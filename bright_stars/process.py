@@ -6,6 +6,9 @@ import random
 import pandas as pd
 
 def process_catalog():
+
+    SMALL = True
+
     bright_stars = []
     count = 1
     with open('catalog.txt', 'r') as f:
@@ -41,19 +44,19 @@ def process_catalog():
             star['ded'] = line[84:86]
             star['dem'] = line[86:88]
             star['des'] = line[88:90]
-            star['glon'] = line[90:96]
-            star['glat'] = line[96:102]
+            #star['glon'] = line[90:96]
+            #star['glat'] = line[96:102]
             star['vmag'] = line[102:107]
-            star['n_vmag'] = line[107]
-            star['u_vmag'] = line[108]
+            #star['n_vmag'] = line[107]
+            #star['u_vmag'] = line[108]
             #star['b_v'] = line[109:114]
             #star['u_b_v'] = line[114]
             #star['u_b'] = line[115:120]
             #star['u_u_b'] = line[120]
             #star['r_i'] = line[121:126]
             #star['n_r_i'] = line[126]
-            star['spectral_type'] = line[127:147]
-            star['n_spectral_type'] = line[147]
+            #star['spectral_type'] = line[127:147]
+            #star['n_spectral_type'] = line[147]
             #star['pmra'] = line[148:154]
             #star['pmde'] = line[154:160]
             #star['n_parallax'] = line[160]
@@ -77,7 +80,7 @@ def process_catalog():
                         star[k] = int(v)
                     else:
                         star[k] = float(v)
-                except Exception:
+                except ValueError:
                     pass
 
             if star['rah'] != '':
@@ -87,13 +90,21 @@ def process_catalog():
                 if star['de_sign'] == '-':
                     star['dec_rad'] = -1 * star['dec_rad']
 
-                star['x'] = np.cos(star['dec_rad']) * np.cos(star['ra_rad'])
-                star['y'] = np.cos(star['dec_rad']) * np.sin(star['ra_rad'])
-                star['z'] = np.sin(star['dec_rad'])
+                star['x'] = 100 * np.cos(star['dec_rad']) * np.cos(star['ra_rad'])
+                star['y'] = 100 * np.cos(star['dec_rad']) * np.sin(star['ra_rad'])
+                star['z'] = 100 * np.sin(star['dec_rad'])
 
                 bright_stars.append(star)
 
+    if SMALL:
+        for star in bright_stars:
+            for k in ['rah', 'ram', 'ras', 'hd_cat_num', 'hrn', 'de_sign', 'ded', 'dem', 'des', 'ra_rad']:
+                del star[k]
+
     stars_df = pd.DataFrame.from_dict(bright_stars)
+
+    if SMALL:
+        stars_df = stars_df.query('vmag<=5')
 
     stars_df.to_csv('bright_stars.csv', index=False)
 
@@ -135,5 +146,5 @@ def plot_celestial_sphere():
     plt.show()
 
 if __name__ == '__main__':
-    #process_catalog()
+    process_catalog()
     plot_celestial_sphere()
