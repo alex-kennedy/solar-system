@@ -11,8 +11,8 @@ var height = window.innerHeight
 console.log("Width = " + width);
 console.log("Height = " + height);
 
-const WIDTH = width;
-const HEIGHT = height;
+const WIDTH = width - 10;
+const HEIGHT = height - 10;
 
 const VIEW_ANGLE = 45;
 const ASPECT = WIDTH / HEIGHT;
