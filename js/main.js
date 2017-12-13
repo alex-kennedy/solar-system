@@ -1,84 +1,74 @@
 "use strict";
 
-var width = window.innerWidth
+var WIDTH = window.innerWidth
 || document.documentElement.clientWidth
 || document.body.clientWidth;
 
-var height = window.innerHeight
+var HEIGHT = window.innerHeight
 || document.documentElement.clientHeight
 || document.body.clientHeight;
 
-console.log("Width = " + width);
-console.log("Height = " + height);
+var aspect = WIDTH / HEIGHT
+var container;
+var renderer, camera, scene;
 
-const WIDTH = width - 10;
-const HEIGHT = height - 10;
+console.log("Width = " + WIDTH);
+console.log("Height = " + HEIGHT);
 
-const VIEW_ANGLE = 45;
-const ASPECT = WIDTH / HEIGHT;
-const NEAR = 0.1;
-const FAR = 1000;
+container = document.querySelector('#container');
+renderer = new THREE.WebGLRenderer();
+camera = new THREE.PerspectiveCamera(
+    45,
+    aspect,
+    1,
+    1000
+);
 
-const container = document.querySelector('#container');
+scene = new THREE.Scene();
+scene.add(camera);
 
-const renderer = new THREE.WebGLRenderer();
-const camera =
-  new THREE.PerspectiveCamera(
-    VIEW_ANGLE,
-    ASPECT,
-    NEAR,
-    FAR
-  );
+renderer.setSize(WIDTH, HEIGHT);
 
-  const scene = new THREE.Scene();
+container.appendChild(renderer.domElement);
 
-  scene.add(camera)
+renderer.render(scene, camera);
 
-  renderer.setSize(WIDTH, HEIGHT);
+var radius = 100;
+var segments = 100;
+var rings = 100;
 
-  container.appendChild(renderer.domElement);
+var geometry = new THREE.SphereGeometry(radius, segments, rings);
+var material = new THREE.MeshBasicMaterial({
+    color: 0x525252,
+    wireframe: true
+});
 
-  const RADIUS = 50;
-  const SEGMENTS = 16;
-  const RINGS = 16;
+var sphere = new THREE.Mesh(geometry, material);
+scene.add(sphere);
 
-  const sphereMaterial =
-    new THREE.MeshLambertMaterial(
-      {
-        color: 0xCC0000
-      });
+var controls = new THREE.OrbitControls(camera);
+camera.position.set(0, 0, 20);
+controls.update();
+controls.enableDamping = true;
+controls.dampingFactor = 0.35;
 
-  const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(
-      RADIUS,
-      SEGMENTS,
-      RINGS
-    ),
-    sphereMaterial
-  );
+radius = 0.00465;
+geometry = new THREE.SphereGeometry(radius, segments, rings);
+material = new THREE.MeshBasicMaterial({
+    color: 0xFFF5EE
+});
+var sun = new THREE.Mesh(geometry, material);
+scene.add(sun)
 
-  sphere.position.z = -300;
+var light = new THREE.PointLight( 0xff0000, 1, 100, 2);
+scene.add(light);
 
-  scene.add(sphere)
 
-  const pointLight =
-    new THREE.PointLight(0xFFFFFF);
-
-  pointLight.position.x = 10;
-  pointLight.position.y = 50;
-  pointLight.position.z = 130;
-
-  scene.add(pointLight);
-
-  var controls = new THREE.OrbitControls(camera);
-  camera.position.set(0, 20, 100);
-  controls.update()
-
-  function update () {
+function animate() {
     renderer.render(scene, camera);
     controls.update();
 
-    requestAnimationFrame(update);
-  }
+    requestAnimationFrame(animate);
+}
 
-  requestAnimationFrame(update);
+animate();
