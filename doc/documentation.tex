@@ -1,0 +1,141 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+
+%%% PAGE DIMENSIONS
+%\usepackage{geometry}
+\usepackage[margin=1in]{geometry}
+\geometry{a4paper}
+\usepackage[parfill]{parskip}
+
+\usepackage{graphicx}
+\usepackage[titletoc,title]{appendix}
+
+% PLOTTING STUFF
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgf}
+%\usepackage{minted}
+%\usemintedstyle{friendly}
+\usepackage[all]{nowidow}
+
+\usepackage{etoolbox}
+%\AtBeginEnvironment{minted}{\fontsize{9}{9}\selectfont}
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{amsmath} % for better maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+\usepackage{enumitem}
+%\usepackage[usenames, dvipsnames]{xcolor}
+\usepackage{color}
+\definecolor{lightgray}{rgb}{0.9, 0.9, 0.9}
+%\usemintedstyle[python]{xcode}
+
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+%\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{Solar System Project}\chead{}\rhead{Documentation}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+
+\begin{document}
+\begin{titlepage}
+	\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % Defines a new command for horizontal lines, change thickness here
+
+	\center
+
+	%------------------------------------------------
+	%	Headings
+	%------------------------------------------------
+
+	\textsc{\LARGE}\\[1.5cm] % Main heading such as the name of your university/college
+
+	\textsc{\Large }\\[0.5cm] % Major heading such as course name
+
+	\textsc{\large Documentation}\\[0.5cm] % Minor heading such as course title
+
+	%------------------------------------------------
+	%	Title
+	%------------------------------------------------
+
+	\HRule\\[0.4cm]
+
+	{\huge\bfseries Solar System Project}\\[0.4cm] % Title of your document
+
+	\HRule\\[1.5cm]
+
+	%------------------------------------------------
+	%	Author(s)
+	%------------------------------------------------
+
+	{\large\textit{Author}}\\
+	Alex \textsc{Kennedy} % Your name
+
+	%------------------------------------------------
+	%	Date
+	%------------------------------------------------
+
+	\vfill\vfill\vfill % Position the date 3/4 down the remaining page
+
+	{\large\today} % Date, change the \today to a set date if you want to be precise
+
+	%----------------------------------------------------------------------------------------
+
+	\vfill % Push the date up 1/4 of the remaining page
+
+\end{titlepage}
+
+\tableofcontents
+
+\pagebreak
+
+\section{Introduction}
+The aim of this project is to create a web-based 3D model of our Solar System, mapping the orbits of even the most recently discovered small bodies. 
+
+In conjunction, the website should look good and be easy to use. All astronomical parts should be an accurate representation of current knowledge. Open source data and transparent techniques for processing it will be used throughout. 
+
+\section{The Celestial Sphere}
+The Yale Bright Star Catalog, Version 5 has been used to provide locations and intensities of the stars visible in our solar system. 
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

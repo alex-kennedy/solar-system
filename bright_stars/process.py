@@ -19,7 +19,7 @@ def process_catalog():
 
             star['hrn'] = line[0:4]
             star['name'] = line[4:14]
-            star['dm'] = line[14:25]
+            star['dm'] = line[14:25]                # Durchmusterung Identification
             star['hd_cat_num'] = line[25:31]
             #star['sao_cat_num'] = line[31:37]
             #star['fk5_num'] = line[37:41]
@@ -94,17 +94,19 @@ def process_catalog():
                 star['y'] = 100 * np.cos(star['dec_rad']) * np.sin(star['ra_rad'])
                 star['z'] = 100 * np.sin(star['dec_rad'])
 
+                star['intensity'] = 1. / (10 ** (star['vmag'] / 2.5))
+
                 bright_stars.append(star)
 
     if SMALL:
         for star in bright_stars:
-            for k in ['rah', 'ram', 'ras', 'hd_cat_num', 'hrn', 'de_sign', 'ded', 'dem', 'des', 'ra_rad']:
+            for k in ['rah', 'ram', 'ras', 'hd_cat_num', 'hrn', 'de_sign', 'ded', 'dem', 'des', 'ra_rad', 'dec_rad', 'name', 'dm', 'vmag']:
                 del star[k]
 
     stars_df = pd.DataFrame.from_dict(bright_stars)
 
-    if SMALL:
-        stars_df = stars_df.query('vmag<=5')
+    #if SMALL:
+    #    stars_df = stars_df.query('intensity>=0.005')
 
     stars_df.to_csv('bright_stars.csv', index=False)
 
@@ -138,13 +140,13 @@ def plot_celestial_sphere():
     # Adding unit sphere
     delta = np.linspace(-np.pi/2, np.pi/2, 100)
     alpha = np.linspace(0, 2*np.pi, 100)
-    x = np.outer(np.cos(delta), np.sin(alpha))
-    y = np.outer(np.sin(delta), np.sin(alpha))
-    z = np.outer(np.ones(np.size(alpha)), np.cos(alpha))
+    x = 100*np.outer(np.cos(delta), np.sin(alpha))
+    y = 100*np.outer(np.sin(delta), np.sin(alpha))
+    z = 100*np.outer(np.ones(np.size(alpha)), np.cos(alpha))
     ax.plot_surface(x, y, z, alpha=0.2)
 
     plt.show()
 
 if __name__ == '__main__':
     process_catalog()
-    plot_celestial_sphere()
+    #plot_celestial_sphere()
