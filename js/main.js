@@ -11,8 +11,77 @@ var HEIGHT = window.innerHeight
 var aspect = WIDTH / HEIGHT;
 var container;
 var renderer, camera, scene;
-var geometry, data, bright_stars, i, material, particles, size, x, y, z, star, star_size;
+var geometry, data, bright_stars, i, material, particles, size, x, y, z, star, star_size, star_opacity;
 
+var particle_basic = {
+    'particle_basic': {
+
+        uniforms: THREE.UniformsUtils.merge([
+
+            THREE.UniformsLib["particle"],
+            THREE.UniformsLib["shadowmap"]
+
+        ]),
+
+        vertexShader: [
+
+            "uniform float size;",
+            "uniform float scale;",
+
+            THREE.ShaderChunk["color_pars_vertex"],
+            THREE.ShaderChunk["shadowmap_pars_vertex"],
+            THREE.ShaderChunk["logdepthbuf_pars_vertex"],
+
+            "void main() {",
+
+            THREE.ShaderChunk["color_vertex"],
+
+            "	vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
+
+            "	#ifdef USE_SIZEATTENUATION",
+            "		gl_PointSize = size * ( scale / length( mvPosition.xyz ) );",
+            "	#else",
+            "		gl_PointSize = size;",
+            "	#endif",
+
+            "	gl_Position = projectionMatrix * mvPosition;",
+
+            THREE.ShaderChunk["logdepthbuf_vertex"],
+            THREE.ShaderChunk["worldpos_vertex"],
+            THREE.ShaderChunk["shadowmap_vertex"],
+
+            "}"
+
+        ].join("\n"),
+
+        fragmentShader: [
+
+            "uniform vec3 psColor;",
+            "uniform float opacity;",
+
+            THREE.ShaderChunk["color_pars_fragment"],
+            THREE.ShaderChunk["map_particle_pars_fragment"],
+            THREE.ShaderChunk["fog_pars_fragment"],
+            THREE.ShaderChunk["shadowmap_pars_fragment"],
+            THREE.ShaderChunk["logdepthbuf_pars_fragment"],
+
+            "void main() {",
+
+            "	gl_FragColor = vec4( psColor, opacity );",
+
+            THREE.ShaderChunk["logdepthbuf_fragment"],
+            THREE.ShaderChunk["map_particle_fragment"],
+            THREE.ShaderChunk["alphatest_fragment"],
+            THREE.ShaderChunk["color_fragment"],
+            THREE.ShaderChunk["shadowmap_fragment"],
+            THREE.ShaderChunk["fog_fragment"],
+
+            "}"
+
+        ].join("\n")
+
+    }
+}
 
 // Declare the scene
 container = document.querySelector('#container');
@@ -68,25 +137,51 @@ function loadBrightStars(data) {
     bright_stars = $.csv.toArrays(data);
 
     geometry = new THREE.Geometry();
-    star_size = []
+    star_size = [];
+    star_opacity = [];
 
     for(i = 1; i < bright_stars.length; i++) {
-        var star = new THREE.Vector3();
+        star = new THREE.Vector3();
         star.x = Number(bright_stars[i][1]);
         star.y = Number(bright_stars[i][2]);
         star.z = Number(bright_stars[i][3]);
 
         geometry.vertices.push(star);
 
-        star_size.push(Number(bright_stars[i][0]) * 100)
+        star_size.push(Number(bright_stars[i][0]) * 100);
+        star_opacity.push(1);
     }
 
-    material = new THREE.PointCloudMaterial({
-        size: 1
+    var attributes = {
+        pSize: {type: 'f', value: star_size},
+        pOpacity: {type: 'f', value: star_opacity}
+    };
+
+    var basicShader = particle_basic['particle_basic'];
+    var uniforms = THREE.UniformsUtils.merge([basicShader['uniforms']]);
+    uniforms['map'].value = THREE.ImageUtils.loadTexture("assets/textures/star.png");
+    uniforms['size'].value = 100;
+    uniforms['opacity'].value = 1;
+    uniforms['psColor'].value = new THREE.Color(0xffffff);
+
+    var psMat2 = new THREE.ShaderMaterial({
+        attributes: attributes,
+        uniforms: uniforms,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        vertexShader: document.
+            getElementById('particleVertexShader').text,
+        fragmentShader: document.
+            getElementById('particleFragmentShader').text
     });
 
-    particles = new THREE.PointCloud(geometry, material);
-    scene.add(particles);
+    var particles = new THREE.PointCloud(geometry, psMat2);
+    particles.sortParticles = true;
+
+    particles.position.x = 0;
+    particles.position.z = 0;
+
+    scene.add(particles)
 
 }
 
