@@ -1,69 +1,57 @@
 <!DOCTYPE HTML>
-<meta charset="utf-8" />
+<meta charset="utf-8"/>
 <html>
-  <head>
+<head>
     <title>Our Solar System</title>
-    <script id="particleVertexShader" type="x-shader/x-vertex">
-    //Vertex shader drawn from the three JS cookbook by josdirksen
-    //https://github.com/josdirksen/threejs-cookbook
-    precision highp float;
-    precision highp int;
-
-    attribute vec3 color;
-    attribute float pSize;
-    attribute float pOpacity;
-
-    uniform float size;
-    uniform float scale;
-
-    varying vec3 vColor;
-    varying float vOpacity;
-
-
-    void main() {
-
-        vColor = color;
-        vOpacity = pOpacity;
-
-        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-        gl_PointSize = 2.0 * pSize * size * ( scale / length( mvPosition.xyz ) );
-        gl_Position = projectionMatrix * mvPosition;
-    }
-    </script>
-
-    <script id="particleFragmentShader" type="x-shader/x-fragment">
-    //Particle fragment shader drawn from the three JS cookbook by josdirksen
-    //https://github.com/josdirksen/threejs-cookbook
-    precision highp float;
-    precision highp int;
-
-    uniform vec3 psColor;
-    uniform float opacity;
-
-    varying vec3 vColor;
-    varying float vOpacity;
-
-    uniform sampler2D map;
-
-    void main() {
-        gl_FragColor = vec4( psColor, vOpacity );
-        gl_FragColor = gl_FragColor * texture2D( map, vec2( gl_PointCoord.x, 1.0 - gl_PointCoord.y ) );
-        gl_FragColor = gl_FragColor * vec4( vColor, 1.0 );
-    }
-
-    </script>
-
+    <!-- Add an image!! -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="js/jquery-csv.js"></script>
-    <script src="js/three.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/threejs/r84/three.min.js"></script>
     <script src="js/OrbitControls.js"></script>
     <script src="js/stats.min.js"></script>
     <link rel="stylesheet" type="text/css" href="css/main.css">
-  </head>
-  <body>
-    <div id="container">
-    </div>
-  </body>
-  <script src="js/main.js"></script>
+
+    <!-- Custom shaders for stars -->
+    <script type="x-shader/x-vertex" id="vertexshader">
+			attribute float size;
+			attribute vec3 color_shader;
+
+			varying vec3 vColor;
+
+			void main() {
+
+				vColor = color_shader;
+
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+
+				gl_PointSize = size * ( 300.0 / -mvPosition.z );
+
+				gl_Position = projectionMatrix * mvPosition;
+
+			}
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragmentshader">
+    		uniform vec3 color;
+			uniform sampler2D texture;
+
+			varying vec3 vColor;
+
+			void main() {
+
+				vec4 color = vec4( color * vColor, 1.0 ) * texture2D( texture, gl_PointCoord );
+
+				gl_FragColor = color;
+
+			}
+    </script>
+
+
+</head>
+<body>
+<div id="container">
+</div>
+</body>
+<script src="js/main.js"></script>
 </html>
 

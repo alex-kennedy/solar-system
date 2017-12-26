@@ -5,10 +5,9 @@ from mpl_toolkits.mplot3d import Axes3D
 import random
 import pandas as pd
 
+SMALL = True
+
 def process_catalog():
-
-    SMALL = True
-
     bright_stars = []
     count = 1
     with open('catalog.txt', 'r') as f:
@@ -94,7 +93,7 @@ def process_catalog():
                 star['y'] = 100 * np.cos(star['dec_rad']) * np.sin(star['ra_rad'])
                 star['z'] = 100 * np.sin(star['dec_rad'])
 
-                star['intensity'] = 1. / (10 ** (star['vmag'] / 2.5))
+                star['intensity'] = (100 ** (1./5)) ** (star['vmag'])
 
                 bright_stars.append(star)
 
@@ -105,48 +104,10 @@ def process_catalog():
 
     stars_df = pd.DataFrame.from_dict(bright_stars)
 
-    #if SMALL:
-    #    stars_df = stars_df.query('intensity>=0.005')
+    # Normalise intensity
+    stars_df['intensity'] *= 10/stars_df['intensity'].max()
 
     stars_df.to_csv('bright_stars.csv', index=False)
 
-def plot_celestial_sphere():
-    stars = pd.DataFrame.from_csv('bright_stars.csv').reset_index()
-
-    x = []
-    y = []
-    z = []
-    size = []
-    points = []
-
-    print(stars.iloc[0]['vmag'])
-
-    for i in range(100):
-        points.append(random.randrange(len(stars)))
-
-    for i in points:
-        x.append(stars.iloc[i]['x'])
-        y.append(stars.iloc[i]['y'])
-        z.append(stars.iloc[i]['z'])
-        size.append(2.512 ** stars.iloc[i]['vmag'])
-        #size.append(20)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_aspect('equal', 'box')
-
-    ax.scatter(x, y, z, c='red', s=size)
-
-    # Adding unit sphere
-    delta = np.linspace(-np.pi/2, np.pi/2, 100)
-    alpha = np.linspace(0, 2*np.pi, 100)
-    x = 100*np.outer(np.cos(delta), np.sin(alpha))
-    y = 100*np.outer(np.sin(delta), np.sin(alpha))
-    z = 100*np.outer(np.ones(np.size(alpha)), np.cos(alpha))
-    ax.plot_surface(x, y, z, alpha=0.2)
-
-    plt.show()
-
 if __name__ == '__main__':
     process_catalog()
-    #plot_celestial_sphere()
