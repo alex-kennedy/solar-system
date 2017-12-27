@@ -73,7 +73,7 @@ function init() {
             positions[i * 3 + 1] = Number(bright_stars[i][2]);
             positions[i * 3 + 2] = Number(bright_stars[i][3]);
 
-            sizes[i] = Number(bright_stars[i][0]);
+            sizes[i] = Number(bright_stars[i][0]) / 2;
 
             color.toArray(colors, i * 3);
         }

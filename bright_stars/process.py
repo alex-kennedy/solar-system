@@ -93,7 +93,8 @@ def process_catalog():
                 star['y'] = 100 * np.cos(star['dec_rad']) * np.sin(star['ra_rad'])
                 star['z'] = 100 * np.sin(star['dec_rad'])
 
-                star['intensity'] = (100 ** (1./5)) ** (star['vmag'])
+                star['intensity'] = (100 ** (1./5)) ** (7.96 - star['vmag'])
+                star['intensity'] = np.log(star['intensity'])
 
                 bright_stars.append(star)
 
