@@ -7,15 +7,15 @@ var HEIGHT = window.innerHeight || document.documentElement.clientHeight || docu
 var aspect = WIDTH / HEIGHT;
 var container;
 var renderer, camera, scene, controls, stats;
-var geometry, data, bright_stars, i, size, x, y, z, stars;
 
-console.time();
+
 init();
-console.timeEnd();
 
 animate();
 
 function init() {
+    console.time();
+
     // Create the scene
     container = document.querySelector('#container');
     renderer = new THREE.WebGLRenderer();
@@ -27,23 +27,24 @@ function init() {
     container.appendChild(renderer.domElement);
 
     // Controls
-    controls = new THREE.OrbitControls(camera);
+    controls = new THREE.OrbitControls(camera, container);
     camera.position.set(0, 0, 20);
     controls.enableDamping = true;
     controls.dampingFactor = 0.15;
     controls.rotateSpeed = 0.15;
+    controls.maxDistance = 100;
 
     // Add page statistics
     stats = new Stats();
     stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-    container.appendChild(stats.dom);
+    //container.appendChild(stats.dom);
 
     // Add the celestial sphere wire frame
     var radius = 100;
     var segments = 100;
     var rings = 100;
 
-    geometry = new THREE.SphereGeometry(radius, segments, rings);
+    var geometry = new THREE.SphereGeometry(radius, segments, rings);
     var material = new THREE.MeshBasicMaterial({
         color: 0xAAAAAA,
         wireframe: true
@@ -55,9 +56,8 @@ function init() {
 
     // Add the stars on the celestial sphere
     $.get('bright_stars/bright_stars.csv', addBrightStars);
-
     function addBrightStars(data) {
-        bright_stars = $.csv.toArrays(data);
+        var bright_stars = $.csv.toArrays(data);
 
         //Remove the column headers
         bright_stars = bright_stars.slice(1);
@@ -68,17 +68,15 @@ function init() {
 
         var color = new THREE.Color(1, 1, 1);
 
-        for (i = 0; i < bright_stars.length; i++) {
-            positions[i * 3] = Number(bright_stars[i][1]);
-            positions[i * 3 + 1] = Number(bright_stars[i][2]);
-            positions[i * 3 + 2] = Number(bright_stars[i][3]);
+        for (var i = 0; i < bright_stars.length; i++) {
+            positions[i * 3] = Number(bright_stars[i][1]);          // x
+            positions[i * 3 + 1] = Number(bright_stars[i][2]);      // y
+            positions[i * 3 + 2] = Number(bright_stars[i][3]);      // z
 
             sizes[i] = Number(bright_stars[i][0]) / 2;
 
             color.toArray(colors, i * 3);
         }
-
-        console.log(sizes);
 
         var geometry = new THREE.BufferGeometry();
         geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -97,9 +95,11 @@ function init() {
             transparent: true
         });
 
-        stars = new THREE.Points(geometry, material);
+        var stars = new THREE.Points(geometry, material);
         scene.add(stars)
     }
+
+    console.timeEnd();
 }
 
 // Animation loop

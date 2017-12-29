@@ -3,3 +3,4 @@ credentials.py
 .credentials
 .idea
 asteroids/asteroids.csv
+asteroids/asteroids.dat

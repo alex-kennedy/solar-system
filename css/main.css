@@ -11,3 +11,13 @@ html, body {
     padding: 0;
 }
 
+#settings {
+    font-family: Arial, sans-serif;
+    position: absolute;
+    background-color: mediumvioletred;
+    opacity: 0.5;
+    height: 100%;
+    width: 750px;
+    display: none;
+}
+
