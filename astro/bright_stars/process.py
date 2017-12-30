@@ -10,7 +10,7 @@ SMALL = True
 def process_catalog():
     bright_stars = []
     count = 1
-    with open('catalog.txt', 'r') as f:
+    with open('astro/bright_stars/catalog.txt', 'r') as f:
         for line in f:
             star = {}
 
@@ -108,7 +108,7 @@ def process_catalog():
     # Normalise intensity
     stars_df['intensity'] *= 10/stars_df['intensity'].max()
 
-    stars_df.to_csv('bright_stars.csv', index=False)
+    stars_df.to_csv('astro/bright_stars/bright_stars.csv', index=False)
 
 if __name__ == '__main__':
     process_catalog()

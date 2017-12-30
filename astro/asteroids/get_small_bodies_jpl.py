@@ -97,7 +97,7 @@ print("Request made successfully.")
 print("Writing file...")
 
 byte_count = 0
-with open('asteroids/asteroids.csv', 'wb') as out:
+with open('astro/asteroids/asteroids.csv', 'wb') as out:
     for chunk in response.iter_content(chunk_size=1024):
         out.write(chunk)
 

@@ -10,7 +10,6 @@ var renderer, camera, scene, controls, stats;
 
 
 init();
-
 animate();
 
 function init() {
@@ -55,7 +54,7 @@ function init() {
     //scene.add(sphere);
 
     // Add the stars on the celestial sphere
-    $.get('bright_stars/bright_stars.csv', addBrightStars);
+    $.get('astro/bright_stars/bright_stars.csv', addBrightStars);
     function addBrightStars(data) {
         var bright_stars = $.csv.toArrays(data);
 

@@ -2,8 +2,8 @@ import requests
 from tqdm import tqdm
 
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
-SAVE_FILE = 'asteroids/asteroids'
-DOWNLOADED = True
+SAVE_FILE = 'astro/asteroids/asteroids'
+DOWNLOADED = False
 
 def join_list(list, sep=','):
     string = ''
