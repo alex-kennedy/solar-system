@@ -1,6 +1,5 @@
 "use strict";
 
-// Establish the environment
 var WIDTH = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 var HEIGHT = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 
@@ -9,13 +8,44 @@ var container;
 var renderer, camera, scene, controls, stats;
 
 
-init();
-animate();
-
 function init() {
     console.time();
 
-    // Create the scene
+    createScene();
+
+    addControls();
+    addStats();
+    addBrightStars();
+
+    console.timeEnd();
+}
+
+
+// Animation loop
+function animate() {
+    stats.begin();
+
+    renderer.render(scene, camera);
+    controls.update();
+    stats.end();
+
+    requestAnimationFrame(animate);
+}
+
+
+// Resize event listener
+window.addEventListener("resize", resetRenderSize);
+function resetRenderSize() {
+    WIDTH = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    HEIGHT = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+    renderer.setSize(WIDTH, HEIGHT);
+    camera.aspect = WIDTH / HEIGHT;
+    camera.updateProjectionMatrix();
+}
+
+
+function createScene() {
     container = document.querySelector('#container');
     renderer = new THREE.WebGLRenderer();
     camera = new THREE.PerspectiveCamera(45, aspect, 0.001, 100000);
@@ -23,22 +53,28 @@ function init() {
 
     scene.add(camera);
     renderer.setSize(WIDTH, HEIGHT);
+    renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
+}
 
-    // Controls
+
+function addControls() {
     controls = new THREE.OrbitControls(camera, container);
     camera.position.set(0, 0, 20);
     controls.enableDamping = true;
     controls.dampingFactor = 0.15;
     controls.rotateSpeed = 0.15;
     controls.maxDistance = 100;
+}
 
-    // Add page statistics
+function addStats() {
     stats = new Stats();
     stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-    //container.appendChild(stats.dom);
+    container.appendChild(stats.dom);
+}
 
-    // Add the celestial sphere wire frame
+
+function addCelestialSphereWireframe() {
     var radius = 100;
     var segments = 100;
     var rings = 100;
@@ -51,11 +87,13 @@ function init() {
     material.side = THREE.DoubleSide;
 
     var sphere = new THREE.Mesh(geometry, material);
-    //scene.add(sphere);
+    scene.add(sphere);
+}
 
-    // Add the stars on the celestial sphere
-    $.get('astro/bright_stars/bright_stars.csv', addBrightStars);
-    function addBrightStars(data) {
+
+function addBrightStars() {
+    $.get('astro/bright_stars/bright_stars.csv', renderBrightStars);
+    function renderBrightStars(data) {
         var bright_stars = $.csv.toArrays(data);
 
         //Remove the column headers
@@ -97,30 +135,41 @@ function init() {
         var stars = new THREE.Points(geometry, material);
         scene.add(stars)
     }
-
-    console.timeEnd();
 }
 
-// Animation loop
-function animate() {
-    stats.begin();
 
-    renderer.render(scene, camera);
-    controls.update();
-
-    stats.end();
-
-    requestAnimationFrame(animate);
+function OrbitingObject(semi_major_axis, eccentricity, inclination, mean_long, arg_peri, long_asc_node) {
+    this.semi_major_axis = semi_major_axis;
+    this.eccentricity = eccentricity;
+    this.inclination = inclination;
+    this.mean_long = mean_long;
+    this.arg_peri = arg_peri;
+    this.long_asc_node = long_asc_node;
 }
 
-// Resize event listener
-window.addEventListener("resize", resetRenderSize);
+OrbitingObject.prototype = {
 
-function resetRenderSize() {
-    WIDTH = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-    HEIGHT = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    constructor: OrbitingObject,
 
-    renderer.setSize(WIDTH, HEIGHT);
-    camera.aspect = WIDTH / HEIGHT;
-    camera.updateProjectionMatrix();
+    testInheritance: function () {
+        return "appears to have worked!"
+    }
+};
+
+
+function Planet(semi_major_axis, eccentricity, inclination, mean_long, arg_peri, long_asc_node) {
+    OrbitingObject.call(this, semi_major_axis, eccentricity, inclination, mean_long, arg_peri);
+    this.long_asc_node = long_asc_node;
 }
+
+Planet.prototype = Object.create(OrbitingObject.prototype, {
+    constructor: Planet,
+
+    nowLikeNormal: function () {
+        return "woohoo!!"
+    }
+});
+
+init();
+animate();
+
