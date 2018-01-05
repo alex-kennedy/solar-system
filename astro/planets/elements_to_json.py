@@ -16,8 +16,6 @@ for i in range(len(lines)):
         except ValueError:
             pass
 
-
-
 planets = []
 for i in range(len(lines)):
     if i % 2 == 0:
@@ -29,34 +27,3 @@ for i in range(len(lines)):
 
 with open(out_file, 'w') as out:
     json.dump(planets, out)
-
-
-"""
-lines = []
-planet_dicts = []
-
-with open(file_name) as elements_file:
-    at_header = True
-    for line in elements_file:
-        if line[0:5] == '-----':
-            at_header = False
-            continue
-
-        if not at_header:
-            lines += [line]
-
-for i in range(len(lines)):
-    lines[i] = lines[i].split()
-
-    if i % 2 == 1:
-        lines[i] = [lines[i-1][0]] + lines[i]
-        lines[i].append(True)
-    else:
-        lines[i].append(False)
-
-    for j in range(1, len(lines[i]) - 1):
-        lines[i][j] = float(lines[i][j])
-
-    planet = {}
-    planet['name'] = lines[i]
-"""

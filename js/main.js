@@ -16,6 +16,7 @@ function init() {
     addControls();
     addStats();
     addBrightStars();
+    addPlanets();
 
     console.timeEnd();
 }
@@ -138,6 +139,20 @@ function addBrightStars() {
 }
 
 
+function addPlanets() {
+    var planets = [];
+
+    $.get('astro/planets/planetary_elements.json', processPlanets);
+    function processPlanets(data) {
+
+        for (var i = 0; i < data.length; i++) {
+            planets[i] = new Planet(data[i]);
+        }
+console.log(planets);
+    }
+}
+
+
 function OrbitingObject(semi_major_axis, eccentricity, inclination, mean_long, arg_peri, long_asc_node) {
     this.semi_major_axis = semi_major_axis;
     this.eccentricity = eccentricity;
@@ -145,30 +160,51 @@ function OrbitingObject(semi_major_axis, eccentricity, inclination, mean_long, a
     this.mean_long = mean_long;
     this.arg_peri = arg_peri;
     this.long_asc_node = long_asc_node;
+
+    this.time_of_orbit = Date.now();
 }
 
 OrbitingObject.prototype = {
 
-    constructor: OrbitingObject,
+    constructor: OrbitingObject
 
-    testInheritance: function () {
-        return "appears to have worked!"
-    }
 };
 
 
-function Planet(semi_major_axis, eccentricity, inclination, mean_long, arg_peri, long_asc_node) {
-    OrbitingObject.call(this, semi_major_axis, eccentricity, inclination, mean_long, arg_peri);
-    this.long_asc_node = long_asc_node;
+function Planet(data) {
+
+    this.name = data.name;
+
+    var time_centuries = (Date.now() - Date.UTC(2000, 0, 1, 12, 0, 0)) / (1000 * 60 * 60 * 24 * 36525);
+
+    var elements = [];
+    for (var i = 0; i < data.elements.length; i++) {
+
+        elements.push(data.elements[i] + time_centuries * data.deltas[i])
+
+    }
+
+    var semi_major_axis = elements[0];
+    var eccentricity = elements[1];
+    var inclination = elements[2];
+    var mean_long = elements[3];
+    var long_peri = elements[4];
+    var long_asc_node = elements[5];
+
+    var arg_peri = long_peri - long_asc_node;
+
+    OrbitingObject.call(this, semi_major_axis, eccentricity, inclination, mean_long, arg_peri, long_asc_node);
+
+    this.mean_anomaly = ((mean_long - long_peri + 180) % 360) - 180;
+
 }
 
 Planet.prototype = Object.create(OrbitingObject.prototype, {
-    constructor: Planet,
 
-    nowLikeNormal: function () {
-        return "woohoo!!"
-    }
+    constructor: Planet
+
 });
+
 
 init();
 animate();
