@@ -173,7 +173,7 @@ OrbitingObject.prototype = {
 
 function Planet(data) {
 
-    this.name = data.name;
+    this.name = data.name || "";
 
     var time_centuries = (Date.now() - Date.UTC(2000, 0, 1, 12, 0, 0)) / (1000 * 60 * 60 * 24 * 36525);
 

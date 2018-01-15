@@ -1,5 +1,6 @@
 import requests
 from tqdm import tqdm
+from google.cloud import datastore
 
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
 SAVE_FILE = 'astro/asteroids/asteroids'
@@ -218,5 +219,10 @@ def get_small_bodies():
     print("Conversion complete")
 
 
+def test_gcloud_datastore():
+    ds_client = datastore.Client()
+
+
 if __name__ == '__main__':
-    get_small_bodies()
+    #get_small_bodies()
+    test_gcloud_datastore()
