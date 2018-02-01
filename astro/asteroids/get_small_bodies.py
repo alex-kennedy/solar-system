@@ -1,10 +1,12 @@
+import os
 import requests
 from tqdm import tqdm
-from google.cloud import datastore
+from google.cloud import datastore, storage
 
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
 SAVE_FILE = 'astro/asteroids/asteroids'
 DOWNLOADED = False
+GCLOUD_STORAGE_BUCKET = 'asteroid-data'
 
 def join_list(list, sep=','):
     string = ''
@@ -139,7 +141,8 @@ def unpack_flags(col_names, values):
     pha = flags_binary[15]
     values.append(pha)
 
-def download_data():
+
+def download_latest():
     chunk_size = 1024
 
     print("Requesting...")
@@ -155,7 +158,17 @@ def download_data():
     print('Finished writing .dat file')
 
 
-def get_small_bodies():
+def gcloud_download_previous(client):
+    bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
+    assert bucket.exists()
+
+    print("Downloading previous asteroid set...")
+    blob = bucket.blob('asteroids.csv')
+    blob.download_to_filename(SAVE_FILE + '_previous.csv')
+    print("Previous asteroid set downloaded successfully.")
+
+
+def process_small_bodies():
     # Formatting from: https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
     line_format = [
         ['designation', (1, 7)],
@@ -191,10 +204,9 @@ def get_small_bodies():
 
     skip_rows = 43
 
-    if not DOWNLOADED:
-        download_data()
+    with open(SAVE_FILE + '.dat', 'r') as dat, \
+         open(SAVE_FILE + '.csv', 'w') as csv:
 
-    with open(SAVE_FILE + '.dat', 'r') as dat, open(SAVE_FILE + '.csv', 'w') as csv:
         print("Converting...")
 
         write_header(csv, col_names)
@@ -219,10 +231,50 @@ def get_small_bodies():
     print("Conversion complete")
 
 
-def test_gcloud_datastore():
-    ds_client = datastore.Client()
+def check_for_changes():
+    with open(SAVE_FILE + ".csv") as current, \
+         open(SAVE_FILE + "_previous.csv") as previous:
+
+        count = 0
+        line_current = current.readline()
+        line_previous = previous.readline()
+        if line_current != "" and line_previous != "":
+            if line_current != line_previous:
+                count += 1
+
+        print(count)
+
+
+def gcloud_overwrite_previous(client):
+    bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
+    assert bucket.exists()
+
+    print("Writing CSV to google cloud...")
+    blob = bucket.blob('asteroids.csv')
+    blob.upload_from_filename(SAVE_FILE + '.csv')
+    print("Successfully wrote CSV to google cloud.")
+
+
+def gcloud_make_changes():
+    pass
+
+
+def clean_files():
+    #os.remove(SAVE_FILE + '.csv')
+    #os.remove(SAVE_FILE + '.dat')
+    #os.remove(SAVE_FILE + '_previous.csv')
+    pass
+
+def update_site():
+    #storage_client = storage.Client()
+
+    #download_latest()
+    #gcloud_download_previous(storage_client)
+    check_for_changes()
+    #gcloud_overwrite_previous(storage_client)
+    #gcloud_make_changes()
+    #clean_files()
 
 
 if __name__ == '__main__':
-    #get_small_bodies()
-    test_gcloud_datastore()
+    update_site()
