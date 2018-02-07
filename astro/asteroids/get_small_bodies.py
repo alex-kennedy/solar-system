@@ -1,12 +1,16 @@
 import os
 import requests
 from tqdm import tqdm
+import difflib
 from google.cloud import datastore, storage
+import time
+
 
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
-SAVE_FILE = 'astro/asteroids/asteroids'
+SAVE_FILE = ""
 DOWNLOADED = False
 GCLOUD_STORAGE_BUCKET = 'asteroid-data'
+
 
 def join_list(list, sep=','):
     string = ''
@@ -47,6 +51,62 @@ def line_to_list(line_format, line):
         separate_values.append(value)
 
     return separate_values
+
+
+def unpack_designation(col_names, values):
+    index = col_names.index("designation")
+    designation  = values[index]
+
+    # Test if the designation is already an integer, e.g. "00001" or "98575"
+    try:
+        values[index] = str(int(designation))
+        return
+    except ValueError:
+        pass
+
+    # Test if the designation is a packed Asteroid Number
+    try:
+        tail = str(int(designation[1:]))
+        head = str(ord(designation[0]) - 55)
+        values[index] = head + tail
+        return
+    except ValueError:
+        pass
+
+    # Test for survey Asteroid formats
+    if designation[2] == "S":
+        head = designation[3:]
+        tail = designation[0] + "-" + designation [1]
+        values[index] = head + " " + tail
+        return
+
+    centuries = {
+        'I' : '18',
+        'J' : '19',
+        'K' : '20'
+    }
+
+    new_desig = ""
+    new_desig += centuries.get(designation[0])
+    new_desig += designation[1:3]
+    new_desig += " "
+    new_desig += designation[3] + designation[6]
+
+    try:
+        int(designation[4:6])
+        is_int = True
+    except ValueError:
+        is_int = False
+
+    if is_int:
+        if int(designation[4:6]) != 0:
+            new_desig += str(int(designation[4:6]))
+    else:
+        new_desig += str(ord(designation[4]) - 55)
+        new_desig += designation[5]
+
+    values[index] = new_desig
+    return
 
 
 def unpack_uncertainty_parameter(col_names, values):
@@ -151,20 +211,21 @@ def download_latest():
 
     content_length = int(response.headers.get('content-length'))
 
-    print("Downloading {0}.dat file...".format(SAVE_FILE))
-    with open(SAVE_FILE + '.dat', 'wb') as dat:
+    print("Downloading {0}.dat file...".format(SAVE_FILE + "asteroids"))
+    with open(SAVE_FILE + "asteroids" + '.dat', 'wb') as dat:
         for chunk in tqdm(response.iter_content(chunk_size=chunk_size), total=round(content_length/chunk_size), unit='KB'):
             dat.write(chunk)
     print('Finished writing .dat file')
 
 
-def gcloud_download_previous(client):
+def gcloud_download_previous():
+    client = storage.Client()
     bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
     assert bucket.exists()
 
     print("Downloading previous asteroid set...")
     blob = bucket.blob('asteroids.csv')
-    blob.download_to_filename(SAVE_FILE + '_previous.csv')
+    blob.download_to_filename(SAVE_FILE + "asteroids_previous.csv")
     print("Previous asteroid set downloaded successfully.")
 
 
@@ -194,7 +255,8 @@ def process_small_bodies():
     ]
 
     processed_fields = [
-        # [('new1', 'new2'), function_pointer]
+        # [('new1', 'new2', ...), function_pointer]
+        [(), unpack_designation],
         [('u_flag',), unpack_uncertainty_parameter],
         [(), unpack_epoch],
         [('orbit_type', 'neo', 'neo_1km', 'opposition_seen_earlier', 'critical_list_numbered', 'pha'), unpack_flags]
@@ -204,8 +266,8 @@ def process_small_bodies():
 
     skip_rows = 43
 
-    with open(SAVE_FILE + '.dat', 'r') as dat, \
-         open(SAVE_FILE + '.csv', 'w') as csv:
+    with open(SAVE_FILE + "asteroids.dat", "r") as dat, \
+         open(SAVE_FILE + "asteroids.csv", "w") as csv:
 
         print("Converting...")
 
@@ -214,7 +276,7 @@ def process_small_bodies():
         for i in range(skip_rows):
             dat.readline()
 
-        for line in dat:
+        for line in tqdm(dat, unit='lines'):
             if len(line) < 10:
                 continue
 
@@ -232,17 +294,45 @@ def process_small_bodies():
 
 
 def check_for_changes():
-    with open(SAVE_FILE + ".csv") as current, \
-         open(SAVE_FILE + "_previous.csv") as previous:
+    over_write_keys = []
 
-        count = 0
-        line_current = current.readline()
-        line_previous = previous.readline()
-        if line_current != "" and line_previous != "":
-            if line_current != line_previous:
+    with open(SAVE_FILE + "asteroids_previous.csv", 'r') as new:
+        new = new.readlines()
+    with open(SAVE_FILE + "asteroids.csv", 'r') as old:
+        old = old.readlines()
+
+
+    diff = difflib.unified_diff(old, new, n=0)      # provide no context (n=0)
+    count = 0
+    with open(SAVE_FILE + "overwrites.csv", 'w') as outfile:
+        for diff_line in diff:
+            if diff_line.startswith("+") and not diff_line.startswith("++"):
                 count += 1
 
-        print(count)
+                line = diff_line[1:]
+                key = line.split(",")[0]
+                over_write_keys.append(key)
+                outfile.write(line)
+    print("{0} write operations to be made.".format(count))
+
+    diff = difflib.unified_diff(old, new, n=0)      # reset diff generator
+    count = 0
+    with open(SAVE_FILE + "deletions.csv", 'w') as outfile:
+        for diff_line in diff:
+            if diff_line.startswith("-") and not diff_line.startswith("--"):
+                line = diff_line[1:]
+                key = line.split(",")[0]
+
+                if key not in over_write_keys:
+                    count += 1
+                    outfile.write(line)
+    print("{0} delete operations to be made.".format(count))
+
+    # Write out a complete diff
+    # diff = difflib.unified_diff(old, new, n=0)
+    # with open("diff.csv", 'w') as outfile:
+    #     for line in diff:
+    #         outfile.write(line)
 
 
 def gcloud_overwrite_previous(client):
@@ -251,7 +341,7 @@ def gcloud_overwrite_previous(client):
 
     print("Writing CSV to google cloud...")
     blob = bucket.blob('asteroids.csv')
-    blob.upload_from_filename(SAVE_FILE + '.csv')
+    blob.upload_from_filename(SAVE_FILE + 'asteroids.csv')
     print("Successfully wrote CSV to google cloud.")
 
 
@@ -260,20 +350,22 @@ def gcloud_make_changes():
 
 
 def clean_files():
-    #os.remove(SAVE_FILE + '.csv')
-    #os.remove(SAVE_FILE + '.dat')
-    #os.remove(SAVE_FILE + '_previous.csv')
-    pass
+    os.remove(SAVE_FILE + 'asteroids.csv')
+    os.remove(SAVE_FILE + 'asteroids.dat')
+    os.remove(SAVE_FILE + 'asteroids_previous.csv')
+    os.remove(SAVE_FILE + "overwrites.csv")
+    os.remove(SAVE_FILE + "deletions.csv")
+
 
 def update_site():
-    #storage_client = storage.Client()
-
-    #download_latest()
-    #gcloud_download_previous(storage_client)
-    check_for_changes()
-    #gcloud_overwrite_previous(storage_client)
+    #download_latest() #X
+    #gcloud_download_previous() #X
+    #process_small_bodies() #X
+    #check_for_changes()
     #gcloud_make_changes()
-    #clean_files()
+    #gcloud_overwrite_previous() #X
+    #clean_files() #X
+    pass
 
 
 if __name__ == '__main__':
