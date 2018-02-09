@@ -1,5 +1,5 @@
 requests
 datetime
 tqdm
-numpy
-pandas
+google-cloud-datastore
+google-cloud-storage
