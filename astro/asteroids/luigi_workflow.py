@@ -1,6 +1,5 @@
 import luigi
 import datetime
-from docker_test import run_test
 from get_small_bodies import *
 
 class DownloadLatest(luigi.Task):
@@ -49,4 +48,17 @@ class CheckForChanges(luigi.Task):
         check_for_changes()
 
     def output(self):
-        return luigi.LocalTarget("diff.csv")
+        return luigi.LocalTarget("deletions.csv"), luigi.LocalTarget("overwrites.csv")
+
+
+class GcloudUpdateDatastore(luigi.Task):
+    date = luigi.DateParameter(default=datetime.date.today())
+
+    def requires(self):
+        return CheckForChanges(self.date)
+
+    def run(self):
+        gcloud_update_datastore()
+
+    def output(self):
+        return luigi.LocalTarget("luigi_workflow.py")

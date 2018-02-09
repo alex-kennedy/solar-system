@@ -335,7 +335,8 @@ def check_for_changes():
     #         outfile.write(line)
 
 
-def gcloud_overwrite_previous(client):
+def gcloud_overwrite_previous():
+    client = storage.Client()
     bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
     assert bucket.exists()
 
@@ -345,7 +346,7 @@ def gcloud_overwrite_previous(client):
     print("Successfully wrote CSV to google cloud.")
 
 
-def gcloud_make_changes():
+def gcloud_update_datastore():
     pass
 
 
@@ -358,12 +359,12 @@ def clean_files():
 
 
 def update_site():
-    #download_latest() #X
-    #gcloud_download_previous() #X
-    #process_small_bodies() #X
-    #check_for_changes()
-    #gcloud_make_changes()
-    #gcloud_overwrite_previous() #X
+    download_latest() #X
+    gcloud_download_previous() #X
+    process_small_bodies() #X
+    check_for_changes()
+    #gcloud_update_datastore()
+    gcloud_overwrite_previous() #X
     #clean_files() #X
     pass
 
