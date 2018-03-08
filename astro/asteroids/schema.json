@@ -1,0 +1,177 @@
+[
+  {
+    "name": "designation",
+    "start_col": 1,
+    "end_col": 7,
+    "bigquery_field": "STRING",
+    "datastore_indexed": true
+  },
+  {
+    "name": "h",
+    "start_col": 9,
+    "end_col": 13,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": false
+  },
+  {
+    "name": "g",
+    "start_col": 15,
+    "end_col": 19,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": false
+  },
+  {
+    "name": "epoch",
+    "start_col": 21,
+    "end_col": 25,
+    "bigquery_field": "DATETIME",
+    "datastore_indexed": false
+  },
+  {
+    "name": "m",
+    "start_col": 27,
+    "end_col": 35,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": false
+  },
+  {
+    "name": "perihelion",
+    "start_col": 38,
+    "end_col": 46,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": false
+  },
+  {
+    "name": "node",
+    "start_col": 49,
+    "end_col": 57,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": false
+  },
+  {
+    "name": "incl",
+    "start_col": 60,
+    "end_col": 68,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": false
+  },
+  {
+    "name": "e",
+    "start_col": 71,
+    "end_col": 79,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": true
+  },
+  {
+    "name": "n",
+    "start_col": 81,
+    "end_col": 91,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": false
+  },
+  {
+    "name": "a",
+    "start_col": 93,
+    "end_col": 103,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": true
+  },
+  {
+    "name": "u",
+    "start_col": 106,
+    "end_col": 106,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": true
+  },
+  {
+    "name": "reference",
+    "start_col": 108,
+    "end_col": 116,
+    "bigquery_field": "STRING",
+    "datastore_indexed": false
+  },
+  {
+    "name": "observations",
+    "start_col": 118,
+    "end_col": 122,
+    "bigquery_field": "INTEGER",
+    "datastore_indexed": false
+  },
+  {
+    "name": "oppositions",
+    "start_col": 124,
+    "end_col": 126,
+    "bigquery_field": "INTEGER",
+    "datastore_indexed": false
+  },
+  {
+    "name": "arc_year_or_length",
+    "start_col": 128,
+    "end_col": 131,
+    "bigquery_field": "FLOAT",
+    "datastore_indexed": false
+  },
+  {
+    "name": "arc_year_last",
+    "start_col": 128,
+    "end_col": 131,
+    "bigquery_field": "INTEGER",
+    "datastore_indexed": false
+  },
+  {
+    "name": "flags",
+    "start_col": 162,
+    "end_col": 165,
+    "bigquery_field": "STRING",
+    "datastore_indexed": false
+  },
+  {
+    "name": "readable_designation",
+    "start_col": 167,
+    "end_col": 194,
+    "bigquery_field": "STRING",
+    "datastore_indexed": true
+  },
+  {
+    "name": "last_observation",
+    "start_col": 195,
+    "end_col": 202,
+    "bigquery_field": "STRING",
+    "datastore_indexed": false
+  },
+  {
+    "name": "u_flag",
+    "bigquery_field": "STRING",
+    "datastore_indexed": false
+  },
+  {
+    "name": "orbit_type",
+    "bigquery_field": "STRING",
+    "datastore_indexed": true
+  },
+  {
+    "name": "neo",
+    "bigquery_field": "BOOLEAN",
+    "datastore_indexed": true
+  },
+  {
+    "name": "neo_1km",
+    "bigquery_field": "BOOLEAN",
+    "datastore_indexed": true
+  },
+  {
+    "name": "opposition_seen_earlier",
+    "bigquery_field": "BOOLEAN",
+    "datastore_indexed": false
+  },
+  {
+    "name": "critical_list_numbered",
+    "bigquery_field": "BOOLEAN",
+    "datastore_indexed": true
+  },
+  {
+    "name": "pha",
+    "bigquery_field": "BOOLEAN",
+    "datastore_indexed": true
+  }
+]
