@@ -9,6 +9,7 @@ from google.api_core.exceptions import BadRequest
 from google.cloud import bigquery, datastore, storage
 from tqdm import tqdm
 
+
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
 FOLDER = 'astro/asteroids/'
 GCLOUD_STORAGE_BUCKET = 'asteroid-data'
@@ -67,108 +68,6 @@ def parse_line(line):
             line[i] = None
 
 
-def unpack_designation(packed_designation):
-    """Unpack the asteroid designation in the list of values, MPC format"""
-
-    # Test if the designation is already an integer, e.g. "00001" or "98575"
-    try:
-        values[index] = str(int(packed_designation))
-        return
-    except ValueError:
-        pass
-
-    # Test if the designation is a packed Asteroid Number
-    try:
-        int(packed_designation[1:])
-        tail = packed_designation[1:]
-        head = str(ord(packed_designation[0]) - 55)
-        return head + tail
-    except ValueError:
-        pass
-
-    # Test for survey Asteroid formats
-    if packed_designation[2] == "S":
-        head = packed_designation[3:]
-        tail = packed_designation[0] + "-" + packed_designation[1]
-        return head + " " + tail
-
-    centuries = {
-        'I' : '18',
-        'J' : '19',
-        'K' : '20'
-    }
-
-    new_desig = ""
-    new_desig += centuries[designation[0]]
-    new_desig += designation[1:3]
-    new_desig += " "
-    new_desig += designation[3] + designation[6]
-
-    try:
-        int(designation[4:6])
-        is_int = True
-    except ValueError:
-        is_int = False
-
-    if is_int:
-        if int(designation[4:6]) != 0:
-            new_desig += str(int(designation[4:6]))
-    else:
-        new_desig += str(ord(designation[4]) - 55)
-        new_desig += designation[5]
-
-    return new_desig
-
-
-def unpack_uncertainty_parameter(u):
-    try:
-        u = int(u)
-        u_flag = ''
-    except ValueError:
-        u_flag = u
-        u = -1
-
-    return u, u_flag
-
-
-def epoch_letter_to_number(letter):
-    try:
-        int(letter)
-        return letter.rjust(2, '0')
-    except ValueError:
-        return ord(letter) - 55
-
-
-def unpack_epoch(epoch_packed):
-    """Unpack epoch to date based on MPC format"""
-    epoch_unpacked = (epoch_letter_to_number(epoch_packed[0]) +
-                      epoch_packed[1:3] +
-                      '-' +
-                      epoch_letter_to_number[3] +
-                      '-' +
-                      epoch_letter_to_number[4])
-
-    return epoch_unpacked
-
-
-def unpack_flags(flags):
-    flags_number = int(flags, 16)
-    flags_binary = "{0:b}".format(flags_number)
-    flags_binary = flags_binary.rjust(16, '0')
-    flags_binary = flags_binary[::-1]
-
-    orbit_type = flags_binary[0:6][::-1]
-    orbit_type = int(orbit_type, 2)
-
-    neo = flags_binary[11]
-    neo_1km = flags_binary[12]
-    opposition_seen_earlier = flags_binary[13]
-    critical_list_numbered = flags_binary[14]
-    pha = flags_binary[15]
-
-    return orbit_type, neo, neo_1km, opposition_seen_earlier, critical_list_numbered, pha
-
-
 def download_latest():
     chunk_size = 1024
 
@@ -194,6 +93,101 @@ def gcloud_download_previous():
     blob = bucket.blob('asteroids.csv')
     blob.download_to_filename(FOLDER + "asteroids_previous.csv")
     print("Previous asteroid set downloaded successfully.")
+
+
+def packed_letter_to_number(letter):
+    try:
+        int(letter)
+        return letter.rjust(2, '0')
+    except ValueError:
+        return str(ord(letter) - 55)
+
+
+def unpack_designation(packed_designation):
+    """Unpack the asteroid designation in the list of values, MPC format"""
+
+    # Test if the designation is already an integer, e.g. "00001" or "98575"
+    try:
+        unpacked = str(int(packed_designation))
+        return unpacked
+    except ValueError:
+        pass
+
+    # Test if the designation is a packed Asteroid Number
+    try:
+        int(packed_designation[1:])
+        tail = packed_designation[1:]
+        head = packed_letter_to_number(packed_designation[0])
+        return head + tail
+    except ValueError:
+        pass
+
+    # Test for survey Asteroid formats
+    if packed_designation[2] == "S":
+        head = packed_designation[3:]
+        tail = packed_designation[0] + "-" + packed_designation[1]
+        return head + " " + tail
+
+    new_desig = (packed_letter_to_number(designation[0]) +
+                 designation[1:3] +
+                 " " +
+                 designation[3] +
+                 designation[6])
+
+    try:
+        int(designation[4:6])
+        is_int = True
+    except ValueError:
+        is_int = False
+
+    if is_int:
+        if int(designation[4:6]) != 0:
+            new_desig += str(int(designation[4:6]))
+    else:
+        new_desig += packed_letter_to_number(designation[4]) + designation[5]
+
+    return new_desig
+
+
+def unpack_uncertainty_parameter(u):
+    try:
+        u = int(u)
+        u_flag = ''
+    except ValueError:
+        u_flag = u
+        u = -1
+
+    return u, u_flag
+
+
+def unpack_epoch(epoch_packed):
+    """Unpack epoch to date based on MPC format"""
+    epoch_unpacked = (packed_letter_to_number(epoch_packed[0]) +
+                      epoch_packed[1:3] +
+                      '-' +
+                      packed_letter_to_number[3] +
+                      '-' +
+                      packed_letter_to_number[4])
+
+    return epoch_unpacked
+
+
+def unpack_flags(flags):
+    flags_number = int(flags, 16)
+    flags_binary = "{0:b}".format(flags_number)
+    flags_binary = flags_binary.rjust(16, '0')
+    flags_binary = flags_binary[::-1]
+
+    orbit_type = flags_binary[0:6][::-1]
+    orbit_type = int(orbit_type, 2)
+
+    neo = flags_binary[11]
+    neo_1km = flags_binary[12]
+    opposition_seen_earlier = flags_binary[13]
+    critical_list_numbered = flags_binary[14]
+    pha = flags_binary[15]
+
+    return orbit_type, neo, neo_1km, opposition_seen_earlier, critical_list_numbered, pha
 
 
 def place_in_list(new_names, new_values, schema_names, current_values):
@@ -285,7 +279,6 @@ def check_for_changes():
                     count += 1
                     outfile.write(line)
     print("{0} delete operations to be made.".format(count))
-
     # Write out a complete diff
     # diff = difflib.unified_diff(old, new, n=0)
     # with open("diff.csv", 'w') as outfile:
@@ -356,7 +349,7 @@ def gcloud_update_datastore():
                 try:
                     client.put_multi(tasks)
                 except BadRequest:
-                    pass
+                    remove(duplicates)
 
 
             successful.write(''.join(chunk))
@@ -389,14 +382,6 @@ def gcloud_update_bigquery():
     print('BigQuery job completed successfully.')
 
 
-def clean_files():
-    os.remove(FOLDER + 'asteroids.csv')
-    os.remove(FOLDER + 'asteroids.dat')
-    os.remove(FOLDER + 'asteroids_previous.csv')
-    os.remove(FOLDER + "overwrites.csv")
-    os.remove(FOLDER + "deletions.csv")
-
-
 def update_site():
     print('Beginning update of site backend...\n')
     start = time.time()
@@ -415,16 +400,7 @@ def update_site():
     print('\nUpdate of site backend completed successfully in {}:{}. '.format(round((end - start) // 60), round((end - start) % 60)))
 
 
-def test():
-    t = ("one"
-        'two')
-    print(t)
-
-
 if __name__ == '__main__':
     # update_site()
     # schema = get_schema(FOLDER + 'schema.json')
-
-    test()
-
     pass

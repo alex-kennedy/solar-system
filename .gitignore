@@ -1,7 +1,6 @@
-.credentials/key.py
-credentials.py
 .credentials
 .idea
+__pycache__
 astro/asteroids/*.csv
 astro/asteroids/*.dat
 astro/asteroids/archive/

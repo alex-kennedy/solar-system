@@ -32,3 +32,23 @@
 #     'U' : '30',
 #     'V' : '31',
 # }
+
+import unittest
+from get_small_bodies import *
+
+class TestUnpackFunctions(unittest.TestCase):
+
+    def test_packed_letter_to_number(self):
+        self.assertEqual(packed_letter_to_number('1'), '01')
+        self.assertEqual(packed_letter_to_number('9'), '09')
+        self.assertEqual(packed_letter_to_number('A'), '10')
+        self.assertEqual(packed_letter_to_number('I'), '18')
+        self.assertEqual(packed_letter_to_number('J'), '19')
+        self.assertEqual(packed_letter_to_number('K'), '20')
+        self.assertEqual(packed_letter_to_number('V'), '31')
+
+
+
+
+if __name__ == '__main__':
+    unittest.main()
