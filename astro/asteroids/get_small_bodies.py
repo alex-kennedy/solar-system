@@ -247,6 +247,15 @@ def gcloud_download_previous():
     print("Previous asteroid set downloaded successfully.")
 
 
+def place_in_list(new_names, new_values, schema_names, current_values):
+	for i in range(len(names)):
+		index = col_names.index(names[i])
+		while len(col) <= index:
+			col_values.append(None)
+		col_values[index] = new_values[i]
+	return col_values
+	
+	
 def process_small_bodies():
     col_names = [field['name'] for field in schema]
     start_col = [field.get('start_col') for field in schema if field.get('start_col') is not None]
