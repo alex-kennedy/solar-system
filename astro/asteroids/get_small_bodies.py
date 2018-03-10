@@ -33,7 +33,7 @@ def write_header(out_file, col_names):
     out_file.write(header_string + '\n')
 
 
-def line_to_list(line, start_col, end_col):
+def data_line_to_list(line, start_col, end_col):
     """Split a string to a list of strings by start_col and end_col"""
     separate_values = []
     for i in range(len(start_col)):
@@ -67,34 +67,30 @@ def parse_line(line):
             line[i] = None
 
 
-def unpack_designation(col_names, values):
+def unpack_designation(packed_designation):
     """Unpack the asteroid designation in the list of values, MPC format"""
-    index = col_names.index("designation")
-    designation  = values[index]
 
     # Test if the designation is already an integer, e.g. "00001" or "98575"
     try:
-        values[index] = str(int(designation))
+        values[index] = str(int(packed_designation))
         return
     except ValueError:
         pass
 
     # Test if the designation is a packed Asteroid Number
     try:
-        int(designation[1:])
-        tail = designation[1:]
-        head = str(ord(designation[0]) - 55)
-        values[index] = head + tail
-        return
+        int(packed_designation[1:])
+        tail = packed_designation[1:]
+        head = str(ord(packed_designation[0]) - 55)
+        return head + tail
     except ValueError:
         pass
 
     # Test for survey Asteroid formats
-    if designation[2] == "S":
-        head = designation[3:]
-        tail = designation[0] + "-" + designation [1]
-        values[index] = head + " " + tail
-        return
+    if packed_designation[2] == "S":
+        head = packed_designation[3:]
+        tail = packed_designation[0] + "-" + packed_designation[1]
+        return head + " " + tail
 
     centuries = {
         'I' : '18',
@@ -103,7 +99,7 @@ def unpack_designation(col_names, values):
     }
 
     new_desig = ""
-    new_desig += centuries.get(designation[0])
+    new_desig += centuries[designation[0]]
     new_desig += designation[1:3]
     new_desig += " "
     new_desig += designation[3] + designation[6]
@@ -121,103 +117,56 @@ def unpack_designation(col_names, values):
         new_desig += str(ord(designation[4]) - 55)
         new_desig += designation[5]
 
-    values[index] = new_desig
-    return
+    return new_desig
 
 
-def unpack_uncertainty_parameter(col_names, values):
-    u_index = col_names.index('u')
-    assert col_names.index('u_flag') == len(values)
-
-    u = values[u_index]
+def unpack_uncertainty_parameter(u):
     try:
         u = int(u)
-        values.append('')
+        u_flag = ''
     except ValueError:
-        values[u_index] = '-1'
-        values.append(u)
+        u_flag = u
+        u = -1
+
+    return u, u_flag
 
 
-def unpack_epoch(col_names, values):
+def epoch_letter_to_number(letter):
+    try:
+        int(letter)
+        return letter.rjust(2, '0')
+    except ValueError:
+        return ord(letter) - 55
+
+
+def unpack_epoch(epoch_packed):
     """Unpack epoch to date based on MPC format"""
-    epoch_index = col_names.index('epoch')
-    epoch_packed = values[epoch_index]
-    epoch_unpacked = ''
+    epoch_unpacked = (epoch_letter_to_number(epoch_packed[0]) +
+                      epoch_packed[1:3] +
+                      '-' +
+                      epoch_letter_to_number[3] +
+                      '-' +
+                      epoch_letter_to_number[4])
 
-    centuries = {
-        'I' : '18',
-        'J' : '19',
-        'K' : '20'
-    }
-
-    epoch_unpacked += centuries.get(epoch_packed[0]) + epoch_packed[1:3] + '-'
-
-    months_days = {
-        '1' : '01',
-        '2' : '02',
-        '3' : '03',
-        '4' : '04',
-        '5' : '05',
-        '6' : '06',
-        '7' : '07',
-        '8' : '08',
-        '9' : '09',
-        'A' : '10',
-        'B' : '11',
-        'C' : '12',
-        'D' : '13',
-        'E' : '14',
-        'F' : '15',
-        'G' : '16',
-        'H' : '17',
-        'I' : '18',
-        'J' : '19',
-        'K' : '20',
-        'L' : '21',
-        'M' : '22',
-        'N' : '23',
-        'O' : '24',
-        'P' : '25',
-        'Q' : '26',
-        'R' : '27',
-        'S' : '28',
-        'T' : '29',
-        'U' : '30',
-        'V' : '31',
-    }
-
-    epoch_unpacked += months_days.get(epoch_packed[3]) + '-'
-    epoch_unpacked += months_days.get(epoch_packed[4])
-
-    values[epoch_index] = epoch_unpacked
+    return epoch_unpacked
 
 
-def unpack_flags(col_names, values):
-    flags_index = col_names.index('flags')
-
-    flags_number = int(values[flags_index], 16)
+def unpack_flags(flags):
+    flags_number = int(flags, 16)
     flags_binary = "{0:b}".format(flags_number)
     flags_binary = flags_binary.rjust(16, '0')
     flags_binary = flags_binary[::-1]
 
     orbit_type = flags_binary[0:6][::-1]
     orbit_type = int(orbit_type, 2)
-    values.append(orbit_type)
 
     neo = flags_binary[11]
-    values.append(neo)
-
     neo_1km = flags_binary[12]
-    values.append(neo_1km)
-
     opposition_seen_earlier = flags_binary[13]
-    values.append(opposition_seen_earlier)
-
     critical_list_numbered = flags_binary[14]
-    values.append(critical_list_numbered)
-
     pha = flags_binary[15]
-    values.append(pha)
+
+    return orbit_type, neo, neo_1km, opposition_seen_earlier, critical_list_numbered, pha
 
 
 def download_latest():
@@ -248,26 +197,23 @@ def gcloud_download_previous():
 
 
 def place_in_list(new_names, new_values, schema_names, current_values):
-	for i in range(len(names)):
-		index = col_names.index(names[i])
-		while len(col) <= index:
-			col_values.append(None)
-		col_values[index] = new_values[i]
-	return col_values
-	
-	
+    if type(new_values) is not list:
+        new_names = [new_names]
+    if type(new_values) is not list:
+        new_values = [new_values]
+
+    for i in range(len(new_names)):
+        index = schema_names.index(new_names[i])
+        while len(current_values) <= index:
+            current_values.append(None)
+        current_values[index] = new_values[i]
+    return current_values
+
+
 def process_small_bodies():
     col_names = [field['name'] for field in schema]
     start_col = [field.get('start_col') for field in schema if field.get('start_col') is not None]
     end_col = [field.get('end_col') for field in schema if field.get('end_col') is not None]
-
-    # processed_fields = [
-    #     # [('new1', 'new2', ...), function_pointer]
-    #     [(), unpack_designation],
-    #     [('u_flag',), unpack_uncertainty_parameter],
-    #     [(), unpack_epoch],
-    #     [('orbit_type', 'neo', 'neo_1km', 'opposition_seen_earlier', 'critical_list_numbered', 'pha'), unpack_flags]
-    # ]
 
     with open(FOLDER + "asteroids.dat", "r") as dat, \
          open(FOLDER + "asteroids.csv", "w") as csv:
@@ -282,14 +228,24 @@ def process_small_bodies():
             if len(line) < 10:
                 continue
 
-            separate_values = line_to_list(line, start_col, end_col)
+            values = data_line_to_list(line, start_col, end_col)
 
-            # place_in_list function maybe????
+            # Replace packed with unpacked designation
+            designation = values[col_names.index('designation')]
+            values = place_in_list(['designation'], unpack_designation(designation), col_names, values)
 
-            # apply each processing function
-            # for unpack in processed_fields:
-            #     function_pointer = unpack[1]
-            #     function_pointer(col_names, separate_values)
+            # Uncertainty parameter and uncertainty flag
+            u = values[col_names.index('u')]
+            values = place_in_list(['u', 'u_flag'], unpack_uncertainty_parameter(u), col_names, values)
+
+            # Epoch
+            epoch_packed = values[col_names.index('epoch')]
+            values = place_in_list(['epoch'], unpack_epoch(epoch_packed))
+
+            # Flags
+            new_names = ['orbit_type', 'neo', 'neo_1km', 'opposition_seen_earlier', 'critical_list_numbered', 'pha']
+            flags = values[col_names.index('flags')]
+            values = place_in_list(new_names, unpack_flags(flags), col_names, values)
 
             string = join_list(separate_values)
             csv.write(string + '\n')
@@ -459,8 +415,16 @@ def update_site():
     print('\nUpdate of site backend completed successfully in {}:{}. '.format(round((end - start) // 60), round((end - start) % 60)))
 
 
+def test():
+    t = ("one"
+        'two')
+    print(t)
+
+
 if __name__ == '__main__':
     # update_site()
     # schema = get_schema(FOLDER + 'schema.json')
+
+    test()
 
     pass
