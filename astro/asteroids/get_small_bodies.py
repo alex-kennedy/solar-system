@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
-FOLDER = 'astro/asteroids/'
+FOLDER = ''
 GCLOUD_STORAGE_BUCKET = 'asteroid-data'
 BIGQUERY_DATASET_ID = 'asteroids_data'
 
@@ -100,7 +100,13 @@ def packed_letter_to_number(letter):
         int(letter)
         return letter.rjust(2, '0')
     except ValueError:
-        return str(ord(letter) - 55)
+        ord_letter = ord(letter)
+        if ord_letter >= 97 and ord_letter <= 122:
+            return str(ord_letter - 61)
+        elif ord_letter >= 65 and ord_letter <= 96:
+            return str(ord_letter - 55)
+        else:
+            raise ValueError('Letter argument not a number or letter.')
 
 
 def unpack_designation(packed_designation):
@@ -128,23 +134,23 @@ def unpack_designation(packed_designation):
         tail = packed_designation[0] + "-" + packed_designation[1]
         return head + " " + tail
 
-    new_desig = (packed_letter_to_number(designation[0]) +
-                 designation[1:3] +
+    new_desig = (packed_letter_to_number(packed_designation[0]) +
+                 packed_designation[1:3] +
                  " " +
-                 designation[3] +
-                 designation[6])
+                 packed_designation[3] +
+                 packed_designation[6])
 
     try:
-        int(designation[4:6])
+        int(packed_designation[4:6])
         is_int = True
     except ValueError:
         is_int = False
 
     if is_int:
-        if int(designation[4:6]) != 0:
-            new_desig += str(int(designation[4:6]))
+        if int(packed_designation[4:6]) != 0:
+            new_desig += str(int(packed_designation[4:6]))
     else:
-        new_desig += packed_letter_to_number(designation[4]) + designation[5]
+        new_desig += packed_letter_to_number(packed_designation[4]) + packed_designation[5]
 
     return new_desig
 
@@ -165,46 +171,49 @@ def unpack_epoch(epoch_packed):
     epoch_unpacked = (packed_letter_to_number(epoch_packed[0]) +
                       epoch_packed[1:3] +
                       '-' +
-                      packed_letter_to_number[3] +
+                      packed_letter_to_number(epoch_packed[3]) +
                       '-' +
-                      packed_letter_to_number[4])
+                      packed_letter_to_number(epoch_packed[4]))
 
     return epoch_unpacked
 
 
-def unpack_flags(flags):
-    flags_number = int(flags, 16)
-    flags_binary = "{0:b}".format(flags_number)
-    flags_binary = flags_binary.rjust(16, '0')
-    flags_binary = flags_binary[::-1]
+def unpack_flags(flags_hex):
+    flags = int(flags_hex, 16)
 
-    orbit_type = flags_binary[0:6][::-1]
-    orbit_type = int(orbit_type, 2)
+    pha = flags // 2**15
+    flags %= 2**15
 
-    neo = flags_binary[11]
-    neo_1km = flags_binary[12]
-    opposition_seen_earlier = flags_binary[13]
-    critical_list_numbered = flags_binary[14]
-    pha = flags_binary[15]
+    critical_list_numbered = flags // 2**14
+    flags %= 2**14
+
+    opposition_seen_earlier = flags // 2**13
+    flags %= 2**13
+
+    neo_1km = flags // 2**12
+    flags %= 2**12
+
+    neo = flags // 2**11
+    flags %= 2**6
+
+    orbit_type = flags
 
     return orbit_type, neo, neo_1km, opposition_seen_earlier, critical_list_numbered, pha
 
 
 def place_in_list(new_names, new_values, schema_names, current_values):
-    if type(new_values) is not list:
-        new_names = [new_names]
-    if type(new_values) is not list:
-        new_values = [new_values]
-
     for i in range(len(new_names)):
         index = schema_names.index(new_names[i])
-        while len(current_values) <= index:
-            current_values.append(None)
+
+        current_len = len(current_values)
+        if current_len <= index:
+            current_values += [None] * (index - current_len + 1)
+
         current_values[index] = new_values[i]
     return current_values
 
 
-def process_small_bodies():
+def process_small_bodies(schema):
     col_names = [field['name'] for field in schema]
     start_col = [field.get('start_col') for field in schema if field.get('start_col') is not None]
     end_col = [field.get('end_col') for field in schema if field.get('end_col') is not None]
@@ -234,14 +243,14 @@ def process_small_bodies():
 
             # Epoch
             epoch_packed = values[col_names.index('epoch')]
-            values = place_in_list(['epoch'], unpack_epoch(epoch_packed))
+            values = place_in_list(['epoch'], unpack_epoch(epoch_packed), col_names, values)
 
             # Flags
             new_names = ['orbit_type', 'neo', 'neo_1km', 'opposition_seen_earlier', 'critical_list_numbered', 'pha']
             flags = values[col_names.index('flags')]
             values = place_in_list(new_names, unpack_flags(flags), col_names, values)
 
-            string = join_list(separate_values)
+            string = join_list(values)
             csv.write(string + '\n')
 
 
@@ -314,9 +323,46 @@ def read_in_chunks(file_object, num_lines=500):
         yield chunk
 
 
+def get_datastore_task_list(chunk):
+    tasks = []
+    for line in chunk:
+        line = line.strip().split(',')
+        parse_line(line)
+
+        asteroid = dict(zip(field_names, line))
+        task_key = client.key('asteroid', asteroid['designation'])
+        del asteroid['designation']
+
+        task = datastore.Entity(
+            key=task_key,
+            exclude_from_indexes=[field['name'] for field in schema if field['datastore_indexed'] is False])
+        task.update(asteroid)
+        tasks.append(task)
+
+        return tasks
+
+
+def put_to_datastore(tasks):
+    if len(tasks) == 1:
+        client.put(tasks[0])
+    else:
+        try:
+            client.put_multi(tasks)
+        except BadRequest:
+            # Attempt same request with duplicates removed
+            print("init length: ", len(tasks))
+            unduplicated = []
+            keys = []
+            for task in tasks:
+                if task.key not in keys:
+                    unduplicated.append(task)
+                    keys.append(task.key)
+            print("new lenght", len(unduplicated))
+            client.put_multi(unduplicated)
+
+
 def gcloud_update_datastore():
     client = datastore.Client()
-
     field_names = [field['name'] for field in schema]
 
     count = 0
@@ -327,30 +373,8 @@ def gcloud_update_datastore():
 
         overwrites = read_in_chunks(overwrites_file_object, num_lines=500)
         for chunk in overwrites:
-            tasks = []
-            for line in chunk:
-                line = line.strip().split(',')
-                parse_line(line)
-
-                asteroid = dict(zip(field_names, line))
-                task_key = client.key('asteroid', asteroid['designation'])
-                del asteroid['designation']
-
-                task = datastore.Entity(
-                    key=task_key,
-                    exclude_from_indexes=[field['name'] for field in schema if field['datastore_indexed'] is False])
-                task.update(asteroid)
-                tasks.append(task)
-
-            # Put to datastore
-            if len(tasks) == 1:
-                client.put(tasks[0])
-            else:
-                try:
-                    client.put_multi(tasks)
-                except BadRequest:
-                    remove(duplicates)
-
+            tasks = get_datastore_task_list(chunk)
+            put_to_datastore(tasks)
 
             successful.write(''.join(chunk))
             count += len(tasks)
@@ -388,19 +412,19 @@ def update_site():
 
     schema = get_schema(FOLDER + 'schema.json')
 
-    #download_latest() #X
-    #gcloud_download_previous() #X
-    #process_small_bodies() #X
+    # download_latest()
+    #gcloud_download_previous()
+    process_small_bodies(schema)
     #check_for_changes()
-    gcloud_update_datastore()
-    glcoud_update_storage()
-    gcloud_update_bigquery()
+    #gcloud_update_datastore()
+    #glcoud_update_storage()
+    #gcloud_update_bigquery()
 
     end = time.time()
     print('\nUpdate of site backend completed successfully in {}:{}. '.format(round((end - start) // 60), round((end - start) % 60)))
 
 
 if __name__ == '__main__':
-    # update_site()
+    update_site()
     # schema = get_schema(FOLDER + 'schema.json')
     pass
