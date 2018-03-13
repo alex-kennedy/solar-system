@@ -16,6 +16,10 @@ GCLOUD_STORAGE_BUCKET = 'asteroid-data'
 BIGQUERY_DATASET_ID = 'asteroids_data'
 
 
+#-------------------------------------------------------------------------------
+#  Helper Functions
+#-------------------------------------------------------------------------------
+
 def get_schema(path):
     # Formatting from: https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
     with open(path) as schema_file:
@@ -47,26 +51,9 @@ def data_line_to_list(line, start_col, end_col):
     return separate_values
 
 
-def parse_line(line):
-    """Convert a list of strings to their types as specified in the schema"""
-    assert type(line) is list
-    assert len(line) == len(schema)
-
-    bigquery_field = [field['bigquery_field'] for field in schema]
-
-    for i in range(len(line)):
-        try:
-            if bigquery_field[i] == 'FLOAT':
-                line[i] = float(line[i])
-            elif bigquery_field[i] == 'INTEGER':
-                line[i] = int(line[i])
-            elif bigquery_field[i] == 'BOOLEAN':
-                line[i] = bool(int(line[i]))
-            elif bigquery_field[i] == 'DATETIME':
-                line[i] = datetime.datetime.strptime(line[i], '%Y-%m-%d')
-        except ValueError:
-            line[i] = None
-
+#-------------------------------------------------------------------------------
+#  Minor Planet Centre site interaction
+#-------------------------------------------------------------------------------
 
 def download_latest():
     chunk_size = 1024
@@ -83,16 +70,9 @@ def download_latest():
     print('Finished writing .dat file')
 
 
-def gcloud_download_previous():
-    client = storage.Client()
-    bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
-    assert bucket.exists()
-
-    print("Downloading previous asteroid set...")
-    blob = bucket.blob('asteroids.csv')
-    blob.download_to_filename(FOLDER + "asteroids_previous.csv")
-    print("Previous asteroid set downloaded successfully.")
-
+#-------------------------------------------------------------------------------
+#  Process MPC .dat file to .csv file
+#-------------------------------------------------------------------------------
 
 def packed_letter_to_number(letter):
     try:
@@ -201,6 +181,9 @@ def unpack_flags(flags_hex):
 
 
 def place_in_list(new_names, new_values, schema_names, current_values):
+    if type(new_values) is not tuple:
+        new_values = (new_values, )
+
     for i in range(len(new_names)):
         index = schema_names.index(new_names[i])
 
@@ -253,6 +236,10 @@ def process_small_bodies(schema):
             csv.write(string + '\n')
 
 
+#-------------------------------------------------------------------------------
+#  Determine changes to be made to Google Cloud Datastore, make those changes
+#-------------------------------------------------------------------------------
+
 def check_for_changes():
     over_write_keys = []
 
@@ -289,17 +276,6 @@ def check_for_changes():
     print("{0} delete operations to be made.".format(count))
 
 
-def glcoud_update_storage():
-    client = storage.Client()
-    bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
-    assert bucket.exists()
-
-    print("Writing CSV to google cloud...")
-    blob = bucket.blob('asteroids.csv')
-    blob.upload_from_filename(FOLDER + 'asteroids.csv')
-    print("Successfully wrote CSV to google cloud.")
-
-
 def read_in_chunks(file_object, num_lines=500):
     while True:
         chunk = []
@@ -317,11 +293,33 @@ def read_in_chunks(file_object, num_lines=500):
         yield chunk
 
 
-def get_datastore_task_list(chunk):
+def parse_line(line, schema):
+    """Convert a list of strings to their types as specified in the schema"""
+    assert type(line) is list
+    assert len(line) == len(schema)
+
+    bigquery_field = [field['bigquery_field'] for field in schema]
+
+    for i in range(len(line)):
+        try:
+            if bigquery_field[i] == 'FLOAT':
+                line[i] = float(line[i])
+            elif bigquery_field[i] == 'INTEGER':
+                line[i] = int(line[i])
+            elif bigquery_field[i] == 'BOOLEAN':
+                line[i] = bool(int(line[i]))
+            elif bigquery_field[i] == 'DATETIME':
+                line[i] = datetime.datetime.strptime(line[i], '%Y-%m-%d')
+        except ValueError:
+            line[i] = None
+
+
+def get_datastore_put_tasks(chunk, schema, client):
+    field_names = [field['name'] for field in schema]
     tasks = []
     for line in chunk:
         line = line.strip().split(',')
-        parse_line(line)
+        parse_line(line, schema)
 
         asteroid = dict(zip(field_names, line))
         task_key = client.key('asteroid', asteroid['designation'])
@@ -333,29 +331,49 @@ def get_datastore_task_list(chunk):
         task.update(asteroid)
         tasks.append(task)
 
-        return tasks
+    return tasks
 
 
-def put_to_datastore(tasks):
-    if len(tasks) == 1:
-        client.put(tasks[0])
-    else:
-        try:
-            client.put_multi(tasks)
-        except BadRequest:
-            # Attempt same request with duplicates removed
-            print("init length: ", len(tasks))
-            unduplicated = []
-            keys = []
-            for task in tasks:
-                if task.key not in keys:
-                    unduplicated.append(task)
-                    keys.append(task.key)
-            print("new lenght", len(unduplicated))
-            client.put_multi(unduplicated)
+def put_to_datastore(tasks, client):
+    try:
+        client.put_multi(tasks)
+    except BadRequest:
+        # Attempt same request with duplicates removed
+        unduplicated = []
+        keys = []
+        for task in tasks:
+            if task.key not in keys:
+                unduplicated.append(task)
+                keys.append(task.key)
+        client.put_multi(unduplicated)
 
 
-def gcloud_update_datastore():
+def get_datastore_delete_keys(chunk, schema, client):
+    field_names = [field['name'] for field in schema]
+    keys = []
+    for line in chunk:
+        line = line.strip().split(',')
+        parse_line(line, schema)
+
+        designation = line[field_names.index('designation')]
+        key = client.key('asteroid', designation)
+        keys.append(key)
+
+    return keys
+
+
+def delete_from_datastore(keys, client):
+    try:
+        client.delete_multi(keys)
+    except BadRequest:
+        unduplicated = []
+        for key in keys:
+            if key not in unduplicated:
+                unduplicated.append(key)
+        client.delete_multi(unduplicated)
+
+
+def gcloud_update_datastore(schema):
     client = datastore.Client()
     field_names = [field['name'] for field in schema]
 
@@ -364,8 +382,8 @@ def gcloud_update_datastore():
         open(FOLDER + 'successful_overwrites.csv', 'w') as successful:
         overwrites = read_in_chunks(overwrites_file_object, num_lines=500)
         for chunk in overwrites:
-            tasks = get_datastore_task_list(chunk)
-            put_to_datastore(tasks)
+            tasks = get_datastore_put_tasks(chunk, schema, client)
+            put_to_datastore(tasks, client)
             successful.write(''.join(chunk))
             count += len(tasks)
             print("Placed {} entities to Google Datastore ({} total)".format(len(tasks), count))
@@ -374,15 +392,19 @@ def gcloud_update_datastore():
     with open(FOLDER + 'deletions.csv') as deletions_file_object, \
         open(FOLDER + 'successful_deletions.csv', 'w') as successful:
         deletions = read_in_chunks(deletions_file_object, num_lines=500)
-        for chunk in overwrites:
-            # tasks = get_datastore_task_list(chunk)
-            # put_to_datastore(tasks)
+        for chunk in deletions:
+            keys = get_datastore_delete_keys(chunk, schema, client)
+            delete_from_datastore(tasks, client)
             successful.write(''.join(chunk))
             count += len(tasks)
             print("Deleted {} entities to Google Datastore ({} total)".format(len(tasks), count))
 
 
-def gcloud_update_bigquery():
+#-------------------------------------------------------------------------------
+#  Upload complete .csv to Google Cloud Bigquery
+#-------------------------------------------------------------------------------
+
+def gcloud_update_bigquery(schema):
     client = bigquery.Client()
 
     gcloud_storage_reference = 'gs://{0}/{1}'.format(GCLOUD_STORAGE_BUCKET, 'asteroids.csv')
@@ -407,6 +429,35 @@ def gcloud_update_bigquery():
     print('BigQuery job completed successfully.')
 
 
+#-------------------------------------------------------------------------------
+#  Google Cloud Storage interaction
+#-------------------------------------------------------------------------------
+
+def gcloud_download_previous():
+    client = storage.Client()
+    bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
+    assert bucket.exists()
+
+    print("Downloading previous asteroid set...")
+    blob = bucket.blob('asteroids_previous.csv')
+    blob.download_to_filename(FOLDER + "asteroids_previous.csv")
+    print("Previous asteroid set downloaded successfully.")
+
+
+def glcoud_update_storage():
+    client = storage.Client()
+    bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
+    assert bucket.exists()
+
+    blob = bucket.blob('asteroids_previous.csv')
+    blob.upload_from_filename(FOLDER + 'asteroids_previous.csv')
+    print("Successfully wrote CSV to google cloud.")
+
+
+#-------------------------------------------------------------------------------
+#  Ready workspace for next download
+#-------------------------------------------------------------------------------
+
 def get_num_lines_in_file(file_path):
     count = 0
     with open(file_path) as f:
@@ -417,17 +468,17 @@ def get_num_lines_in_file(file_path):
 
 
 def consolidate_local_files():
-    print('Checking Files...')
     n_overwrites = get_num_lines_in_file(FOLDER + 'overwrites.csv')
     n_successful_overwrites = get_num_lines_in_file(FOLDER + 'successful_overwrites.csv')
     if n_overwrites == n_successful_overwrites:
         print('Correct number of successful overwrites.')
     else:
-        raise Exception('Number of successful overwrites != overwrites. Exiting.')
+        pass
+        #raise Exception('Number of successful overwrites != overwrites. Exiting.')
 
     n_deletions = get_num_lines_in_file(FOLDER + 'deletions.csv')
     n_successful_deletions = get_num_lines_in_file(FOLDER + 'successful_deletions.csv')
-    if n_overwrites == n_successful_overwrites:
+    if n_deletions == n_successful_deletions:
         print('Correct number of successful deletions.')
     else:
         raise Exception('Number of successful deletions != deletions. Exiting.')
@@ -442,6 +493,10 @@ def consolidate_local_files():
     os.rename(FOLDER + 'asteroids.csv', FOLDER + 'asteroids_previous.csv')
 
 
+#-------------------------------------------------------------------------------
+#  Make updates
+#-------------------------------------------------------------------------------
+
 def update_site():
     print('Beginning update of site backend...\n')
     start = time.time()
@@ -450,7 +505,6 @@ def update_site():
 
     print("Requesting .dat file from Minor Planet Center...")
     download_latest()
-
 
     if not os.path.isfile(FOLDER + 'asteroids_previous.csv'):
         print('Previous file was not present in folder, retrieving from back up...')
@@ -465,11 +519,11 @@ def update_site():
     print('Changes recorded.')
 
     print('Updating datastore...')
-    gcloud_update_datastore()
+    gcloud_update_datastore(schema)
     print('Datastore updated!')
 
     print('Updating bigquery...')
-    gcloud_update_bigquery()
+    gcloud_update_bigquery(schema)
     print('Updated bigquery!')
 
     print('Checking and cleaning files...')
