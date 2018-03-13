@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
-FOLDER = ''
+FOLDER = 'astro/asteroids/'
 GCLOUD_STORAGE_BUCKET = 'asteroid-data'
 BIGQUERY_DATASET_ID = 'asteroids_data'
 
@@ -71,7 +71,6 @@ def parse_line(line):
 def download_latest():
     chunk_size = 1024
 
-    print("Requesting...")
     response = requests.get(URL, stream=True)
     assert response.status_code == 200
 
@@ -288,11 +287,6 @@ def check_for_changes():
                     count += 1
                     outfile.write(line)
     print("{0} delete operations to be made.".format(count))
-    # Write out a complete diff
-    # diff = difflib.unified_diff(old, new, n=0)
-    # with open("diff.csv", 'w') as outfile:
-    #     for line in diff:
-    #         outfile.write(line)
 
 
 def glcoud_update_storage():
@@ -366,19 +360,26 @@ def gcloud_update_datastore():
     field_names = [field['name'] for field in schema]
 
     count = 0
-    with open(FOLDER + 'asteroids.csv') as overwrites_file_object, \
-        open(FOLDER + 'successful.csv', 'a') as successful:
-
-        overwrites_file_object.readline() # ignore header FOR NOW
-
+    with open(FOLDER + 'overwrites.csv') as overwrites_file_object, \
+        open(FOLDER + 'successful_overwrites.csv', 'w') as successful:
         overwrites = read_in_chunks(overwrites_file_object, num_lines=500)
         for chunk in overwrites:
             tasks = get_datastore_task_list(chunk)
             put_to_datastore(tasks)
-
             successful.write(''.join(chunk))
             count += len(tasks)
             print("Placed {} entities to Google Datastore ({} total)".format(len(tasks), count))
+
+    count = 0
+    with open(FOLDER + 'deletions.csv') as deletions_file_object, \
+        open(FOLDER + 'successful_deletions.csv', 'w') as successful:
+        deletions = read_in_chunks(deletions_file_object, num_lines=500)
+        for chunk in overwrites:
+            # tasks = get_datastore_task_list(chunk)
+            # put_to_datastore(tasks)
+            successful.write(''.join(chunk))
+            count += len(tasks)
+            print("Deleted {} entities to Google Datastore ({} total)".format(len(tasks), count))
 
 
 def gcloud_update_bigquery():
@@ -406,19 +407,78 @@ def gcloud_update_bigquery():
     print('BigQuery job completed successfully.')
 
 
+def get_num_lines_in_file(file_path):
+    count = 0
+    with open(file_path) as f:
+        for line in f:
+            count += 1
+
+    return count
+
+
+def consolidate_local_files():
+    print('Checking Files...')
+    n_overwrites = get_num_lines_in_file(FOLDER + 'overwrites.csv')
+    n_successful_overwrites = get_num_lines_in_file(FOLDER + 'successful_overwrites.csv')
+    if n_overwrites == n_successful_overwrites:
+        print('Correct number of successful overwrites.')
+    else:
+        raise Exception('Number of successful overwrites != overwrites. Exiting.')
+
+    n_deletions = get_num_lines_in_file(FOLDER + 'deletions.csv')
+    n_successful_deletions = get_num_lines_in_file(FOLDER + 'successful_deletions.csv')
+    if n_overwrites == n_successful_overwrites:
+        print('Correct number of successful deletions.')
+    else:
+        raise Exception('Number of successful deletions != deletions. Exiting.')
+
+    os.remove(FOLDER + 'overwrites.csv')
+    os.remove(FOLDER + 'successful_overwrites.csv')
+    os.remove(FOLDER + 'deletions.csv')
+    os.remove(FOLDER + 'successful_deletions.csv')
+    os.remove(FOLDER + 'asteroids_previous.csv')
+    os.remove(FOLDER + 'asteroids.dat')
+
+    os.rename(FOLDER + 'asteroids.csv', FOLDER + 'asteroids_previous.csv')
+
+
 def update_site():
     print('Beginning update of site backend...\n')
     start = time.time()
 
     schema = get_schema(FOLDER + 'schema.json')
 
-    # download_latest()
-    #gcloud_download_previous()
+    print("Requesting .dat file from Minor Planet Center...")
+    download_latest()
+
+
+    if not os.path.isfile(FOLDER + 'asteroids_previous.csv'):
+        print('Previous file was not present in folder, retrieving from back up...')
+        gcloud_download_previous()
+        print('Backup file retrieved. ')
+
+    print('Processing .dat file...')
     process_small_bodies(schema)
-    #check_for_changes()
-    #gcloud_update_datastore()
-    #glcoud_update_storage()
-    #gcloud_update_bigquery()
+
+    print('Checking for changes to asteroids...')
+    check_for_changes()
+    print('Changes recorded.')
+
+    print('Updating datastore...')
+    gcloud_update_datastore()
+    print('Datastore updated!')
+
+    print('Updating bigquery...')
+    gcloud_update_bigquery()
+    print('Updated bigquery!')
+
+    print('Checking and cleaning files...')
+    consolidate_local_files()
+    print('File check successful, backend update successful!')
+
+    print('Backing up this asteroids csv to cloud storage...')
+    glcoud_update_storage()
+    print('Backup successful!')
 
     end = time.time()
     print('\nUpdate of site backend completed successfully in {}:{}. '.format(round((end - start) // 60), round((end - start) % 60)))
@@ -426,5 +486,3 @@ def update_site():
 
 if __name__ == '__main__':
     update_site()
-    # schema = get_schema(FOLDER + 'schema.json')
-    pass
