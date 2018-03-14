@@ -498,8 +498,8 @@ def consolidate_local_files():
 #-------------------------------------------------------------------------------
 
 def pickup():
-    if (os.path.isdir(FOLDER + 'overwrites.csv') and
-        os.path.isdir(FOLDER + 'successful_overwrites.csv')):
+    if (os.path.isfile(FOLDER + 'overwrites.csv') and
+        os.path.isfile(FOLDER + 'successful_overwrites.csv')):
         with open(FOLDER + 'overwrites.csv') as overwrites, \
             open(FOLDER + 'successful_overwrites.csv') as successful_overwrites:
             queued = overwrites.readlines()
@@ -513,8 +513,8 @@ def pickup():
     else:
         print('No successful overwrites to alter. ')
 
-    if (os.path.isdir(FOLDER + 'deletions.csv') and
-        os.path.isdir(FOLDER + 'successful_deletions.csv')):
+    if (os.path.isfile(FOLDER + 'deletions.csv') and
+        os.path.isfile(FOLDER + 'successful_deletions.csv')):
         with open(FOLDER + 'deletions.csv') as deletions, \
             open(FOLDER + 'successful_deletions.csv') as successful_deletions:
             queued = deletions.readlines()
@@ -571,5 +571,5 @@ def update_site():
 
 
 if __name__ == '__main__':
-    update_site()
-    # pickup()
+    # update_site()
+    pickup()
