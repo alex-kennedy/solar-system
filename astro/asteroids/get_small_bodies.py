@@ -497,6 +497,25 @@ def consolidate_local_files():
 #  Make updates
 #-------------------------------------------------------------------------------
 
+def pickup():
+    if not (
+        os.path.isdir(FOLDER + 'overwrites.csv') and
+        os.path.isdir(FOLDER + 'successful_overwrites.csv') and
+        os.path.isdir(FOLDER + 'deletions.csv') and
+        os.path.isdir(FOLDER + 'successful_deletions.csv')
+    ):
+        print("Restart the whole thing.")
+        return
+
+    with open(FOLDER + 'overwrites.csv') as overwrites, \
+        open(FOLDER + 'successful_overwrites.csv') as successful_overwrites:
+        queued = overwrites.readlines()
+        successful = successful_overwrites.readlines()
+
+    queued = queued[len(successful):]
+
+
+
 def update_site():
     print('Beginning update of site backend...\n')
     start = time.time()
@@ -539,4 +558,5 @@ def update_site():
 
 
 if __name__ == '__main__':
-    update_site()
+    #update_site()
+    pickup()
