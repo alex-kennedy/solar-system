@@ -498,22 +498,35 @@ def consolidate_local_files():
 #-------------------------------------------------------------------------------
 
 def pickup():
-    if not (
-        os.path.isdir(FOLDER + 'overwrites.csv') and
-        os.path.isdir(FOLDER + 'successful_overwrites.csv') and
-        os.path.isdir(FOLDER + 'deletions.csv') and
-        os.path.isdir(FOLDER + 'successful_deletions.csv')
-    ):
-        print("Restart the whole thing.")
-        return
+    if (os.path.isdir(FOLDER + 'overwrites.csv') and
+        os.path.isdir(FOLDER + 'successful_overwrites.csv')):
+        with open(FOLDER + 'overwrites.csv') as overwrites, \
+            open(FOLDER + 'successful_overwrites.csv') as successful_overwrites:
+            queued = overwrites.readlines()
+            successful = successful_overwrites.readlines()
 
-    with open(FOLDER + 'overwrites.csv') as overwrites, \
-        open(FOLDER + 'successful_overwrites.csv') as successful_overwrites:
-        queued = overwrites.readlines()
-        successful = successful_overwrites.readlines()
+            queued = queued[len(successful):]
 
-    queued = queued[len(successful):]
+        with open(FOLDER + 'overwrites.csv', 'w') as overwrites, \
+            open(FOLDER + 'successful_overwrites.csv', 'w') as successful_overwrites:
+            overwrites.write(''.join(queued))
+    else:
+        print('No successful overwrites to alter. ')
 
+    if (os.path.isdir(FOLDER + 'deletions.csv') and
+        os.path.isdir(FOLDER + 'successful_deletions.csv')):
+        with open(FOLDER + 'deletions.csv') as deletions, \
+            open(FOLDER + 'successful_deletions.csv') as successful_deletions:
+            queued = deletions.readlines()
+            successful = successful_deletions.readlines()
+
+            queued = queued[len(successful):]
+
+        with open(FOLDER + 'deletions.csv', 'w') as deletions, \
+            open(FOLDER + 'successful_deletions.csv', 'w') as successful_deletions:
+            deletions.write(''.join(queued))
+    else:
+        print('No successful deletions to alter')
 
 
 def update_site():
@@ -558,5 +571,5 @@ def update_site():
 
 
 if __name__ == '__main__':
-    #update_site()
-    pickup()
+    update_site()
+    # pickup()
