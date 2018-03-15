@@ -5,7 +5,7 @@ import os
 import time
 
 import requests
-from google.api_core.exceptions import BadRequest
+from google.api_core.exceptions import BadRequest, NotFound
 from google.cloud import bigquery, datastore, storage
 from tqdm import tqdm
 
@@ -406,25 +406,27 @@ def gcloud_update_datastore(schema):
 
 def gcloud_update_bigquery(schema):
     client = bigquery.Client()
-
-    gcloud_storage_reference = 'gs://{0}/{1}'.format(GCLOUD_STORAGE_BUCKET, 'asteroids.csv')
     dataset = client.dataset(BIGQUERY_DATASET_ID)
 
     job_config = bigquery.LoadJobConfig()
     job_config.source_format = 'CSV'
     job_config.skip_leading_rows = 1
-    job_config.schema = [bigquery.SchemaField(field['name'], field[bigquery_field]) for field in schema]
+    job_config.schema = [bigquery.SchemaField(field['name'], field['bigquery_field']) for field in schema]
 
     # Delete and reload
-    client.delete_table(dataset.table('asteroids'))
-    load_job = client.load_table_from_uri(
-        gcloud_storage_reference,
-        dataset.table('asteroids'),
-        job_config=job_config
-    )
+    try:
+        client.delete_table(dataset.table('asteroids'))
+    except NotFound:
+        pass
 
     print('Beginning load job from Cloud Storage to BigQuery...')
-    load_job.result()  # Waits for table load to complete.
+    with open(FOLDER + 'asteroids.csv', 'rb') as file_obj:
+        load_job = client.load_table_from_file(
+            file_obj,
+            dataset.table('asteroids'),
+            job_config=job_config
+        )
+    load_job.result()
     assert load_job.state == 'DONE'
     print('BigQuery job completed successfully.')
 
@@ -571,5 +573,5 @@ def update_site():
 
 
 if __name__ == '__main__':
-    # update_site()
-    pickup()
+    update_site()
+    # pickup()
