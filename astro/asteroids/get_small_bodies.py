@@ -575,3 +575,4 @@ def update_site():
 if __name__ == '__main__':
     update_site()
     # pickup()
+    pass
