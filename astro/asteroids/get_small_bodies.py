@@ -419,7 +419,7 @@ def gcloud_update_bigquery(schema):
     except NotFound:
         pass
 
-    print('Beginning load job from Cloud Storage to BigQuery...')
+    print('Beginning load job to BigQuery...')
     with open(FOLDER + 'asteroids.csv', 'rb') as file_obj:
         load_job = client.load_table_from_file(
             file_obj,
@@ -541,30 +541,30 @@ def update_site():
     download_latest()
 
     if not os.path.isfile(FOLDER + 'asteroids_previous.csv'):
-        print('Previous file was not present in folder, retrieving from back up...')
+        print('\nPrevious file was not present in folder, retrieving from back up...')
         gcloud_download_previous()
         print('Backup file retrieved. ')
 
-    print('Processing .dat file...')
+    print('\nProcessing .dat file...')
     process_small_bodies(schema)
 
-    print('Checking for changes to asteroids...')
+    print('\nChecking for changes to asteroids...')
     check_for_changes()
     print('Changes recorded.')
 
-    print('Updating datastore...')
+    print('\nUpdating datastore...')
     gcloud_update_datastore(schema)
     print('Datastore updated!')
 
-    print('Updating bigquery...')
+    print('\nUpdating bigquery...')
     gcloud_update_bigquery(schema)
     print('Updated bigquery!')
 
-    print('Checking and cleaning files...')
+    print('\nChecking and cleaning files...')
     consolidate_local_files()
     print('File check successful, backend update successful!')
 
-    print('Backing up this asteroids csv to cloud storage...')
+    print('\nBacking up this asteroids csv to cloud storage...')
     glcoud_update_storage()
     print('Backup successful!')
 
@@ -575,4 +575,3 @@ def update_site():
 if __name__ == '__main__':
     update_site()
     # pickup()
-    pass
