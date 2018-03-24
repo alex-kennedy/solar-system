@@ -47,7 +47,7 @@ def get_declination(ded, dem, des):
     return dec
 
 
-def get_cartesian(ra, dec, r=100, ndigits=4):
+def get_cartesian(ra, dec, r=100, ndigits=2):
     x = r * np.cos(dec) * np.cos(ra)
     y = r * np.cos(dec) * np.sin(ra)
     z = r * np.sin(dec)
@@ -58,7 +58,7 @@ def get_cartesian(ra, dec, r=100, ndigits=4):
     return x, y, z
 
 
-def get_intensity(vmag, ndigits=20):
+def get_intensity(vmag, ndigits=2):
     intensity = vmag.apply(lambda x: (100 ** (1./5)) ** (7.96 - x))
     intensity = intensity.apply(np.log)
     intensity *= 10/intensity.max()
