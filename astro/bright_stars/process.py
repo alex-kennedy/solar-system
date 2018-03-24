@@ -1,114 +1,105 @@
 import json
+
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import random
 import pandas as pd
 
-SMALL = True
+FOLDER = 'astro/bright_stars/'
 
-def process_catalog():
-    bright_stars = []
-    count = 1
-    with open('astro/bright_stars/catalog.txt', 'r') as f:
-        for line in f:
-            star = {}
+def get_schema(path):
+    # Formatting from: http://tdc-www.harvard.edu/catalogs/bsc5.readme
+    with open(path) as schema_file:
+        schema = json.load(schema_file)
 
-            line = line.ljust(197)
+    labels = [field['label'] for field in schema]
+    start_col = [field['start_col'] for field in schema]
+    end_col = [field['end_col'] for field in schema]
+    dtype = [field['type'] for field in schema]
+    return labels, start_col, end_col, dtype
 
-            star['hrn'] = line[0:4]
-            star['name'] = line[4:14]
-            star['dm'] = line[14:25]                # Durchmusterung Identification
-            star['hd_cat_num'] = line[25:31]
-            #star['sao_cat_num'] = line[31:37]
-            #star['fk5_num'] = line[37:41]
-            #star['ir_flag'] = line[41]
-            #star['ir_ref'] = line[42]
-            #star['double_multiple'] = line[43]
-            #star['ads'] = line[44:49]
-            #star['ads_comp'] = line[49:51]
-            #star['var_id'] = line[51:60]
-            #star['rah1900'] = line[60:62]
-            #star['ram1900'] = line[62:64]
-            #star['ras1900'] = line[64:68]
-            #star['ras1900'] = line[64:68]
-            #star['de_1900_sign'] = line[68]
-            #star['ded1900'] = line[69:71]
-            #star['dem1900'] = line[72:73]
-            #star['des1900'] = line[73:75]
-            star['rah'] = line[75:77]
-            star['ram'] = line[77:79]
-            star['ras'] = line[79:83]
-            star['de_sign'] = line[83]
-            star['ded'] = line[84:86]
-            star['dem'] = line[86:88]
-            star['des'] = line[88:90]
-            #star['glon'] = line[90:96]
-            #star['glat'] = line[96:102]
-            star['vmag'] = line[102:107]
-            #star['n_vmag'] = line[107]
-            #star['u_vmag'] = line[108]
-            #star['b_v'] = line[109:114]
-            #star['u_b_v'] = line[114]
-            #star['u_b'] = line[115:120]
-            #star['u_u_b'] = line[120]
-            #star['r_i'] = line[121:126]
-            #star['n_r_i'] = line[126]
-            #star['spectral_type'] = line[127:147]
-            #star['n_spectral_type'] = line[147]
-            #star['pmra'] = line[148:154]
-            #star['pmde'] = line[154:160]
-            #star['n_parallax'] = line[160]
-            #star['parallax'] = line[161:166]
-            #star['rad_vel'] = line[166:170]
-            #star['n_rad_vel'] = line[170:174]
-            #star['l_rad_vel'] = line[174:176]
-            #star['rot_vel'] = line[176:179]
-            #star['u_rot_vel'] = line[179]
-            #star['dmag'] = line[180:184]
-            #star['sep'] = line[184:190]
-            #star['mult_id'] = line[190:194]
-            #star['mult_id'] = line[194:196]
-            #star['note_flag'] = line[196]
 
-            for k, v in star.items():
-                star[k] = v.strip()
+def data_line_to_list(line, start_col, end_col):
+    """Split a string to a list of strings by start_col and end_col"""
+    separate_values = []
+    for i in range(len(start_col)):
+        lower = start_col[i] - 1 # -1 due to 0 indexing
+        upper = end_col[i]       # -1 due to 0 indexing, +1 due to exclusive indexing
 
-                try:
-                    if k in ['hrn', 'name', 'dm', 'hd_cat_num']:
-                        star[k] = int(v)
-                    else:
-                        star[k] = float(v)
-                except ValueError:
-                    pass
+        value = line[lower:upper].strip()
+        separate_values.append(value)
 
-            if star['rah'] != '':
-                star['ra_rad'] = ((1./24)*star['rah'] + (1./1440)*star['ram'] + (1./86400)*star['ras']) * 2*np.pi
-                star['dec_rad'] = ((1./360)*star['ded'] + (1./1440)*star['dem'] + (1./86400)*star['des']) * 2*np.pi
+    return separate_values
 
-                if star['de_sign'] == '-':
-                    star['dec_rad'] = -1 * star['dec_rad']
 
-                star['x'] = 100 * np.cos(star['dec_rad']) * np.cos(star['ra_rad'])
-                star['y'] = 100 * np.cos(star['dec_rad']) * np.sin(star['ra_rad'])
-                star['z'] = 100 * np.sin(star['dec_rad'])
+def parse_to_float(df, labels, dtype):
+    for i in range(len(labels)):
+        if dtype[i] == 'float':
+            df[labels[i]] = pd.to_numeric(df[labels[i]])
+    return df
 
-                star['intensity'] = (100 ** (1./5)) ** (7.96 - star['vmag'])
-                star['intensity'] = np.log(star['intensity'])
 
-                bright_stars.append(star)
+def get_ra(rah, ram, ras):
+    ra = ((1./24) * rah + (1./1440) * ram + (1./86400) * ras) * 2*np.pi
+    return ra
 
-    if SMALL:
-        for star in bright_stars:
-            for k in ['rah', 'ram', 'ras', 'hd_cat_num', 'hrn', 'de_sign', 'ded', 'dem', 'des', 'ra_rad', 'dec_rad', 'name', 'dm', 'vmag']:
-                del star[k]
 
-    stars_df = pd.DataFrame.from_dict(bright_stars)
+def get_declination(ded, dem, des):
+    dec = (ded + (1./60)*dem + (1./3600)*des) * 2*np.pi / 360
+    return dec
 
-    # Normalise intensity
-    stars_df['intensity'] *= 10/stars_df['intensity'].max()
 
-    stars_df.to_csv('astro/bright_stars/bright_stars.csv', index=False)
+def get_cartesian(ra, dec, r=100, ndigits=4):
+    x = r * np.cos(dec) * np.cos(ra)
+    y = r * np.cos(dec) * np.sin(ra)
+    z = r * np.sin(dec)
+
+    x = x.apply(round, ndigits=ndigits)
+    y = y.apply(round, ndigits=ndigits)
+    z = z.apply(round, ndigits=ndigits)
+    return x, y, z
+
+
+def get_intensity(vmag, ndigits=20):
+    intensity = vmag.apply(lambda x: (100 ** (1./5)) ** (7.96 - x))
+    intensity = intensity.apply(np.log)
+    intensity *= 10/intensity.max()
+    intensity = intensity.apply(round, ndigits=ndigits)
+    return intensity
+
+
+def process_bright_stars():
+    # Load data schema for parsing .dat file
+    labels, start_col, end_col, dtype = get_schema(FOLDER + 'schema.json')
+
+    # Load .dat file and split the lines to a list according to the schema
+    with open(FOLDER + 'catalog.txt') as dat:
+        lines = dat.readlines()
+    data = [data_line_to_list(line, start_col, end_col) for line in lines]
+
+    # Create a pd.DataFrame object of the stars, convert correct strings to floats,
+    # drop empty rows
+    df = pd.DataFrame(data, columns=labels)
+    df = parse_to_float(df, labels, dtype)
+    df.dropna(subset=['RAh'], inplace=True)
+
+    # Produce derived columns
+    derived_cols = {}
+    derived_cols['intensity'] = get_intensity(df['Vmag'])
+    derived_cols['ra'] = get_ra(df['RAh'], df['RAm'], df['RAs'])
+    derived_cols['dec'] = get_declination(df['DEd'], df['DEm'], df['DEs'])
+
+    x, y, z = get_cartesian(derived_cols['ra'], derived_cols['dec'])
+    derived_cols['x'] = x
+    derived_cols['y'] = y
+    derived_cols['z'] = z
+
+    # Produce dataframe from combined cols and concatenate them
+    derived_df = pd.DataFrame.from_dict(derived_cols)
+    df = pd.concat([df, derived_df], axis=1)
+
+    df.to_csv(FOLDER + 'full.csv')
+    df[['intensity', 'x', 'y', 'z']].to_csv(FOLDER + 'bright_stars.csv', index=False)
+
+
 
 if __name__ == '__main__':
-    process_catalog()
+    process_bright_stars()

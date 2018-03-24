@@ -3,4 +3,5 @@
 __pycache__
 astro/asteroids/*.csv
 astro/asteroids/*.dat
-astro/asteroids/archive/
+astro/bright_stars/full.csv
+*archive/
