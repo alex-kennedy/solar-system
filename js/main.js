@@ -18,8 +18,6 @@ function init() {
     addBrightStars();
     addPlanets();
 
-    getJET();
-
     console.timeEnd();
 }
 
@@ -147,10 +145,14 @@ function addPlanets() {
     $.get('astro/planets/planetary_elements.json', processPlanets);
     function processPlanets(data) {
 
-        for (var i = 0; i < data.length; i++) {
-            planets[i] = new Planet(data[i]);
+        for (var system_name in data) {
+            if (data.hasOwnProperty(system_name)) {
+                planets.push(new Planet(system_name, data[system_name]));
+            }
         }
-// console.log(planets);
+
+        console.log(planets);
+
     }
 }
 
@@ -170,15 +172,31 @@ function getCenturiesTT() {
 
 
 
-function OrbitingObject(semi_major_axis, eccentricity, inclination, mean_long, arg_peri, long_asc_node) {
-    this.semi_major_axis = semi_major_axis;
-    this.eccentricity = eccentricity;
-    this.inclination = inclination;
-    this.mean_long = mean_long;
-    this.arg_peri = arg_peri;
-    this.long_asc_node = long_asc_node;
+function OrbitingObject(name, a, e, I, L, long_peri, long_node) {
+    this.name = name || "";
+    this.a = a;
+    this.e = e;
+    this.I = I;
+    this.L = L;
+    this.long_peri = long_peri;
+    this.long_node = long_node;
 
-    this.time_of_orbit = Date.now();
+    this.solveKepler = function (tol) {
+        // Currently only solves in degrees
+        tol = typeof tol !== 'undefined' ? tol : 1.e-5;
+
+        var e_star = (180 / Math.PI) * this.e;
+        var E_n = this.M + e_star * Math.sin((Math.PI / 180) * this.M);
+        var delta = 360;
+
+        while (Math.abs(delta) < tol) {
+            delta = (this.M - (E_n - e_star * Math.sin((Math.PI / 180) * E_n))) / (1 - this.e * Math.cos((Math.PI / 180) * E_n));
+            E_n = E_n + delta;
+        }
+
+        return E_n;
+
+    };
 }
 
 OrbitingObject.prototype = {
@@ -188,31 +206,21 @@ OrbitingObject.prototype = {
 };
 
 
-function Planet(data) {
+function Planet(name, elements) {
 
-    this.name = data.name || "";
+    this.time_centuries = getCenturiesTT();
 
-    var time_centuries = (Date.now() - Date.UTC(2000, 0, 1, 12, 0, 0)) / (1000 * 60 * 60 * 24 * 36525);
-
-    var elements = [];
-    for (var i = 0; i < data.elements.length; i++) {
-
-        elements.push(data.elements[i] + time_centuries * data.deltas[i])
-
+    for (var key in elements) {
+        if (elements.hasOwnProperty(key)) {
+            elements[key] = elements[key][0] + this.time_centuries * elements[key][1];
+        }
     }
 
-    var semi_major_axis = elements[0];
-    var eccentricity = elements[1];
-    var inclination = elements[2];
-    var mean_long = elements[3];
-    var long_peri = elements[4];
-    var long_asc_node = elements[5];
+    OrbitingObject.call(this, name, elements['a'], elements['e'], elements['I'], elements['L'], elements['long_peri'], elements['long_node']);
 
-    var arg_peri = long_peri - long_asc_node;
+    this.arg_peri = this.long_peri - this.long_node;
+    this.M = ((this.L - this.long_peri - 180) % 360) + 180;
 
-    OrbitingObject.call(this, semi_major_axis, eccentricity, inclination, mean_long, arg_peri, long_asc_node);
-
-    this.mean_anomaly = ((mean_long - long_peri + 180) % 360) - 180;
 
 }
 
