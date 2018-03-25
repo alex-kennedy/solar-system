@@ -69,7 +69,6 @@ class TestUnpackFunctions(unittest.TestCase):
         self.assertEqual(unpack_uncertainty_parameter('D'), (-1, 'D'))
         self.assertEqual(unpack_uncertainty_parameter('F'), (-1, 'F'))
 
-# return orbit_type, neo, neo_1km, opposition_seen_earlier, critical_list_numbered, pha
 
     def test_unpack_flags(self):
         self.assertEqual(unpack_flags('5801'), (1, 1, 1, 0, 1, 0))

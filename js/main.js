@@ -18,6 +18,8 @@ function init() {
     addBrightStars();
     addPlanets();
 
+    getJET();
+
     console.timeEnd();
 }
 
@@ -148,9 +150,24 @@ function addPlanets() {
         for (var i = 0; i < data.length; i++) {
             planets[i] = new Planet(data[i]);
         }
-console.log(planets);
+// console.log(planets);
     }
 }
+
+
+function getNowTT() {
+  // Get the current time as a unix seconds, but in Terrestrial Time
+  return Date.now() / 1000 + 69.184;
+}
+
+
+function getCenturiesTT() {
+  // Get the number of centuries that have elapsed since J2000.0, TT
+  var nowTT = getNowTT();
+  return ((nowTT / 86400.0) - 10957.5) / 36525;
+}
+
+
 
 
 function OrbitingObject(semi_major_axis, eccentricity, inclination, mean_long, arg_peri, long_asc_node) {
@@ -208,4 +225,3 @@ Planet.prototype = Object.create(OrbitingObject.prototype, {
 
 init();
 animate();
-
