@@ -108,14 +108,14 @@
     "name": "arc_year_or_length",
     "start_col": 128,
     "end_col": 131,
-    "bigquery_field": "FLOAT",
+    "bigquery_field": "STRING",
     "datastore_indexed": false
   },
   {
     "name": "arc_year_last",
     "start_col": 128,
     "end_col": 131,
-    "bigquery_field": "INTEGER",
+    "bigquery_field": "STRING",
     "datastore_indexed": false
   },
   {

@@ -394,10 +394,10 @@ def gcloud_update_datastore(schema):
         deletions = read_in_chunks(deletions_file_object, num_lines=500)
         for chunk in deletions:
             keys = get_datastore_delete_keys(chunk, schema, client)
-            delete_from_datastore(tasks, client)
+            delete_from_datastore(keys, client)
             successful.write(''.join(chunk))
-            count += len(tasks)
-            print("Deleted {} entities to Google Datastore ({} total)".format(len(tasks), count))
+            count += len(keys)
+            print("Deleted {} entities to Google Datastore ({} total)".format(len(keys), count))
 
 
 #-------------------------------------------------------------------------------
