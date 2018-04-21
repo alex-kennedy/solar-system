@@ -1,0 +1,23 @@
+{
+  "name": "solar-system",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "csv": "^3.0.2",
+    "jquery": "^3.3.1",
+    "jquery-csv": "^0.8.9",
+    "parse-csv": "^0.2.0",
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2",
+    "react-scripts": "1.1.4",
+    "stats-js": "^1.0.0-alpha1",
+    "three": "^0.92.0",
+    "three-full": "^6.0.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
