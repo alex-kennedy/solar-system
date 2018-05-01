@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import * as THREE from 'three';
+import * as THREE from 'three-full';
 import { OrbitControls } from  'three-full'
 import * as Stats from 'stats-js'
 import * as $ from 'jquery'
