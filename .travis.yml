@@ -1,0 +1,18 @@
+matrix:
+  include:
+    - language: python
+      python:
+        - "3.5"
+      install:
+        - pip install -r requirements.txt
+      script:
+        - python -m astro.asteroids.test
+    
+    - language: node_js
+      node_js:
+        - "10"
+      before_script:
+        - cd app/
+        - npm install
+      script:
+        - npm run deploy

@@ -1,5 +1,5 @@
 import unittest
-from get_small_bodies import *
+from astro.asteroids.get_small_bodies import *
 
 class TestUnpackFunctions(unittest.TestCase):
 
