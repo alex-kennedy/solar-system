@@ -17,8 +17,8 @@ matrix:
       script:
         - npm run build
 
-deploy:
-  provider: pages
-  skip_cleanup: true
-  github-token: $GITHUB_TOKEN
-  local-dir: app/build/
+      deploy:
+        provider: pages
+        skip_cleanup: true
+        github-token: $GITHUB_TOKEN
+        local-dir: app/build/
