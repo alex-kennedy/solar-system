@@ -15,4 +15,10 @@ matrix:
         - cd app/
         - npm install
       script:
-        - npm run deploy
+        - npm run build
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github-token: $GITHUB_TOKEN
+  local-dir: app/build/
