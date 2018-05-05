@@ -5,8 +5,11 @@ import * as Stats from 'stats-js'
 import * as $ from 'jquery'
 import * as csv from 'parse-csv'
 
+import Planet from './Orbit.js'
+
 import stars_file from './stars/bright_stars.csv'
-import stars_texture from './stars/star.png'
+import stars_texture from './stars/star.svg'
+import planets from './planets/planetary_elements.json'
 
 class Scene extends Component {
     constructor(props) {
@@ -26,7 +29,7 @@ class Scene extends Component {
         this.addStats();
         this.loadBrightStars();
         this.addSun();
-        // addPlanets();
+        this.addPlanets(planets);
 
         // this.addCelestialSphereWireframe();
 
@@ -119,7 +122,7 @@ class Scene extends Component {
             positions[i * 3 + 1] = Number(bright_stars[i][2]);      // y
             positions[i * 3 + 2] = Number(bright_stars[i][3]);      // z
 
-            sizes[i] = Number(bright_stars[i][0]) / 2;
+            sizes[i] = Number(bright_stars[i][0]) / 2.25;
 
             color.toArray(colors, i * 3);
         }
@@ -159,6 +162,39 @@ class Scene extends Component {
         material.color.setRGB(1, 0.25, 0);
         var particles = new THREE.Points( geometry, material );
     
+        this.scene.add(particles);
+    }
+
+    addPlanets(planets_file) {
+
+        var planets = [];
+
+        for (var system_name in planets_file) {
+
+            if (planets_file.hasOwnProperty(system_name)) {
+                planets.push(new Planet(system_name, planets_file[system_name]));
+            }
+
+        }
+
+        var geometry = new THREE.Geometry();
+
+        for ( var i = 0; i < planets.length; i ++ ) {
+
+            var vertex = new THREE.Vector3();
+            vertex.x = planets[i].currentCoords[0];
+            vertex.y = planets[i].currentCoords[1];
+            vertex.z = planets[i].currentCoords[2];
+
+            geometry.vertices.push(vertex);
+
+        }
+
+        var size = 2;
+        var material = new THREE.PointsMaterial( {size: size} );
+        material.color.setRGB(0, 0, 1);
+        var particles = new THREE.Points( geometry, material );
+
         this.scene.add(particles);
     }
     
