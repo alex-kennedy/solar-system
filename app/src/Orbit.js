@@ -1,44 +1,62 @@
+import * as THREE from 'three-full'
+
+
+class OrbitCurve extends THREE.Curve {
+    constructor(focus, a, e, I, L, long_peri, long_node) {
+        super();
+
+        this.type = 'OrbitCurve';
+
+        this.focus = focus;
+
+        this.a = a; // semi-major axis 
+        this.e = e; // eccentricity
+        this.I = I; // inclination
+        this.L = L; // mean longitude
+        this.long_peri = long_peri; // longitude of perihelion
+        this.long_node = long_node; // longitude of the ascending node
+
+        this.arg_peri = this.long_peri - this.long_node;
+    }
+
+
+    getPoint(t, optionalTarget) {
+        var point = optionalTarget || new THREE.Vector3();
+
+        var E = t * 360;
+        var conversion  = Math.PI / 180;
+
+        var x = this.a * (Math.cos(conversion * E) - this.e);
+        var y = this.a * Math.sqrt(1 - Math.pow(this.e, 2)) * Math.sin(conversion * E);
+
+        var co = Math.cos(conversion * this.arg_peri);
+        var cO = Math.cos(conversion * this.long_node);
+        var cI = Math.cos(conversion * this.I);
+        var so = Math.sin(conversion * this.arg_peri);
+        var sO = Math.sin(conversion * this.long_node);
+        var sI = Math.sin(conversion * this.I);
+
+        var x_ecl = (co*cO - so*sO*cI) * x + (-so*cO - co*sO*cI) * y;
+        var y_ecl = (co*sO + so*cO*cI) * x + (-so*sO + co*cO*cI) * y;
+        var z_ecl = (so*sI) * x + (co*sI) * y;
+        
+        return point.set(x_ecl, y_ecl, z_ecl);
+    }
+}
+
+
 class OrbitingObject {
-    constructor(name, a, e, I, L, long_peri, long_node) {
+    constructor(name, focus, a, e, I, L, long_peri, long_node) {
         this.name = name || "";
-        this.a = a;
-        this.e = e;
-        this.I = I;
-        this.L = L;
-        this.long_peri = long_peri;
-        this.long_node = long_node;
+        this.focus = focus || new THREE.Vector3(0, 0, 0);
+
+        this.a = a; // semi-major axis 
+        this.e = e; // eccentricity
+        this.I = I; // inclination
+        this.L = L; // mean longitude
+        this.long_peri = long_peri; // longitude of perihelion
+        this.long_node = long_node; // longitude of the ascending node
     }
-
-    solveKepler(tol) {
-        // Currently only solves in degrees
-        tol = typeof tol !== 'undefined' ? tol : 1e-5;
-
-        var e_star = (180 / Math.PI) * this.e;
-        var E_n = this.M + e_star * Math.sin((Math.PI / 180) * this.M);
-        var delta = 360;
-        var count = 0;
-
-        while (Math.abs(delta) > tol) {
-            delta = (this.M - (E_n - e_star * Math.sin((Math.PI / 180) * E_n))) / (1 - this.e * Math.cos((Math.PI / 180) * E_n));
-            E_n = E_n + delta;
-            count = count + 1;
-        }
-
-        this.E = E_n;
-
-        return E_n;
-    }
-
-    getCenturiesTT() {
-        // Get the number of centuries that have elapsed since J2000.0, TT
-        var nowTT = this.getNowTT();
-        return ((nowTT / 86400.0) - 10957.5) / 36525;
-    }
-
-    getNowTT() {
-        // Get the current time as a unix seconds, but in Terrestrial Time
-        return Date.now() / 1000 + 69.184;
-      }
 
 }
 
@@ -51,40 +69,84 @@ class Planet extends OrbitingObject {
 
         for (var key in elements) {
             if (elements.hasOwnProperty(key)) {
+
+                // Part 1: compute planet's six elements
                 this[key] = elements[key][0] + this.time_centuries * elements[key][1];
+
             }
         }
 
+        // Part 2: compute argument of perihelion 
         this.arg_peri = this.long_peri - this.long_node;
+
+        // Part 3: modulus the mean anomaly so -180 <= M <= 180
         this.M = ((this.L - this.long_peri + 180) % 360) - 180;
-        
-        this.solveKepler();
-        this.transformToGeocentric();
     }
 
-    transformToGeocentric(true_anomaly) {
-        true_anomaly = true_anomaly || this.E || 0;
+    
+    solveKepler(tol) {
+        // Currently only solves in degrees
+        tol = tol || 1e-6;
 
-        var x = this.a * (Math.cos((Math.PI/180) * true_anomaly) - this.e);
-        var y = this.a * Math.sqrt(1 - Math.pow(this.e, 2));
+        var e_star = (180 / Math.PI) * this.e;
+        var E_n = this.M + e_star * Math.sin((Math.PI / 180) * this.M);
+        var delta = 360;
+        var count = 0;
 
-        var conv = Math.PI/180;
+        while (Math.abs(delta) > tol) {
+            delta = (this.M - (E_n - e_star * Math.sin((Math.PI / 180) * E_n))) / (1 - this.e * Math.cos((Math.PI / 180) * E_n));
+            E_n = E_n + delta;
+            count = count + 1;
+        }
 
-        var co = Math.cos(conv * this.arg_peri);
-        var cO = Math.cos(conv * this.long_node);
-        var cI = Math.cos(conv * this.I);
-        var so = Math.sin(conv * this.arg_peri);
-        var sO = Math.sin(conv * this.long_node);
-        var sI = Math.sin(conv * this.I);
+        return E_n;
+    }
 
-        var x_ecl = (co*cO - so*sO*cI) * x + (-so*cO - co*sO*cI) * y;
-        var y_ecl = (co*sO + so*cO*cI) * x + (-so*sO + co*cO*cI) * y;
-        var z_ecl = (so*sI) * x + (co*sI) * y;
 
-        this.currentCoords = [x_ecl, y_ecl, z_ecl];
-        return this.currentCoords;
+    getCenturiesTT() {
+        // Get the number of centuries that have elapsed since J2000.0, TT
+        var nowTT = this.getNowTT();
+        return ((nowTT / 86400.0) - 10957.5) / 36525;
+    }
+
+
+    getNowTT() {
+        // Get the current time as a unix seconds, but in Terrestrial Time
+        return Date.now() / 1000 + 69.184;
+      }
+    
+
+    initialiseOrbit() {
+        this.curve = new OrbitCurve(
+            this.focus,
+            this.a,
+            this.e,
+            this.I,
+            this.L,
+            this.long_peri,
+            this.long_node
+        ); 
+
+        this.E = this.solveKepler();
+        this.currentPosition = this.curve.getPoint(this.E / 360);
+    }
+
+
+    showInScene(scene) {
+        var points = this.curve.getPoints(50);
+        var geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+        var material = new THREE.LineBasicMaterial({color: 0x0000ff})
+
+        this.orbitLine = new THREE.Line(geometry, material);
+
+        scene.add(this.orbitLine);
     }
 
 }
 
-export default Planet
+
+export {
+    Planet,
+    OrbitCurve
+}
