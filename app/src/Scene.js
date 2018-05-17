@@ -4,6 +4,7 @@ import { OrbitControls } from  'three-full'
 import * as Stats from 'stats-js'
 import * as $ from 'jquery'
 import * as csv from 'parse-csv'
+// import * as MESHLINE from 'three.meshline'
 
 import { Planet } from './Orbit.js'
 
@@ -30,9 +31,11 @@ class Scene extends Component {
         this.loadBrightStars();
         this.addSun();
         this.addPlanets(planets);
-        // this.addTestEllipse();
+        // this.addTestLine();
 
         // this.addCelestialSphereWireframe();
+
+        console.log(this);
 
         window.addEventListener("resize", this.updateDimensions);
     }
@@ -167,13 +170,12 @@ class Scene extends Component {
     }
 
     addPlanets(planets_file) {
-
         var planets = [];
 
         for (var system_name in planets_file) {
 
             if (planets_file.hasOwnProperty(system_name)) {
-
+                
                 var planet = new Planet(system_name, planets_file[system_name]);
                 planet.initialiseOrbit();
                 planets.push(planet);
@@ -181,40 +183,26 @@ class Scene extends Component {
             }
 
         }
-
-        var geometry = new THREE.Geometry();
+        
+        // var geometry = new THREE.Geometry();
 
         for ( var i = 0; i < planets.length; i ++ ) {
 
-            geometry.vertices.push(planets[i].currentPosition);
-            planets[i].showInScene(this.scene);
+            // geometry.vertices.push(planets[i].currentPosition);
+            planets[i].showInScene(this.scene, colours[i]);
 
         }
 
-        var size = 2;
-        var material = new THREE.PointsMaterial( {size: size} );
-        material.color.setRGB(0, 0, 1);
-        var particles = new THREE.Points( geometry, material );
+        // var size = 2;
+        // var material = new THREE.PointsMaterial( {size: size} );
+        // material.color.setRGB(0, 0, 1);
+        // var particles = new THREE.Points( geometry, material );
 
-        console.log(planets);
+        this.planets = planets;
 
-        this.scene.add(particles);
+        // this.scene.add(particles);
     }
 
-
-    addTestEllipse() {
-        var curve = new THREE.EllipseCurve(0, 0, 10, 20, 0, 2 * Math.PI, false, 0);
-
-        var points = curve.getPoints(100);
-        var geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-        var material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-
-        var ellipse = new THREE.Line( geometry, material );
-
-        this.scene.add(ellipse);
-    }
-    
 
     updateDimensions() {
         const width = this.mount.clientWidth;
