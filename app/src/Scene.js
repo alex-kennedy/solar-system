@@ -189,7 +189,7 @@ class Scene extends Component {
         for ( var i = 0; i < planets.length; i ++ ) {
 
             // geometry.vertices.push(planets[i].currentPosition);
-            planets[i].showInScene(this.scene, colours[i]);
+            planets[i].showInScene(this.scene); //, colours[i]
 
         }
 

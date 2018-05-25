@@ -8,8 +8,11 @@
     "react-scripts": "1.0.13"
   },
   "dependencies": {
+    "@material-ui/core": "^1.0.0",
+    "@material-ui/icons": "^1.0.0",
     "csv": "^3.0.2",
     "jquery": "^3.3.1",
+    "materialize-css": "^1.0.0-rc.1",
     "parse-csv": "^0.2.0",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
