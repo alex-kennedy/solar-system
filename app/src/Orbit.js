@@ -1,4 +1,6 @@
-import * as THREE from 'three-full'
+import * as THREE from 'three-full';
+// import * as THREE from 'three';
+// import * as MESHLINE from 'three.meshline';
 
 
 class OrbitCurve extends THREE.Curve {
@@ -62,9 +64,10 @@ class OrbitingObject {
 
 
 class Planet extends OrbitingObject {
-    constructor(name, elements) {
+    constructor(name, elements, color) {
         super(name);
         
+        this.color = color;
         this.time_centuries = this.getCenturiesTT();
 
         for (var key in elements) {
@@ -132,15 +135,15 @@ class Planet extends OrbitingObject {
     }
 
 
-    showInScene(scene) {
-        var points = this.curve.getPoints(50);
+    showInScene(scene, color) {
+        var points = this.curve.getPoints(100);
+
         var geometry = new THREE.BufferGeometry().setFromPoints(points);
+        var material = new THREE.LineBasicMaterial({color: color})
 
-        var material = new THREE.LineBasicMaterial({color: 0x0000ff})
+        var orbitLine = new THREE.Line(geometry, material);
 
-        this.orbitLine = new THREE.Line(geometry, material);
-
-        scene.add(this.orbitLine);
+        scene.add(orbitLine);
     }
 
 }

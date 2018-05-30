@@ -184,23 +184,23 @@ class Scene extends Component {
 
         }
         
-        // var geometry = new THREE.Geometry();
+        var geometry = new THREE.Geometry();
 
         for ( var i = 0; i < planets.length; i ++ ) {
 
-            // geometry.vertices.push(planets[i].currentPosition);
-            planets[i].showInScene(this.scene, colours[i]);
+            geometry.vertices.push(planets[i].currentPosition);
+            planets[i].showInScene(this.scene); //, colours[i]
 
         }
 
-        // var size = 2;
-        // var material = new THREE.PointsMaterial( {size: size} );
-        // material.color.setRGB(0, 0, 1);
-        // var particles = new THREE.Points( geometry, material );
+        var size = 1;
+        var material = new THREE.PointsMaterial( {size: size} );
+        material.color.setRGB(1, 1, 1);
+        var particles = new THREE.Points( geometry, material );
 
         this.planets = planets;
 
-        // this.scene.add(particles);
+        this.scene.add(particles);
     }
 
 
