@@ -139,7 +139,7 @@ class Planet extends OrbitingObject {
         var points = this.curve.getPoints(100);
 
         var geometry = new THREE.BufferGeometry().setFromPoints(points);
-        var material = new THREE.LineBasicMaterial({color: color, linewidth: 1})
+        var material = new THREE.LineBasicMaterial({color: color})
 
         var orbitLine = new THREE.Line(geometry, material);
 
