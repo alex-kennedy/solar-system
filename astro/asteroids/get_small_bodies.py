@@ -585,7 +585,7 @@ def update_site():
     print('Backup successful!')
 
     end = time.time()
-    print('\nUpdate of site backend completed successfully in {}:{}. '.format(str(datetime.timedelta(seconds=end-start))))
+    print('\nUpdate of site backend completed successfully in {}. '.format(str(datetime.timedelta(seconds=end-start))))
 
     slack_notify('Asteroids updated successfully for the day! :+1: \n There were {0} writes and {1} deletions. It took {2}.'.format(
             n_successful_overwrites, 
