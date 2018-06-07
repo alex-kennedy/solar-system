@@ -8,12 +8,14 @@ import requests
 from google.api_core.exceptions import BadRequest, NotFound
 from google.cloud import bigquery, datastore, storage
 from tqdm import tqdm
+from slackclient import SlackClient
 
 
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
 FOLDER = 'astro/asteroids/'
 GCLOUD_STORAGE_BUCKET = 'asteroid-data'
 BIGQUERY_DATASET_ID = 'asteroids_data'
+SLACK_CHANNEL = 'CB1THMD1D'
 
 
 #-------------------------------------------------------------------------------
@@ -49,6 +51,19 @@ def data_line_to_list(line, start_col, end_col):
         separate_values.append(value)
 
     return separate_values
+
+
+def slack_notify(message, channel):
+    with open('.credentials/slack.json') as conf:
+        token = json.load(conf)['BOT_TOKEN']
+
+    sc = SlackClient(token)
+
+    sc.api_call(
+        "chat.postMessage",
+        channel=channel,
+        text=message
+    )
 
 
 #-------------------------------------------------------------------------------
@@ -475,8 +490,7 @@ def consolidate_local_files():
     if n_overwrites == n_successful_overwrites:
         print('Correct number of successful overwrites.')
     else:
-        pass
-        #raise Exception('Number of successful overwrites != overwrites. Exiting.')
+        raise Exception('Number of successful overwrites != overwrites. Exiting.')
 
     n_deletions = get_num_lines_in_file(FOLDER + 'deletions.csv')
     n_successful_deletions = get_num_lines_in_file(FOLDER + 'successful_deletions.csv')
@@ -493,6 +507,8 @@ def consolidate_local_files():
     os.remove(FOLDER + 'asteroids.dat')
 
     os.rename(FOLDER + 'asteroids.csv', FOLDER + 'asteroids_previous.csv')
+
+    return n_successful_overwrites, n_successful_deletions
 
 
 #-------------------------------------------------------------------------------
@@ -561,7 +577,7 @@ def update_site():
     print('Updated bigquery!')
 
     print('\nChecking and cleaning files...')
-    consolidate_local_files()
+    n_successful_overwrites, n_successful_deletions = consolidate_local_files()
     print('File check successful, backend update successful!')
 
     print('\nBacking up this asteroids csv to cloud storage...')
@@ -569,9 +585,22 @@ def update_site():
     print('Backup successful!')
 
     end = time.time()
-    print('\nUpdate of site backend completed successfully in {}:{}. '.format(round((end - start) // 60), round((end - start) % 60)))
+    print('\nUpdate of site backend completed successfully in {}:{}. '.format(str(datetime.timedelta(seconds=end-start))))
+
+    slack_notify('Asteroids updated successfully for the day! :+1: \n There were {0} writes and {1} deletions. It took {2}.'.format(
+            n_successful_overwrites, 
+            n_successful_deletions, 
+            str(datetime.timedelta(seconds=end-start))
+        ), 
+        SLACK_CHANNEL
+    )
 
 
 if __name__ == '__main__':
-    update_site()
-    # pickup()
+    try:
+        update_site()
+    except Exception as e:
+        slack_notify('Update failed for some reason :cry:', SLACK_CHANNEL)
+        raise e
+
+    #pickup()
