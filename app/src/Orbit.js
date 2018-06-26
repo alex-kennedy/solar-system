@@ -1,6 +1,6 @@
 import * as THREE from 'three-full';
 // import * as THREE from 'three';
-// import * as MESHLINE from 'three.meshline';
+import * as MESHLINE from 'three.meshline';
 
 
 class OrbitCurve extends THREE.Curve {
@@ -107,16 +107,18 @@ class Planet extends OrbitingObject {
 
 
     getCenturiesTT() {
+
         // Get the number of centuries that have elapsed since J2000.0, TT
         var nowTT = this.getNowTT();
         return ((nowTT / 86400.0) - 10957.5) / 36525;
+
     }
 
 
     getNowTT() {
         // Get the current time as a unix seconds, but in Terrestrial Time
         return Date.now() / 1000 + 69.184;
-      }
+    }
     
 
     initialiseOrbit() {
@@ -135,15 +137,29 @@ class Planet extends OrbitingObject {
     }
 
 
-    showInScene(scene, color) {
+    showInScene(scene, camera, color) {
         var points = this.curve.getPoints(100);
 
         var geometry = new THREE.BufferGeometry().setFromPoints(points);
-        var material = new THREE.LineBasicMaterial({color: color})
+        geometry = geometry.getAttribute('position').array; // Needed due to strange error...
 
-        var orbitLine = new THREE.Line(geometry, material);
+        var line = new MESHLINE.MeshLine();
+        line.setGeometry(geometry)
 
-        scene.add(orbitLine);
+        var material = new MESHLINE.MeshLineMaterial({
+            useMap: false,
+            color: new THREE.Color( 1, 1, 1 ),
+            opacity: 1,
+            resolution: new THREE.Vector2( window.innerWidth, window.innerHeight ),
+            sizeAttenuation: false,
+            lineWidth: 5,
+            near: camera.near,
+            far: camera.far
+        });
+
+        var mesh = new THREE.Mesh(line.geometry, material);
+        scene.add(mesh);
+
     }
 
 }

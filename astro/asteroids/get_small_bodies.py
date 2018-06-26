@@ -582,18 +582,20 @@ def update_site():
 
     print('\nBacking up this asteroids csv to cloud storage...')
     glcoud_update_storage()
-    print('Backup successful!')
+    print('Backup successful!\n')
 
     end = time.time()
-    print('\nUpdate of site backend completed successfully in {}. '.format(str(datetime.timedelta(seconds=end-start))))
 
-    slack_notify('Asteroids updated successfully for the day! :+1: \n There were {0} writes and {1} deletions. It took {2}.'.format(
+    delta = str(datetime.timedelta(seconds=end-start)).split('.')[0]
+    message = 'Asteroids updated successfully for the day! :+1:\n' \
+        'There were {0} writes and {1} deletions. It took {2}.'.format(
             n_successful_overwrites, 
             n_successful_deletions, 
-            str(datetime.timedelta(seconds=end-start))
-        ), 
-        SLACK_CHANNEL
-    )
+            delta
+        )
+
+    print('\nUpdate of site backend completed successfully in {}. '.format(delta))
+    slack_notify(message, SLACK_CHANNEL)
 
 
 if __name__ == '__main__':

@@ -4,7 +4,6 @@ import { OrbitControls } from  'three-full'
 import * as Stats from 'stats-js'
 import * as $ from 'jquery'
 import * as csv from 'parse-csv'
-// import * as MESHLINE from 'three.meshline'
 
 import { Planet } from './Orbit.js'
 
@@ -31,11 +30,8 @@ class Scene extends Component {
         this.loadBrightStars();
         this.addSun();
         this.addPlanets(planets);
-        // this.addTestLine();
 
         // this.addCelestialSphereWireframe();
-
-        console.log(this);
 
         window.addEventListener("resize", this.updateDimensions);
     }
@@ -189,7 +185,7 @@ class Scene extends Component {
         for ( var i = 0; i < planets.length; i ++ ) {
 
             geometry.vertices.push(planets[i].currentPosition);
-            planets[i].showInScene(this.scene); //, colours[i]
+            planets[i].showInScene(this.scene, this.camera); //, colours[i]
 
         }
 
