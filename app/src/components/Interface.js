@@ -6,7 +6,7 @@ import Paper from '@material-ui/core/Paper';
 import Toolbar from '@material-ui/core/Toolbar'
 // import MenuIcon from '@material-ui/icons/Menu'
 
-import svgLogo from './logo.svg'
+import svgLogo from './../images/logo.svg'
 
 const theme = createMuiTheme({
     palette: {

@@ -7,9 +7,9 @@ import * as csv from 'parse-csv'
 
 import { Planet } from './Orbit.js'
 
-import stars_file from './stars/bright_stars.csv'
-import stars_texture from './stars/star.svg'
-import planets from './planets/planetary_elements.json'
+import stars_file from './../assets/stars/bright_stars.csv'
+import stars_texture from './../assets/stars/star.svg'
+import planets from './../assets/planets/planetary_elements.json'
 
 class Scene extends Component {
     constructor(props) {
