@@ -1,3 +1,4 @@
+warnings_are_errors: false
 matrix:
   include:
     - language: python
