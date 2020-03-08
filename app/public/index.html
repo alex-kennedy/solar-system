@@ -2,55 +2,66 @@
 <html lang="en">
   <head>
     <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-117981617-1"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=UA-117981617-1"
+    ></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-      gtag('config', 'UA-117981617-1');
+      gtag("config", "UA-117981617-1");
     </script>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="theme-color" content="#000000">
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.png">
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="theme-color" content="#000000" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.png" />
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500"
+    />
 
     <!-- Custom shaders for stars -->
     <script type="x-shader/x-vertex" id="vertexshader">
-			attribute float size;
-			attribute vec3 color_shader;
+      attribute float size;
+      attribute vec3 color_shader;
 
-			varying vec3 vColor;
+      varying vec3 vColor;
 
-			void main() {
+      void main() {
 
-				vColor = color_shader;
+      	vColor = color_shader;
 
-				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+      	vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 
-				gl_PointSize = size * ( 300.0 / -mvPosition.z );
+      	gl_PointSize = size * ( 300.0 / -mvPosition.z );
 
-				gl_Position = projectionMatrix * mvPosition;
+      	gl_Position = projectionMatrix * mvPosition;
 
-			}
+      }
     </script>
     <script type="x-shader/x-fragment" id="fragmentshader">
-    	uniform vec3 color;
-			uniform sampler2D texture;
+      uniform vec3 color;
+      uniform sampler2D texture;
 
-			varying vec3 vColor;
+      varying vec3 vColor;
 
-			void main() {
+      void main() {
 
-				vec4 color = vec4( color * vColor, 1.0 ) * texture2D( texture, gl_PointCoord );
+      	vec4 color = vec4( color * vColor, 1.0 ) * texture2D( texture, gl_PointCoord );
 
-				gl_FragColor = color;
+      	gl_FragColor = color;
 
-			}
+      }
     </script>
 
     <title>Solar System</title>
