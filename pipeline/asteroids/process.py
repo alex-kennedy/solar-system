@@ -1,74 +1,15 @@
 import datetime
-import difflib
 import json
 import os
 import time
 
 import requests
-from google.api_core.exceptions import BadRequest, NotFound
-from google.cloud import bigquery, datastore, storage
 from tqdm import tqdm
-from slackclient import SlackClient
 
 
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
-FOLDER = 'astro/asteroids/'
-GCLOUD_STORAGE_BUCKET = 'asteroid-data'
-BIGQUERY_DATASET_ID = 'asteroids_data'
-SLACK_CHANNEL = 'CB1THMD1D'
+FOLDER = 'data/asteroids/'
 
-
-#-------------------------------------------------------------------------------
-#  Helper Functions
-#-------------------------------------------------------------------------------
-
-def get_schema(path):
-    # Formatting from: https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
-    with open(path) as schema_file:
-        return json.load(schema_file)
-
-
-def join_list(list_to_join, sep=','):
-    """Combine a list of objects into one string separated by sep."""
-    string = sep.join([str(i) for i in list_to_join])
-    return string
-
-
-def write_header(out_file, col_names):
-    """Add a header to the .csv outfile, determined by the list col_names"""
-    header_string = join_list(col_names)
-    out_file.write(header_string + '\n')
-
-
-def data_line_to_list(line, start_col, end_col):
-    """Split a string to a list of strings by start_col and end_col"""
-    separate_values = []
-    for i in range(len(start_col)):
-        lower = start_col[i] - 1 # -1 due to 0 indexing
-        upper = end_col[i]       # -1 due to 0 indexing, +1 due to exclusive indexing
-
-        value = line[lower:upper].strip()
-        separate_values.append(value)
-
-    return separate_values
-
-
-def slack_notify(message, channel):
-    with open('.credentials/slack.json') as conf:
-        token = json.load(conf)['BOT_TOKEN']
-
-    sc = SlackClient(token)
-
-    sc.api_call(
-        "chat.postMessage",
-        channel=channel,
-        text=message
-    )
-
-
-#-------------------------------------------------------------------------------
-#  Minor Planet Centre site interaction
-#-------------------------------------------------------------------------------
 
 def download_latest():
     chunk_size = 1024
@@ -84,10 +25,6 @@ def download_latest():
             dat.write(chunk)
     print('Finished writing .dat file')
 
-
-#-------------------------------------------------------------------------------
-#  Process MPC .dat file to .csv file
-#-------------------------------------------------------------------------------
 
 def packed_letter_to_number(letter):
     try:
@@ -149,6 +86,17 @@ def unpack_designation(packed_designation):
     return new_desig
 
 
+def unpack_epoch(epoch_packed):
+    """Unpack epoch to date based on MPC format"""
+    epoch_unpacked = (packed_letter_to_number(epoch_packed[0]) +
+                      epoch_packed[1:3] +
+                      '-' +
+                      packed_letter_to_number(epoch_packed[3]) +
+                      '-' +
+                      packed_letter_to_number(epoch_packed[4]))
+    return epoch_unpacked
+
+
 def unpack_uncertainty_parameter(u):
     try:
         u = int(u)
@@ -158,18 +106,6 @@ def unpack_uncertainty_parameter(u):
         u = -1
 
     return u, u_flag
-
-
-def unpack_epoch(epoch_packed):
-    """Unpack epoch to date based on MPC format"""
-    epoch_unpacked = (packed_letter_to_number(epoch_packed[0]) +
-                      epoch_packed[1:3] +
-                      '-' +
-                      packed_letter_to_number(epoch_packed[3]) +
-                      '-' +
-                      packed_letter_to_number(epoch_packed[4]))
-
-    return epoch_unpacked
 
 
 def unpack_flags(flags_hex):
