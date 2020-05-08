@@ -1,177 +1,152 @@
 [
   {
-    "label": "HR",
-    "explanations": "[1/9110]+ Harvard Revised = Bright Star Number",
-    "start_col": 1,
-    "end_col": 4,
-    "type": "string"
+    "column_name": "HR",
+    "long_name": "[1/9110]+ Harvard Revised = Bright Star Number",
+    "colspec": [0, 4],
+    "dtype": "str"
   },
   {
-    "label": "Name",
-    "explanations": "Name, generally Bayer and/or Flamsteed name",
-    "start_col": 5,
-    "end_col": 14,
-    "type": "string"
+    "column_name": "Name",
+    "long_name": "Name, generally Bayer and/or Flamsteed name",
+    "colspec": [4, 14],
+    "dtype": "str"
   },
   {
-    "label": "DM",
-    "explanations": "Durchmusterung Identification (zone bytes 17-19)",
-    "start_col": 15,
-    "end_col": 25,
-    "type": "string"
+    "column_name": "DM",
+    "long_name": "Durchmusterung Identification (zone bytes 17-19)",
+    "colspec": [14, 25],
+    "dtype": "str"
   },
   {
-    "label": "HD",
-    "explanations": "[1/225300]? Henry Draper Catalog Number",
-    "start_col": 26,
-    "end_col": 31,
-    "type": "string"
+    "column_name": "HD",
+    "long_name": "[1/225300]? Henry Draper Catalog Number",
+    "colspec": [25, 31],
+    "dtype": "str"
   },
   {
-    "label": "SAO",
-    "explanations": "[1/258997]? SAO Catalog Number",
-    "start_col": 32,
-    "end_col": 37,
-    "type": "string"
+    "column_name": "SAO",
+    "long_name": "[1/258997]? SAO Catalog Number",
+    "colspec": [31, 37],
+    "dtype": "str"
   },
   {
-    "label": "FK5",
-    "explanations": "FK5 star Number",
-    "start_col": 38,
-    "end_col": 41,
-    "type": "string"
+    "column_name": "FK5",
+    "long_name": "FK5 star Number",
+    "colspec": [37, 41],
+    "dtype": "str"
   },
   {
-    "label": "Multiple",
-    "explanations": "[AWDIRS] Double or multiple-star code",
-    "start_col": 44,
-    "end_col": 44,
-    "type": "string"
+    "column_name": "Multiple",
+    "long_name": "[AWDIRS] Double or multiple-star code",
+    "colspec": [43, 45],
+    "dtype": "str"
   },
   {
-    "label": "RAh",
-    "explanations": "Hours RA, equinox J2000, epoch 2000.0 (1)",
-    "start_col": 76,
-    "end_col": 77,
-    "type": "float"
+    "column_name": "RAh",
+    "long_name": "Hours RA, equinox J2000, epoch 2000.0 (1)",
+    "colspec": [75, 77],
+    "dtype": "float"
   },
   {
-    "label": "RAm",
-    "explanations": "Minutes RA, equinox J2000, epoch 2000.0 (1)",
-    "start_col": 78,
-    "end_col": 79,
-    "type": "float"
+    "column_name": "RAm",
+    "long_name": "Minutes RA, equinox J2000, epoch 2000.0 (1)",
+    "colspec": [77, 79],
+    "dtype": "float"
   },
   {
-    "label": "RAs",
-    "explanations": "Seconds RA, equinox J2000, epoch 2000.0 (1)",
-    "start_col": 80,
-    "end_col": 83,
-    "type": "float"
+    "column_name": "RAs",
+    "long_name": "Seconds RA, equinox J2000, epoch 2000.0 (1)",
+    "colspec": [79, 83],
+    "dtype": "float"
   },
   {
-    "label": "DEd",
-    "explanations": "Degrees Dec, equinox J2000, epoch 2000.0 (1)",
-    "start_col": 84,
-    "end_col": 86,
-    "type": "float"
+    "column_name": "DEd",
+    "long_name": "Degrees Dec, equinox J2000, epoch 2000.0 (1)",
+    "colspec": [83, 86],
+    "dtype": "float"
   },
   {
-    "label": "DEm",
-    "explanations": "Minutes Dec, equinox J2000, epoch 2000.0 (1)",
-    "start_col": 87,
-    "end_col": 88,
-    "type": "float"
+    "column_name": "DEm",
+    "long_name": "Minutes Dec, equinox J2000, epoch 2000.0 (1)",
+    "colspec": [86, 88],
+    "dtype": "float"
   },
   {
-    "label": "DEs",
-    "explanations": "Seconds Dec, equinox J2000, epoch 2000.0 (1)",
-    "start_col": 89,
-    "end_col": 90,
-    "type": "float"
+    "column_name": "DEs",
+    "long_name": "Seconds Dec, equinox J2000, epoch 2000.0 (1)",
+    "colspec": [88, 90],
+    "dtype": "float"
   },
   {
-    "label": "GLON",
-    "explanations": "Galactic longitude (1)",
-    "start_col": 91,
-    "end_col": 96,
-    "type": "float"
+    "column_name": "GLON",
+    "long_name": "Galactic longitude (1)",
+    "colspec": [90, 96],
+    "dtype": "float"
   },
   {
-    "label": "GLAT",
-    "explanations": "Galactic latitude (1)",
-    "start_col": 97,
-    "end_col": 102,
-    "type": "float"
+    "column_name": "GLAT",
+    "long_name": "Galactic latitude (1)",
+    "colspec": [96, 102],
+    "dtype": "float"
   },
   {
-    "label": "Vmag",
-    "explanations": "Visual magnitude (1)",
-    "start_col": 103,
-    "end_col": 107,
-    "type": "float"
+    "column_name": "Vmag",
+    "long_name": "Visual magnitude (1)",
+    "colspec": [102, 107],
+    "dtype": "float"
   },
   {
-    "label": "n_Vmag",
-    "explanations": "[HR] Visual magnitude code",
-    "start_col": 108,
-    "end_col": 108,
-    "type": "string"
+    "column_name": "n_Vmag",
+    "long_name": "[HR] Visual magnitude code",
+    "colspec": [107, 109],
+    "dtype": "str"
   },
   {
-    "label": "u_Vmag",
-    "explanations": "Uncertainty flag on V",
-    "start_col": 109,
-    "end_col": 109,
-    "type": "string"
+    "column_name": "u_Vmag",
+    "long_name": "Uncertainty flag on V",
+    "colspec": [108, 110],
+    "dtype": "str"
   },
   {
-    "label": "B-V",
-    "explanations": "B-V color in the UBV system",
-    "start_col": 110,
-    "end_col": 114,
-    "type": "string"
+    "column_name": "B-V",
+    "long_name": "B-V color in the UBV system",
+    "colspec": [109, 114],
+    "dtype": "str"
   },
   {
-    "label": "u_B-V",
-    "explanations": "Uncertainty flag on B-V",
-    "start_col": 115,
-    "end_col": 115,
-    "type": "string"
+    "column_name": "u_B-V",
+    "long_name": "Uncertainty flag on B-V",
+    "colspec": [114, 116],
+    "dtype": "str"
   },
   {
-    "label": "U-B",
-    "explanations": "U-B color in the UBV system",
-    "start_col": 116,
-    "end_col": 120,
-    "type": "string"
+    "column_name": "U-B",
+    "long_name": "U-B color in the UBV system",
+    "colspec": [115, 120],
+    "dtype": "str"
   },
   {
-    "label": "u_U-B",
-    "explanations": "Uncertainty flag on U-B",
-    "start_col": 121,
-    "end_col": 121,
-    "type": "string"
+    "column_name": "u_U-B",
+    "long_name": "Uncertainty flag on U-B",
+    "colspec": [120, 122],
+    "dtype": "str"
   },
   {
-      "label": "RadVel",
-      "explanations": "Heliocentric Radial Velocity",
-      "start_col": 167,
-      "end_col": 170,
-      "type": "float"
+    "column_name": "RadVel",
+    "long_name": "Heliocentric Radial Velocity",
+    "colspec": [166, 170],
+    "dtype": "float"
   },
   {
-    "label": "RotVel",
-    "explanations": "Rotational velocity, v sin i",
-    "start_col": 177,
-    "end_col": 179,
-    "type": "float"
+    "column_name": "RotVel",
+    "long_name": "Rotational velocity, v sin i",
+    "colspec": [176, 179],
+    "dtype": "float"
   },
   {
-    "label": "u_RotVel",
-    "explanations": "uncertainty and variability flag on RotVel",
-    "start_col": 180,
-    "end_col": 180,
-    "type": "string"
+    "column_name": "u_RotVel",
+    "long_name": "uncertainty and variability flag on RotVel",
+    "colspec": [179, 181],
+    "dtype": "str"
   }
 ]
