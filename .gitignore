@@ -2,9 +2,9 @@
 .credentials
 
 # misc processing files
-astro/asteroids/*.csv
-astro/asteroids/*.dat
-astro/bright_stars/full.csv
+pipeline/asteroids/*.csv
+pipeline/asteroids/*.dat
+pipeline/bright_stars/full.csv
 *archive/
 
 # dependencies
