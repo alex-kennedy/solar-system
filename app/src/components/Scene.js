@@ -5,6 +5,7 @@ import decompress from "brotli/decompress";
 import Stats from 'three/examples/jsm/libs/stats.module';
 
 import { Planet } from "./Orbit.js";
+import * as starShaders from "../assets/shaders/stars";
 
 import stars_texture from "./../assets/stars/star.svg";
 import planets from "./../assets/planets/planetary_elements.json";
@@ -134,8 +135,8 @@ class Scene extends Component {
         color: { value: new THREE.Color(0xffffff) },
         texture: { value: texture },
       },
-      vertexShader: document.getElementById("vertexshader").textContent,
-      fragmentShader: document.getElementById("fragmentshader").textContent,
+      vertexShader: starShaders.vertexShader,
+      fragmentShader: starShaders.fragmentShader,
       transparent: true,
     });
 
