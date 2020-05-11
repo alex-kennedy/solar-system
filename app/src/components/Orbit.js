@@ -1,5 +1,4 @@
-import * as THREE from "three-full";
-// import * as THREE from 'three';
+import * as THREE from 'three';
 import * as MESHLINE from "three.meshline";
 
 class OrbitCurve extends THREE.Curve {

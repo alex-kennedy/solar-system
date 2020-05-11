@@ -1,11 +1,10 @@
 import React, { Component } from "react";
-import * as THREE from "three-full";
-import { OrbitControls } from "three-full";
-import * as Stats from "stats-js";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import decompress from "brotli/decompress";
+import Stats from 'three/examples/jsm/libs/stats.module';
 
 import { Planet } from "./Orbit.js";
-
-import decompress from "brotli/decompress";
 
 import stars_texture from "./../assets/stars/star.svg";
 import planets from "./../assets/planets/planetary_elements.json";
@@ -80,7 +79,7 @@ class Scene extends Component {
     var stats = new Stats();
     stats.setMode(0); // 0: fps, 1: ms, 2: mb, 3+: custom
     this.stats = stats;
-    this.mount.appendChild(this.renderer.domElement);
+    this.mount.appendChild(this.stats.domElement);
   }
 
   addCelestialSphereWireframe() {
@@ -91,7 +90,7 @@ class Scene extends Component {
     var geometry = new THREE.SphereGeometry(radius, segments, rings);
     var material = new THREE.MeshBasicMaterial({
       color: 0xaaaaaa,
-      wireframe: true
+      wireframe: true,
     });
     material.side = THREE.DoubleSide;
 
@@ -138,7 +137,7 @@ class Scene extends Component {
       },
       vertexShader: document.getElementById("vertexshader").textContent,
       fragmentShader: document.getElementById("fragmentshader").textContent,
-      transparent: true
+      transparent: true,
     });
 
     var stars = new THREE.Points(geometry, material);

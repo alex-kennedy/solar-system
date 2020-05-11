@@ -15,9 +15,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "stats-js": "^1.0.1",
-    "three": "^0.92.0",
-    "three-full": "^6.0.0",
-    "three.js": "^0.77.1",
+    "three": "^0.116.1",
     "three.meshline": "^1.2.0",
     "typescript": "^3.8.3"
   },
