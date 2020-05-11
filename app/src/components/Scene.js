@@ -69,32 +69,31 @@ class Scene extends Component {
     this.camera.position.set(0, 0, 20);
     controls.enableDamping = true;
     controls.dampingFactor = 0.15;
-    controls.rotateSpeed = 0.15;
+    controls.rotateSpeed = 0.5;
     controls.maxDistance = 100;
-
     this.controls = controls;
   }
 
   addStats() {
-    var stats = new Stats();
+    const stats = new Stats();
     stats.setMode(0); // 0: fps, 1: ms, 2: mb, 3+: custom
     this.stats = stats;
     this.mount.appendChild(this.stats.domElement);
   }
 
   addCelestialSphereWireframe() {
-    var radius = 100;
-    var segments = 100;
-    var rings = 100;
+    const radius = 100;
+    const segments = 100;
+    const rings = 100;
 
-    var geometry = new THREE.SphereGeometry(radius, segments, rings);
-    var material = new THREE.MeshBasicMaterial({
+    const geometry = new THREE.SphereGeometry(radius, segments, rings);
+    const material = new THREE.MeshBasicMaterial({
       color: 0xaaaaaa,
       wireframe: true,
     });
     material.side = THREE.DoubleSide;
 
-    var sphere = new THREE.Mesh(geometry, material);
+    const sphere = new THREE.Mesh(geometry, material);
     this.scene.add(sphere);
   }
 
@@ -107,13 +106,13 @@ class Scene extends Component {
   renderBrightStars(bright_stars) {
     console.log(bright_stars);
 
-    var sizes = new Float32Array(bright_stars.length);
-    var positions = new Float32Array(bright_stars.length * 3);
-    var colors = new Float32Array(bright_stars.length * 3);
+    const sizes = new Float32Array(bright_stars.length);
+    const positions = new Float32Array(bright_stars.length * 3);
+    const colors = new Float32Array(bright_stars.length * 3);
 
-    var color = new THREE.Color(1, 1, 1);
+    const color = new THREE.Color(1, 1, 1);
 
-    for (var i = 0; i < bright_stars.length; i++) {
+    for (let i = 0; i < bright_stars.length; i++) {
       positions[i * 3] = bright_stars[i][1]; // x
       positions[i * 3 + 1] = bright_stars[i][2]; // y
       positions[i * 3 + 2] = bright_stars[i][3]; // z
@@ -123,14 +122,14 @@ class Scene extends Component {
       color.toArray(colors, i * 3);
     }
 
-    var geometry = new THREE.BufferGeometry();
+    const geometry = new THREE.BufferGeometry();
     geometry.addAttribute("position", new THREE.BufferAttribute(positions, 3));
     geometry.addAttribute("size", new THREE.BufferAttribute(sizes, 1));
     geometry.addAttribute("color_shader", new THREE.BufferAttribute(colors, 3));
 
-    var texture = new THREE.TextureLoader().load(stars_texture);
+    const texture = new THREE.TextureLoader().load(stars_texture);
 
-    var material = new THREE.ShaderMaterial({
+    const material = new THREE.ShaderMaterial({
       uniforms: {
         color: { value: new THREE.Color(0xffffff) },
         texture: { value: texture },
@@ -140,49 +139,49 @@ class Scene extends Component {
       transparent: true,
     });
 
-    var stars = new THREE.Points(geometry, material);
+    const stars = new THREE.Points(geometry, material);
     this.scene.add(stars);
   }
 
   addSun() {
-    var geometry = new THREE.Geometry();
+    const geometry = new THREE.Geometry();
 
-    var vertex = new THREE.Vector3();
+    const vertex = new THREE.Vector3();
     vertex.x = 0;
     vertex.y = 0;
     vertex.z = 0;
 
     geometry.vertices.push(vertex);
 
-    var material = new THREE.PointsMaterial({ size: 1 });
+    const material = new THREE.PointsMaterial({ size: 1 });
     material.color.setRGB(1, 0.25, 0);
-    var particles = new THREE.Points(geometry, material);
+    const particles = new THREE.Points(geometry, material);
 
     this.scene.add(particles);
   }
 
   addPlanets(planets_file) {
-    var planets = [];
+    const planets = [];
 
-    for (var system_name in planets_file) {
+    for (let system_name in planets_file) {
       if (planets_file.hasOwnProperty(system_name)) {
-        var planet = new Planet(system_name, planets_file[system_name]);
+        const planet = new Planet(system_name, planets_file[system_name]);
         planet.initialiseOrbit();
         planets.push(planet);
       }
     }
 
-    var geometry = new THREE.Geometry();
+    const geometry = new THREE.Geometry();
 
-    for (var i = 0; i < planets.length; i++) {
+    for (let i = 0; i < planets.length; i++) {
       geometry.vertices.push(planets[i].currentPosition);
       planets[i].showInScene(this.scene, this.camera); //, colours[i]
     }
 
-    var size = 1;
-    var material = new THREE.PointsMaterial({ size: size });
+    const size = 1;
+    const material = new THREE.PointsMaterial({ size: size });
     material.color.setRGB(1, 1, 1);
-    var particles = new THREE.Points(geometry, material);
+    const particles = new THREE.Points(geometry, material);
 
     this.planets = planets;
 

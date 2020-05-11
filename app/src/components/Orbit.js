@@ -20,25 +20,25 @@ class OrbitCurve extends THREE.Curve {
   }
 
   getPoint(t, optionalTarget) {
-    var point = optionalTarget || new THREE.Vector3();
+    const point = optionalTarget || new THREE.Vector3();
 
-    var E = t * 360;
-    var conversion = Math.PI / 180;
+    const E = t * 360;
+    const conversion = Math.PI / 180;
 
-    var x = this.a * (Math.cos(conversion * E) - this.e);
-    var y =
+    const x = this.a * (Math.cos(conversion * E) - this.e);
+    const y =
       this.a * Math.sqrt(1 - Math.pow(this.e, 2)) * Math.sin(conversion * E);
 
-    var co = Math.cos(conversion * this.arg_peri);
-    var cO = Math.cos(conversion * this.long_node);
-    var cI = Math.cos(conversion * this.I);
-    var so = Math.sin(conversion * this.arg_peri);
-    var sO = Math.sin(conversion * this.long_node);
-    var sI = Math.sin(conversion * this.I);
+    const co = Math.cos(conversion * this.arg_peri);
+    const cO = Math.cos(conversion * this.long_node);
+    const cI = Math.cos(conversion * this.I);
+    const so = Math.sin(conversion * this.arg_peri);
+    const sO = Math.sin(conversion * this.long_node);
+    const sI = Math.sin(conversion * this.I);
 
-    var x_ecl = (co * cO - so * sO * cI) * x + (-so * cO - co * sO * cI) * y;
-    var y_ecl = (co * sO + so * cO * cI) * x + (-so * sO + co * cO * cI) * y;
-    var z_ecl = so * sI * x + co * sI * y;
+    const x_ecl = (co * cO - so * sO * cI) * x + (-so * cO - co * sO * cI) * y;
+    const y_ecl = (co * sO + so * cO * cI) * x + (-so * sO + co * cO * cI) * y;
+    const z_ecl = so * sI * x + co * sI * y;
 
     return point.set(x_ecl, y_ecl, z_ecl);
   }
@@ -65,7 +65,7 @@ class Planet extends OrbitingObject {
     this.color = color;
     this.time_centuries = this.getCenturiesTT();
 
-    for (var key in elements) {
+    for (let key in elements) {
       if (elements.hasOwnProperty(key)) {
         // Part 1: compute planet's six elements
         this[key] = elements[key][0] + this.time_centuries * elements[key][1];
@@ -83,10 +83,10 @@ class Planet extends OrbitingObject {
     // Currently only solves in degrees
     tol = tol || 1e-6;
 
-    var e_star = (180 / Math.PI) * this.e;
-    var E_n = this.M + e_star * Math.sin((Math.PI / 180) * this.M);
-    var delta = 360;
-    var count = 0;
+    const e_star = (180 / Math.PI) * this.e;
+    let E_n = this.M + e_star * Math.sin((Math.PI / 180) * this.M);
+    let delta = 360;
+    let count = 0;
 
     while (Math.abs(delta) > tol) {
       delta =
@@ -101,7 +101,7 @@ class Planet extends OrbitingObject {
 
   getCenturiesTT() {
     // Get the number of centuries that have elapsed since J2000.0, TT
-    var nowTT = this.getNowTT();
+    const nowTT = this.getNowTT();
     return (nowTT / 86400.0 - 10957.5) / 36525;
   }
 
@@ -126,15 +126,15 @@ class Planet extends OrbitingObject {
   }
 
   showInScene(scene, camera, color) {
-    var points = this.curve.getPoints(100);
+    const points = this.curve.getPoints(100);
 
-    var geometry = new THREE.BufferGeometry().setFromPoints(points);
+    let geometry = new THREE.BufferGeometry().setFromPoints(points);
     geometry = geometry.getAttribute("position").array; // Needed due to strange error...
 
-    var line = new MESHLINE.MeshLine();
+    const line = new MESHLINE.MeshLine();
     line.setGeometry(geometry);
 
-    var material = new MESHLINE.MeshLineMaterial({
+    const material = new MESHLINE.MeshLineMaterial({
       useMap: false,
       color: new THREE.Color(1, 1, 1),
       opacity: 1,
@@ -145,7 +145,7 @@ class Planet extends OrbitingObject {
       far: camera.far
     });
 
-    var mesh = new THREE.Mesh(line.geometry, material);
+    const mesh = new THREE.Mesh(line.geometry, material);
     scene.add(mesh);
   }
 }
