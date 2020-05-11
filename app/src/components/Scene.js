@@ -2,14 +2,20 @@ import React, { Component } from "react";
 import * as THREE from "three-full";
 import { OrbitControls } from "three-full";
 import * as Stats from "stats-js";
-import * as $ from "jquery";
-import * as csv from "parse-csv";
 
 import { Planet } from "./Orbit.js";
 
-import stars_file from "./../assets/stars/bright_stars.csv";
+import decompress from "brotli/decompress";
+
 import stars_texture from "./../assets/stars/star.svg";
 import planets from "./../assets/planets/planetary_elements.json";
+
+const fetchBrotliAsJSON = async (path) => {
+  const response = await fetch(path);
+  const buffer = await response.arrayBuffer();
+  const decompressed = decompress(Buffer(buffer));
+  return JSON.parse(new TextDecoder("utf-8").decode(decompressed));
+};
 
 class Scene extends Component {
   constructor(props) {
@@ -94,17 +100,13 @@ class Scene extends Component {
   }
 
   loadBrightStars() {
-    $.get(stars_file, this.renderBrightStars);
+    fetchBrotliAsJSON(
+      process.env.PUBLIC_URL + "/assets/bright_stars.json.br"
+    ).then(this.renderBrightStars);
   }
 
-  renderBrightStars(data) {
-    var parser = new csv.Parser();
-    var bright_stars = parser.parse(data).data;
-
-    // console.log(bright_stars)
-
-    //Remove the column headers
-    bright_stars = bright_stars.slice(1);
+  renderBrightStars(bright_stars) {
+    console.log(bright_stars);
 
     var sizes = new Float32Array(bright_stars.length);
     var positions = new Float32Array(bright_stars.length * 3);
@@ -113,11 +115,11 @@ class Scene extends Component {
     var color = new THREE.Color(1, 1, 1);
 
     for (var i = 0; i < bright_stars.length; i++) {
-      positions[i * 3] = Number(bright_stars[i][1]); // x
-      positions[i * 3 + 1] = Number(bright_stars[i][2]); // y
-      positions[i * 3 + 2] = Number(bright_stars[i][3]); // z
+      positions[i * 3] = bright_stars[i][1]; // x
+      positions[i * 3 + 1] = bright_stars[i][2]; // y
+      positions[i * 3 + 2] = bright_stars[i][3]; // z
 
-      sizes[i] = Number(bright_stars[i][0]) / 2.25;
+      sizes[i] = bright_stars[i][0] / 2;
 
       color.toArray(colors, i * 3);
     }
@@ -132,7 +134,7 @@ class Scene extends Component {
     var material = new THREE.ShaderMaterial({
       uniforms: {
         color: { value: new THREE.Color(0xffffff) },
-        texture: { value: texture }
+        texture: { value: texture },
       },
       vertexShader: document.getElementById("vertexshader").textContent,
       fragmentShader: document.getElementById("fragmentshader").textContent,
@@ -228,7 +230,7 @@ class Scene extends Component {
     return (
       <div
         style={{ width: "100%", height: "100%" }}
-        ref={mount => {
+        ref={(mount) => {
           this.mount = mount;
         }}
       />
