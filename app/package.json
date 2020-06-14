@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://alexk.nz/solar-system/",
   "devDependencies": {
+    "@svgr/webpack": "^5.4.0",
     "gh-pages": "^2.2.0",
     "react-scripts": "^3.4.1"
   },

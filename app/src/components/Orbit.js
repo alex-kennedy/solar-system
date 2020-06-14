@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import * as MESHLINE from "three.meshline";
 
 class OrbitCurve extends THREE.Curve {
@@ -125,7 +125,7 @@ class Planet extends OrbitingObject {
     this.currentPosition = this.curve.getPoint(this.E / 360);
   }
 
-  showInScene(scene, camera, color) {
+  showInScene(scene, camera) {
     const points = this.curve.getPoints(100);
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -136,13 +136,13 @@ class Planet extends OrbitingObject {
 
     const material = new MESHLINE.MeshLineMaterial({
       useMap: false,
-      color: new THREE.Color(1, 1, 1),
+      color: this.color,
       opacity: 1,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
       sizeAttenuation: false,
       lineWidth: 5,
       near: camera.near,
-      far: camera.far
+      far: camera.far,
     });
 
     const mesh = new THREE.Mesh(line.geometry, material);

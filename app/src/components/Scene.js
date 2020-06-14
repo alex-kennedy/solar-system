@@ -2,13 +2,14 @@ import React, { Component } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import decompress from "brotli/decompress";
-import Stats from 'three/examples/jsm/libs/stats.module';
+import Stats from "three/examples/jsm/libs/stats.module";
 
 import { Planet } from "./Orbit.js";
 import * as starShaders from "../assets/shaders/stars";
 
-import stars_texture from "./../assets/stars/star.svg";
-import planets from "./../assets/planets/planetary_elements.json";
+import starTexture from "./../assets/stars/star.svg";
+import planetElements from "./../assets/planets/planetary_elements.json";
+import planetColors from "./../assets/planets/colours.json";
 
 const fetchBrotliAsJSON = async (path) => {
   const response = await fetch(path);
@@ -34,8 +35,8 @@ class Scene extends Component {
     this.addControls();
     this.addStats();
     this.loadBrightStars();
+    this.addPlanets();
     this.addSun();
-    this.addPlanets(planets);
 
     // this.addCelestialSphereWireframe();
 
@@ -104,31 +105,29 @@ class Scene extends Component {
     ).then(this.renderBrightStars);
   }
 
-  renderBrightStars(bright_stars) {
-    console.log(bright_stars);
-
-    const sizes = new Float32Array(bright_stars.length);
-    const positions = new Float32Array(bright_stars.length * 3);
-    const colors = new Float32Array(bright_stars.length * 3);
+  renderBrightStars(brightStars) {
+    const sizes = new Float32Array(brightStars.length);
+    const positions = new Float32Array(brightStars.length * 3);
+    const colors = new Float32Array(brightStars.length * 3);
 
     const color = new THREE.Color(1, 1, 1);
 
-    for (let i = 0; i < bright_stars.length; i++) {
-      positions[i * 3] = bright_stars[i][1]; // x
-      positions[i * 3 + 1] = bright_stars[i][2]; // y
-      positions[i * 3 + 2] = bright_stars[i][3]; // z
+    for (let i = 0; i < brightStars.length; i++) {
+      positions[i * 3] = brightStars[i][1]; // x
+      positions[i * 3 + 1] = brightStars[i][2]; // y
+      positions[i * 3 + 2] = brightStars[i][3]; // z
 
-      sizes[i] = bright_stars[i][0] / 2;
+      sizes[i] = brightStars[i][0] / 2; // manually scaled brightness
 
       color.toArray(colors, i * 3);
     }
 
     const geometry = new THREE.BufferGeometry();
-    geometry.addAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.addAttribute("size", new THREE.BufferAttribute(sizes, 1));
-    geometry.addAttribute("color_shader", new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute("color_shader", new THREE.BufferAttribute(colors, 3));
 
-    const texture = new THREE.TextureLoader().load(stars_texture);
+    const texture = new THREE.TextureLoader().load(starTexture);
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
@@ -145,48 +144,49 @@ class Scene extends Component {
   }
 
   addSun() {
-    const geometry = new THREE.Geometry();
-
-    const vertex = new THREE.Vector3();
-    vertex.x = 0;
-    vertex.y = 0;
-    vertex.z = 0;
-
-    geometry.vertices.push(vertex);
-
-    const material = new THREE.PointsMaterial({ size: 1 });
-    material.color.setRGB(1, 0.25, 0);
-    const particles = new THREE.Points(geometry, material);
-
-    this.scene.add(particles);
+    const geometry = new THREE.SphereBufferGeometry(1, 16, 16);
+    const material = new THREE.MeshBasicMaterial({
+      color: new THREE.Color("#F9D670"),
+    });
+    const sphere = new THREE.Mesh(geometry, material);
+    this.scene.add(sphere);
+    this.sun = sphere;
   }
 
-  addPlanets(planets_file) {
+  addPlanets() {
     const planets = [];
 
-    for (let system_name in planets_file) {
-      if (planets_file.hasOwnProperty(system_name)) {
-        const planet = new Planet(system_name, planets_file[system_name]);
+    // Adds the orbits of the planets
+    for (let systemName in planetElements) {
+      if (planetElements.hasOwnProperty(systemName)) {
+        const planet = new Planet(
+          systemName,
+          planetElements[systemName],
+          planetColors[systemName]
+        );
         planet.initialiseOrbit();
         planets.push(planet);
       }
     }
 
-    const geometry = new THREE.Geometry();
-
+    // Adds the sphere/dot representing each planet
     for (let i = 0; i < planets.length; i++) {
-      geometry.vertices.push(planets[i].currentPosition);
-      planets[i].showInScene(this.scene, this.camera); //, colours[i]
+      planets[i].showInScene(this.scene, this.camera);
+
+      let geometry = new THREE.SphereBufferGeometry(1, 16, 16);
+      let material = new THREE.MeshBasicMaterial({
+        color: planetColors[planets[i].name],
+      });
+
+      let sphere = new THREE.Mesh(geometry, material);
+      let pos = planets[i].currentPosition;
+      sphere.position.set(pos.x, pos.y, pos.z);
+      planets[i].mesh = sphere;
+
+      this.scene.add(sphere);
     }
 
-    const size = 1;
-    const material = new THREE.PointsMaterial({ size: size });
-    material.color.setRGB(1, 1, 1);
-    const particles = new THREE.Points(geometry, material);
-
     this.planets = planets;
-
-    this.scene.add(particles);
   }
 
   updateDimensions() {
@@ -216,13 +216,27 @@ class Scene extends Component {
   animate() {
     this.stats.begin();
 
+    // Scale planets, sun
+    const scaleFactor = 250;
+    const scaleVector = new THREE.Vector3();
+    for (let i = 0; i < this.planets.length; i++) {
+      let scale =
+        scaleVector
+          .subVectors(this.planets[i].mesh.position, this.camera.position)
+          .length() / scaleFactor;
+      this.planets[i].mesh.scale.set(scale, scale, scale);
+    }
+    let scale =
+      scaleVector.subVectors(this.sun.position, this.camera.position).length() /
+      scaleFactor;
+    this.sun.scale.set(scale, scale, scale);
+
     this.renderer.render(this.scene, this.camera);
     this.controls.update();
 
     this.stats.end();
 
-    // requestAnimationFrame(animate);
-    this.frameId = window.requestAnimationFrame(this.animate);
+    this.frameId = requestAnimationFrame(this.animate);
   }
 
   render() {
