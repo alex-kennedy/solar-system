@@ -1,0 +1,20 @@
+{
+  "colours": {
+    "trojan": "#c8d1ea",
+    "q_bound": "#bde3e9",
+    "hungaria": "#bef1e8",
+    "neo": "#d3fbe5",
+    "hilda": "#ffc8b7",
+    "distant": "#e25969",
+    "other": "#A8414B"
+  },
+  "opacity": {
+    "trojan": 0.75,
+    "q_bound": 1,
+    "hungaria": 1,
+    "neo": 0.35,
+    "hilda": 0.75,
+    "distant": 1,
+    "other": 0.5
+  }
+}

@@ -3,13 +3,15 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import decompress from "brotli/decompress";
 import Stats from "three/examples/jsm/libs/stats.module";
+import calculateAsteroidPosition from "./Asteroids";
 
 import { Planet } from "./Orbit.js";
 import * as starShaders from "../assets/shaders/stars";
 
 import starTexture from "./../assets/stars/star.svg";
 import planetElements from "./../assets/planets/planetary_elements.json";
-import planetColors from "./../assets/planets/colours.json";
+import planetColours from "./../assets/planets/colours.json";
+import asteroidStyles from './../assets/asteroids/styles.json';
 
 const fetchBrotliAsJSON = async (path) => {
   const response = await fetch(path);
@@ -27,20 +29,22 @@ class Scene extends Component {
     this.animate = this.animate.bind(this);
     this.updateDimensions = this.updateDimensions.bind(this);
     this.renderBrightStars = this.renderBrightStars.bind(this);
+    this.renderAsteroids = this.renderAsteroids.bind(this);
   }
 
   componentDidMount() {
     this.createScene();
+
+    window.addEventListener("resize", this.updateDimensions);
 
     this.addControls();
     this.addStats();
     this.loadBrightStars();
     this.addPlanets();
     this.addSun();
+    this.loadAsteroids();
 
     // this.addCelestialSphereWireframe();
-
-    window.addEventListener("resize", this.updateDimensions);
   }
 
   createScene() {
@@ -162,7 +166,7 @@ class Scene extends Component {
         const planet = new Planet(
           systemName,
           planetElements[systemName],
-          planetColors[systemName]
+          planetColours[systemName]
         );
         planet.initialiseOrbit();
         planets.push(planet);
@@ -175,7 +179,7 @@ class Scene extends Component {
 
       let geometry = new THREE.SphereBufferGeometry(1, 16, 16);
       let material = new THREE.MeshBasicMaterial({
-        color: planetColors[planets[i].name],
+        color: planetColours[planets[i].name],
       });
 
       let sphere = new THREE.Mesh(geometry, material);
@@ -187,6 +191,39 @@ class Scene extends Component {
     }
 
     this.planets = planets;
+  }
+
+  loadAsteroids() {
+    fetchBrotliAsJSON(
+      process.env.PUBLIC_URL + "/assets/asteroids.json.br"
+    ).then(this.renderAsteroids);
+  }
+
+  renderAsteroids(allAsteroids) {
+    for (const [type, asteroids] of Object.entries(allAsteroids)) {
+      let locations = new Float32Array(3 * asteroids.length);
+      for (const [i, data] of asteroids.entries()) {
+        let [x, y, z] = calculateAsteroidPosition(data);
+        locations[3 * i] = x;
+        locations[3 * i + 1] = y;
+        locations[3 * i + 2] = z;
+      }
+
+      let geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(locations, 3)
+      );
+
+      let material = new THREE.PointsMaterial({
+        color: new THREE.Color(asteroidStyles.colours[type]),
+        size: 0.05,
+        transparent: true,
+        opacity: asteroidStyles.opacity[type],
+      });
+      let points = new THREE.Points(geometry, material);
+      this.scene.add(points);
+    }
   }
 
   updateDimensions() {
