@@ -314,7 +314,7 @@ def get_web_payload(df):
     steps = (
         ('too_uncertain', lambda d:
          (d['u_number'].values >= 6) | (d['u_number'].values == -1), False),
-        ('too_distant', lambda d: d['orbit_type'].values == 10, False),
+        ('distant', lambda d: d['orbit_type'].values == 10, True),
         ('neo', lambda d: d['neo'].values == 1, True),
         ('hungaria', lambda d: d['orbit_type'].values == 6, True),
         ('trojan', lambda d: d['orbit_type'].values == 8, True),
