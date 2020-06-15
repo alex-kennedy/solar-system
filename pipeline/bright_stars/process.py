@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import requests
 
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger('bright_stars')
+logging.basicConfig(level=logging.WARNING)  # TODO: Move this out of here
+logger = logging.getLogger(__name__)
 
 FOLDER = 'data/bright_stars/'
 SCHEMA_PATH = 'pipeline/bright_stars/schema.json'
