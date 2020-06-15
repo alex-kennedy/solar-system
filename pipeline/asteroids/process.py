@@ -1,32 +1,96 @@
 import datetime
+import gzip
 import json
+import logging
 import os
+import shutil
 import time
+from datetime import datetime
 
+import brotli
+import numpy as np
+import pandas as pd
 import requests
 from tqdm import tqdm
 
-
-URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT'
+URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT.gz'
 FOLDER = 'data/asteroids/'
+SCHEMA_PATH = 'pipeline/asteroids/schema.json'
+
+logging.basicConfig(level=logging.INFO)  # TODO: Move this out of here
+logger = logging.getLogger(__name__)
 
 
-def download_latest():
-    chunk_size = 1024
+def download_latest(chunk_size=1024):
+    """Downloads the current MPCORB.dat file.
+
+    See directory of data at:
+        https://minorplanetcenter.net/data
+
+    Args:
+        chunk_size (int): Size of download chunks in bytes.
+    """
+    zip_path = os.path.join(FOLDER, 'asteroids.dat.gz')
+    unzip_path = os.path.join(FOLDER, 'asteroids.dat')
 
     response = requests.get(URL, stream=True)
-    assert response.status_code == 200
-
+    response.raise_for_status()
     content_length = int(response.headers.get('content-length'))
 
-    print("Downloading {0}.dat file...".format(FOLDER + "asteroids"))
-    with open(FOLDER + "asteroids" + '.dat', 'wb') as dat:
-        for chunk in tqdm(response.iter_content(chunk_size=chunk_size), total=round(content_length/chunk_size), unit='KB'):
-            dat.write(chunk)
-    print('Finished writing .dat file')
+    logger.info(f"Downloading {zip_path} ...")
+    with open(zip_path, 'wb') as dat:
+        with tqdm(total=content_length, unit_scale=True) as bar:
+            for chunk in response.iter_content(chunk_size=chunk_size):
+                dat.write(chunk)
+                bar.update(chunk_size)
+
+    # Unzip file
+    logger.info(f'Unzipping {zip_path} to {unzip_path}')
+    with gzip.open(zip_path, 'rb') as f_zipped:
+        with open(unzip_path, 'wb') as f_unzipped:
+            shutil.copyfileobj(f_zipped, f_unzipped)
+
+
+def get_schema():
+    """Get columns schema from file. 
+
+    The schema was drawn from the readme for the MPC orbital data:
+        https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
+
+    Args:
+        path (str): path to schema file
+
+    Returns:
+        list: dataframe column names
+        list: (int, int) half-open intervals corresponding to columns
+        list: datatypes of values
+    """
+    with open(SCHEMA_PATH) as schema_file:
+        schema = json.load(schema_file)
+
+    dtype_mapping = {'str': str, 'float': np.float64}
+
+    names = [field['column_name'] for field in schema]
+    colspecs = [tuple(field['colspec']) for field in schema]
+
+    dtype = {}
+    for field in schema:
+        dtype[field['column_name']] = dtype_mapping[field['dtype']]
+    return names, colspecs, dtype
 
 
 def packed_letter_to_number(letter):
+    """Unpack a letter to the corresponding number according to MPC.
+
+    See:
+        https://www.minorplanetcenter.net/iau/info/DesDoc.html
+    
+    Args:
+        letter (str): Single character to decode.
+
+    Returns:
+        int: Corresponding number. 
+    """
     try:
         int(letter)
         return letter.rjust(2, '0')
@@ -37,508 +101,300 @@ def packed_letter_to_number(letter):
         elif ord_letter >= 65 and ord_letter <= 96:
             return str(ord_letter - 55)
         else:
-            raise ValueError('Letter argument not a number or letter.')
+            raise ValueError(f'Letter "{letter}" is invalid')
 
 
-def unpack_designation(packed_designation):
-    """Unpack the asteroid designation in the list of values, MPC format"""
+def unpack_designation(packed):
+    """Unpack the asteroid designation in the list of values, MPC format.
 
-    # Test if the designation is already an integer, e.g. "00001" or "98575"
+    See:
+        https://www.minorplanetcenter.net/iau/info/PackedDes.html
+    
+    Args:
+        packed (str): Packed designation.
+
+    Returns:
+        str: Unpacked designation.
+    """
+    # Tests if the designation is already an integer, e.g. "00001" or "98575"
     try:
-        unpacked = str(int(packed_designation))
-        return unpacked
+        return str(int(packed))
     except ValueError:
         pass
 
     # Test if the designation is a packed Asteroid Number
     try:
-        int(packed_designation[1:])
-        tail = packed_designation[1:]
-        head = packed_letter_to_number(packed_designation[0])
+        int(packed[1:])
+        tail = packed[1:]
+        head = packed_letter_to_number(packed[0])
         return head + tail
     except ValueError:
         pass
 
     # Test for survey Asteroid formats
-    if packed_designation[2] == "S":
-        head = packed_designation[3:]
-        tail = packed_designation[0] + "-" + packed_designation[1]
+    if packed[2] == "S":
+        head = packed[3:]
+        tail = packed[0] + "-" + packed[1]
         return head + " " + tail
 
-    new_desig = (packed_letter_to_number(packed_designation[0]) +
-                 packed_designation[1:3] +
-                 " " +
-                 packed_designation[3] +
-                 packed_designation[6])
+    new_desig = (packed_letter_to_number(packed[0]) + packed[1:3] + " " +
+                 packed[3] + packed[6])
 
     try:
-        int(packed_designation[4:6])
+        int(packed[4:6])
         is_int = True
     except ValueError:
         is_int = False
 
     if is_int:
-        if int(packed_designation[4:6]) != 0:
-            new_desig += str(int(packed_designation[4:6]))
+        if int(packed[4:6]) != 0:
+            new_desig += str(int(packed[4:6]))
     else:
-        new_desig += packed_letter_to_number(packed_designation[4]) + packed_designation[5]
+        new_desig += packed_letter_to_number(packed[4]) + packed[5]
 
     return new_desig
 
 
 def unpack_epoch(epoch_packed):
-    """Unpack epoch to date based on MPC format"""
+    """Unpack epoch to date based on MPC format.
+    
+    See:
+        https://www.minorplanetcenter.net/iau/info/PackedDates.html
+
+    Args:
+        epoch_packed (str): Packed epoch string.
+
+    Returns:
+        str: Date in yyyy-mm-dd.
+    """
     epoch_unpacked = (packed_letter_to_number(epoch_packed[0]) +
-                      epoch_packed[1:3] +
-                      '-' +
-                      packed_letter_to_number(epoch_packed[3]) +
-                      '-' +
+                      epoch_packed[1:3] + '-' +
+                      packed_letter_to_number(epoch_packed[3]) + '-' +
                       packed_letter_to_number(epoch_packed[4]))
+    epoch_unpacked = ''.join([
+        packed_letter_to_number(epoch_packed[0]), epoch_packed[1:3], '-',
+        packed_letter_to_number(epoch_packed[3]), '-',
+        packed_letter_to_number(epoch_packed[4])
+    ])
     return epoch_unpacked
 
 
+def tt_epoch_to_unix_s(epoch):
+    d = datetime.fromisoformat(epoch).timestamp()
+    d -= 67.6439  # see https://en.wikipedia.org/wiki/Terrestrial_Time
+    d = round(d)
+    return d
+
+
 def unpack_uncertainty_parameter(u):
+    """Unpack uncertainty parameter (integer or single character). 
+
+    See:
+        https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
+
+    Args:
+        u (str): Packed uncertainty parameter.
+
+    Returns:
+        int: Uncertainty parameter, or -1 if invalid.
+        str: Empty string or letter if uncertainty parameter was invalid.
+    """
     try:
         u = int(u)
         u_flag = ''
     except ValueError:
         u_flag = u
         u = -1
-
     return u, u_flag
 
 
 def unpack_flags(flags_hex):
+    """Unpacks 4-digit hexadecimal flags string.
+
+    Args:
+        flags_hex (str): Hexadecimal flags string.
+
+    Returns:
+        int: Object type.
+        int: Near Earth Object indicator.
+        int: If object is 1-km (or larger) Near Earth Object.
+        int: 1-opposition object seen at earlier opposition.
+        int: Critical list numbered object.
+        int: Object is PHA (Potentially Hazardous Asteroid).
+    """
     flags = int(flags_hex, 16)
 
-    pha = flags // 2**15
-    flags %= 2**15
-
-    critical_list_numbered = flags // 2**14
-    flags %= 2**14
-
-    opposition_seen_earlier = flags // 2**13
-    flags %= 2**13
-
-    neo_1km = flags // 2**12
-    flags %= 2**12
-
-    neo = flags // 2**11
-    flags %= 2**6
-
-    orbit_type = flags
-
-    return orbit_type, neo, neo_1km, opposition_seen_earlier, critical_list_numbered, pha
+    pha = (flags & 2**15) >> 15
+    critical_list_numbered = flags >> 14 & 1
+    opposition_seen_earlier = flags >> 13 & 1
+    neo_1km = flags >> 12 & 1
+    neo = flags >> 11 & 1
+    orbit_type = flags & (2**6 - 1)
+    return (orbit_type, neo, neo_1km, opposition_seen_earlier,
+            critical_list_numbered, pha)
 
 
-def place_in_list(new_names, new_values, schema_names, current_values):
-    if type(new_values) is not tuple:
-        new_values = (new_values, )
+def get_asteroids_df():
+    """Gets a dataframe from raw MPCORB.dat file.
 
-    for i in range(len(new_names)):
-        index = schema_names.index(new_names[i])
+    Returns:
+        pandas.DataFrame: Minor planets dataframe.
+    """
+    n_steps = 6  # Number of steps for measuring progress
 
-        current_len = len(current_values)
-        if current_len <= index:
-            current_values += [None] * (index - current_len + 1)
+    # Read from MPCORB.dat file.
+    names, colspecs, dtype = get_schema()
+    df = pd.read_fwf(os.path.join(FOLDER, 'asteroids.dat'),
+                     names=names,
+                     colspecs=colspecs,
+                     dtype=dtype,
+                     skiprows=43)
+    logger.info(f'1/{n_steps} Loaded MPCORB.dat')
 
-        current_values[index] = new_values[i]
-    return current_values
+    # Drops asteroids with NA flags
+    count = df.shape[0]
+    df.dropna(inplace=True, subset=['flags'])
+    if count - df.shape[0] != 0:
+        logger.warning(f'Dropped {count - df.shape[0]} rows with NA flags')
+    logger.info(f'2/{n_steps} Checked for NA flags')
 
+    # Unpacks the flags into their columns
+    columns = [
+        'orbit_type', 'neo', 'neo_1km', 'opposition_seen_earlier',
+        'critical_list_numbered', 'pha'
+    ]
+    unpacked_flags = list(zip(*df['flags'].map(unpack_flags)))
+    for i, c in enumerate(columns):
+        df[c] = unpacked_flags[i]
+    logger.info(f'3/{n_steps} Unpacked flags')
 
-def process_small_bodies(schema):
-    col_names = [field['name'] for field in schema]
-    start_col = [field.get('start_col') for field in schema if field.get('start_col') is not None]
-    end_col = [field.get('end_col') for field in schema if field.get('end_col') is not None]
+    # Unpacks uncertainty parameter
+    columns = ['u_number', 'u_flag']
+    unpacked_u = list(zip(*df['u'].map(unpack_uncertainty_parameter)))
+    for i, c in enumerate(columns):
+        df[c] = unpacked_u[i]
+    logger.info(f'4/{n_steps} Unpacked uncertainty parameter')
 
-    with open(FOLDER + "asteroids.dat", "r") as dat, \
-         open(FOLDER + "asteroids.csv", "w") as csv:
+    # Unpacks and converts epoch
+    df['epoch_unpacked'] = df['epoch_packed'].apply(unpack_epoch)
+    df['epoch_timestamp'] = df['epoch_unpacked'].apply(
+        tt_epoch_to_unix_s).astype(int)
+    logger.info(f'5/{n_steps} Unpacked epoch')
 
-        write_header(csv, col_names)
-
-        # Skip the 43 header rows in the .dat file
-        for i in range(43):
-            dat.readline()
-
-        for line in tqdm(dat, unit='lines'):
-            if len(line) < 10:
-                continue
-
-            values = data_line_to_list(line, start_col, end_col)
-
-            # Replace packed with unpacked designation
-            designation = values[col_names.index('designation')]
-            values = place_in_list(['designation'], unpack_designation(designation), col_names, values)
-
-            # Uncertainty parameter and uncertainty flag
-            u = values[col_names.index('u')]
-            values = place_in_list(['u', 'u_flag'], unpack_uncertainty_parameter(u), col_names, values)
-
-            # Epoch
-            epoch_packed = values[col_names.index('epoch')]
-            values = place_in_list(['epoch'], unpack_epoch(epoch_packed), col_names, values)
-
-            # Flags
-            new_names = ['orbit_type', 'neo', 'neo_1km', 'opposition_seen_earlier', 'critical_list_numbered', 'pha']
-            flags = values[col_names.index('flags')]
-            values = place_in_list(new_names, unpack_flags(flags), col_names, values)
-
-            string = join_list(values)
-            csv.write(string + '\n')
-
-
-#-------------------------------------------------------------------------------
-#  Determine changes to be made to Google Cloud Datastore, make those changes
-#-------------------------------------------------------------------------------
-
-def check_for_changes():
-    over_write_keys = []
-
-    with open(FOLDER + "asteroids_previous.csv", 'r') as new:
-        new = new.readlines()
-    with open(FOLDER + "asteroids.csv", 'r') as old:
-        old = old.readlines()
+    # Converts to radians
+    cols = ['m0', 'arg_perihelion', 'long_asc_node', 'i', 'mean_daily_motion']
+    for c in cols:
+        df[c] = np.deg2rad(df[c].values)
+    logger.info(f'6/{n_steps} Converted degrees to radians')
+    return df
 
 
-    diff = difflib.unified_diff(new, old, n=0)      # provide no context (n=0)
-    count = 0
-    with open(FOLDER + "overwrites.csv", 'w') as outfile:
-        for diff_line in diff:
-            if diff_line.startswith("+") and not diff_line.startswith("++"):
-                count += 1
+def get_web_payload(df):
+    """Converts a dataframe to unserialised web payload. 
 
-                line = diff_line[1:]
-                key = line.split(",")[0]
-                over_write_keys.append(key)
-                outfile.write(line)
-    print("{0} write operations to be made.".format(count))
+    Note, the `steps` are used to partition the dataframe into categories
+    relevant to the front end. This is simply used to keep the size down while
+    providing some characterisation for styling and whatnot. Changes should
+    correspond to front-end changes.
 
-    diff = difflib.unified_diff(new, old, n=0)      # reset diff generator
-    count = 0
-    with open(FOLDER + "deletions.csv", 'w') as outfile:
-        for diff_line in diff:
-            if diff_line.startswith("-") and not diff_line.startswith("--"):
-                line = diff_line[1:]
-                key = line.split(",")[0]
+    Args:
+        df (pandas.DataFrame): Dataframe of minor planets. 
 
-                if key not in over_write_keys:
-                    count += 1
-                    outfile.write(line)
-    print("{0} delete operations to be made.".format(count))
+    Returns:
+        dict: Front-end payload ready to be serialised.
 
+    """
+    # Columns to send to the browser
+    columns_to_include = [
+        'm0', 'epoch_timestamp', 'mean_daily_motion', 'e', 'arg_perihelion',
+        'long_asc_node', 'i', 'a'
+    ]
 
-def read_in_chunks(file_object, num_lines=500):
-    while True:
-        chunk = []
-        for _ in range(num_lines):
-            data = file_object.readline()
+    # Processing steps to take (name, filter function, keep/remove)
+    steps = (
+        ('too_uncertain', lambda d:
+         (d['u_number'].values >= 6) | (d['u_number'].values == -1), False),
+        ('too_distant', lambda d: d['orbit_type'].values == 10, False),
+        ('neo', lambda d: d['neo'].values == 1, True),
+        ('hungaria', lambda d: d['orbit_type'].values == 6, True),
+        ('trojan', lambda d: d['orbit_type'].values == 8, True),
+        ('hilda', lambda d: d['orbit_type'].values == 9, True),
+        ('q_bound', lambda d: d['orbit_type'].values == 5, True),
+    )
 
-            if data:
-                chunk.append(data)
+    original_count = df.shape[0]
+    dropped = 0
+
+    # Collects into categories
+    payload = {}
+    for step in steps:
+        mask = step[1](df)
+        if step[2] is True:
+            payload[step[0]] = df.iloc[mask, :][columns_to_include]
+        else:
+            dropped += len(mask[mask])
+        df = df.iloc[~mask, :]
+    payload['other'] = df[columns_to_include]
+
+    logger.info(f'{df.shape[0]}/{original_count} in other. {dropped} dropped.')
+
+    # Precision control (linear variables need less precision on the front)
+    linear_variables = ['arg_perihelion', 'long_asc_node', 'i', 'a']
+    for k, df in payload.items():
+        for c in df:
+            if c == 'epoch_timestamp':
+                df[c] = df[c].astype(int)
+            elif c in linear_variables:
+                df[c] = df[c].apply(lambda x: float(f'{x:.4e}'))
             else:
-                break
-
-        if not chunk:
-            break
-
-        yield chunk
-
-
-def parse_line(line, schema):
-    """Convert a list of strings to their types as specified in the schema"""
-    assert type(line) is list
-    assert len(line) == len(schema)
-
-    bigquery_field = [field['bigquery_field'] for field in schema]
-
-    for i in range(len(line)):
-        try:
-            if bigquery_field[i] == 'FLOAT':
-                line[i] = float(line[i])
-            elif bigquery_field[i] == 'INTEGER':
-                line[i] = int(line[i])
-            elif bigquery_field[i] == 'BOOLEAN':
-                line[i] = bool(int(line[i]))
-            elif bigquery_field[i] == 'DATETIME':
-                line[i] = datetime.datetime.strptime(line[i], '%Y-%m-%d')
-        except ValueError:
-            line[i] = None
-
-
-def get_datastore_put_tasks(chunk, schema, client):
-    field_names = [field['name'] for field in schema]
-    tasks = []
-    for line in chunk:
-        line = line.strip().split(',')
-        parse_line(line, schema)
-
-        asteroid = dict(zip(field_names, line))
-        task_key = client.key('asteroid', asteroid['designation'])
-        del asteroid['designation']
-
-        task = datastore.Entity(
-            key=task_key,
-            exclude_from_indexes=[field['name'] for field in schema if field['datastore_indexed'] is False])
-        task.update(asteroid)
-        tasks.append(task)
-
-    return tasks
-
-
-def put_to_datastore(tasks, client):
-    try:
-        client.put_multi(tasks)
-    except BadRequest:
-        # Attempt same request with duplicates removed
-        unduplicated = []
-        keys = []
-        for task in tasks:
-            if task.key not in keys:
-                unduplicated.append(task)
-                keys.append(task.key)
-        client.put_multi(unduplicated)
-
-
-def get_datastore_delete_keys(chunk, schema, client):
-    field_names = [field['name'] for field in schema]
-    keys = []
-    for line in chunk:
-        line = line.strip().split(',')
-        parse_line(line, schema)
-
-        designation = line[field_names.index('designation')]
-        key = client.key('asteroid', designation)
-        keys.append(key)
-
-    return keys
-
-
-def delete_from_datastore(keys, client):
-    try:
-        client.delete_multi(keys)
-    except BadRequest:
-        unduplicated = []
-        for key in keys:
-            if key not in unduplicated:
-                unduplicated.append(key)
-        client.delete_multi(unduplicated)
-
-
-def gcloud_update_datastore(schema):
-    client = datastore.Client()
-    field_names = [field['name'] for field in schema]
-
-    count = 0
-    with open(FOLDER + 'overwrites.csv') as overwrites_file_object, \
-        open(FOLDER + 'successful_overwrites.csv', 'w') as successful:
-        overwrites = read_in_chunks(overwrites_file_object, num_lines=500)
-        for chunk in overwrites:
-            tasks = get_datastore_put_tasks(chunk, schema, client)
-            put_to_datastore(tasks, client)
-            successful.write(''.join(chunk))
-            count += len(tasks)
-            print("Placed {} entities to Google Datastore ({} total)".format(len(tasks), count))
-
-    count = 0
-    with open(FOLDER + 'deletions.csv') as deletions_file_object, \
-        open(FOLDER + 'successful_deletions.csv', 'w') as successful:
-        deletions = read_in_chunks(deletions_file_object, num_lines=500)
-        for chunk in deletions:
-            keys = get_datastore_delete_keys(chunk, schema, client)
-            delete_from_datastore(keys, client)
-            successful.write(''.join(chunk))
-            count += len(keys)
-            print("Deleted {} entities to Google Datastore ({} total)".format(len(keys), count))
-
-
-#-------------------------------------------------------------------------------
-#  Upload complete .csv to Google Cloud Bigquery
-#-------------------------------------------------------------------------------
-
-def gcloud_update_bigquery(schema):
-    client = bigquery.Client()
-    dataset = client.dataset(BIGQUERY_DATASET_ID)
-
-    job_config = bigquery.LoadJobConfig()
-    job_config.source_format = 'CSV'
-    job_config.skip_leading_rows = 1
-    job_config.schema = [bigquery.SchemaField(field['name'], field['bigquery_field']) for field in schema]
-
-    # Delete and reload
-    try:
-        client.delete_table(dataset.table('asteroids'))
-    except NotFound:
-        pass
-
-    print('Beginning load job to BigQuery...')
-    with open(FOLDER + 'asteroids.csv', 'rb') as file_obj:
-        load_job = client.load_table_from_file(
-            file_obj,
-            dataset.table('asteroids'),
-            job_config=job_config
-        )
-    load_job.result()
-    assert load_job.state == 'DONE'
-    print('BigQuery job completed successfully.')
-
-
-#-------------------------------------------------------------------------------
-#  Google Cloud Storage interaction
-#-------------------------------------------------------------------------------
-
-def gcloud_download_previous():
-    client = storage.Client()
-    bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
-    assert bucket.exists()
-
-    print("Downloading previous asteroid set...")
-    blob = bucket.blob('asteroids_previous.csv')
-    blob.download_to_filename(FOLDER + "asteroids_previous.csv")
-    print("Previous asteroid set downloaded successfully.")
-
-
-def glcoud_update_storage():
-    client = storage.Client()
-    bucket = client.bucket(GCLOUD_STORAGE_BUCKET)
-    assert bucket.exists()
-
-    blob = bucket.blob('asteroids_previous.csv')
-    blob.upload_from_filename(FOLDER + 'asteroids_previous.csv')
-    print("Successfully wrote CSV to google cloud.")
-
-
-#-------------------------------------------------------------------------------
-#  Ready workspace for next download
-#-------------------------------------------------------------------------------
-
-def get_num_lines_in_file(file_path):
-    count = 0
-    with open(file_path) as f:
-        for line in f:
-            count += 1
-
-    return count
-
-
-def consolidate_local_files():
-    n_overwrites = get_num_lines_in_file(FOLDER + 'overwrites.csv')
-    n_successful_overwrites = get_num_lines_in_file(FOLDER + 'successful_overwrites.csv')
-    if n_overwrites == n_successful_overwrites:
-        print('Correct number of successful overwrites.')
-    else:
-        raise Exception('Number of successful overwrites != overwrites. Exiting.')
-
-    n_deletions = get_num_lines_in_file(FOLDER + 'deletions.csv')
-    n_successful_deletions = get_num_lines_in_file(FOLDER + 'successful_deletions.csv')
-    if n_deletions == n_successful_deletions:
-        print('Correct number of successful deletions.')
-    else:
-        raise Exception('Number of successful deletions != deletions. Exiting.')
-
-    os.remove(FOLDER + 'overwrites.csv')
-    os.remove(FOLDER + 'successful_overwrites.csv')
-    os.remove(FOLDER + 'deletions.csv')
-    os.remove(FOLDER + 'successful_deletions.csv')
-    os.remove(FOLDER + 'asteroids_previous.csv')
-    os.remove(FOLDER + 'asteroids.dat')
-
-    os.rename(FOLDER + 'asteroids.csv', FOLDER + 'asteroids_previous.csv')
-
-    return n_successful_overwrites, n_successful_deletions
-
-
-#-------------------------------------------------------------------------------
-#  Make updates
-#-------------------------------------------------------------------------------
-
-def pickup():
-    if (os.path.isfile(FOLDER + 'overwrites.csv') and
-        os.path.isfile(FOLDER + 'successful_overwrites.csv')):
-        with open(FOLDER + 'overwrites.csv') as overwrites, \
-            open(FOLDER + 'successful_overwrites.csv') as successful_overwrites:
-            queued = overwrites.readlines()
-            successful = successful_overwrites.readlines()
-
-            queued = queued[len(successful):]
-
-        with open(FOLDER + 'overwrites.csv', 'w') as overwrites, \
-            open(FOLDER + 'successful_overwrites.csv', 'w') as successful_overwrites:
-            overwrites.write(''.join(queued))
-    else:
-        print('No successful overwrites to alter. ')
-
-    if (os.path.isfile(FOLDER + 'deletions.csv') and
-        os.path.isfile(FOLDER + 'successful_deletions.csv')):
-        with open(FOLDER + 'deletions.csv') as deletions, \
-            open(FOLDER + 'successful_deletions.csv') as successful_deletions:
-            queued = deletions.readlines()
-            successful = successful_deletions.readlines()
-
-            queued = queued[len(successful):]
-
-        with open(FOLDER + 'deletions.csv', 'w') as deletions, \
-            open(FOLDER + 'successful_deletions.csv', 'w') as successful_deletions:
-            deletions.write(''.join(queued))
-    else:
-        print('No successful deletions to alter')
-
-
-def update_site():
-    print('Beginning update of site backend...\n')
-    start = time.time()
-
-    schema = get_schema(FOLDER + 'schema.json')
-
-    print("Requesting .dat file from Minor Planet Center...")
-    download_latest()
-
-    if not os.path.isfile(FOLDER + 'asteroids_previous.csv'):
-        print('\nPrevious file was not present in folder, retrieving from back up...')
-        gcloud_download_previous()
-        print('Backup file retrieved. ')
-
-    print('\nProcessing .dat file...')
-    process_small_bodies(schema)
-
-    print('\nChecking for changes to asteroids...')
-    check_for_changes()
-    print('Changes recorded.')
-
-    print('\nUpdating datastore...')
-    gcloud_update_datastore(schema)
-    print('Datastore updated!')
-
-    print('\nUpdating bigquery...')
-    gcloud_update_bigquery(schema)
-    print('Updated bigquery!')
-
-    print('\nChecking and cleaning files...')
-    n_successful_overwrites, n_successful_deletions = consolidate_local_files()
-    print('File check successful, backend update successful!')
-
-    print('\nBacking up this asteroids csv to cloud storage...')
-    glcoud_update_storage()
-    print('Backup successful!\n')
-
-    end = time.time()
-
-    delta = str(datetime.timedelta(seconds=end-start)).split('.')[0]
-    message = 'Asteroids updated successfully for the day! :+1:\n' \
-        'There were {0} writes and {1} deletions. It took {2}.'.format(
-            n_successful_overwrites, 
-            n_successful_deletions, 
-            delta
-        )
-
-    print('\nUpdate of site backend completed successfully in {}. '.format(delta))
-    slack_notify(message, SLACK_CHANNEL)
+                df[c] = df[c].apply(lambda x: float(f'{x:.9e}'))
+        payload[k] = df.values.tolist()
+    return payload
+
+
+def write_web_payload(payload, write_uncompressed=False):
+    """Serialises and compresses a payload ready for the web.
+
+    Args:
+        payload (dict): Payload to be serialised.
+        write_uncompressed (bool): Whether to write the uncompressed JSON file.
+    """
+    uncompressed = json.dumps(payload).encode('utf-8')
+    if write_uncompressed:
+        with open(os.path.join(FOLDER, 'asteroids.json'), 'wb') as f:
+            f.write(uncompressed)
+
+    compressed = brotli.compress(uncompressed)
+    with open(os.path.join(FOLDER, 'asteroids.json.br'), 'wb') as f:
+        f.write(compressed)
+
+
+def copy_to_public():
+    shutil.copyfile(os.path.join(FOLDER, 'asteroids.json.br'),
+                    'app/public/assets/asteroids.json.br')
+
+
+def run_all(download=True, write_csv=False, write_uncompressed_json=False):
+    """Run all the download, processing, and compression steps.
+
+    Args:
+        download (bool): Whether to download the MPCORB.dat, or to expect it 
+            to be there (for debugging).
+        write_csv (bool): Whether to write the full dataframe as a CSV (for
+            debugging).
+        write_uncompressed_json (bool): Whether to write the uncompressed
+            serialisation to JSON before compression (for debugging).
+    """
+    if download is True:
+        download_latest()
+    df = get_asteroids_df()
+    if write_csv is True:
+        df.to_csv(os.path.join(FOLDER, 'asteroids.csv'))
+    payload = get_web_payload(df)
+    write_web_payload(payload, write_uncompressed_json)
+    copy_to_public()
 
 
 if __name__ == '__main__':
-    try:
-        update_site()
-    except Exception as e:
-        slack_notify('Update failed for some reason :cry:', SLACK_CHANNEL)
-        raise e
-
-    #pickup()
+    # Essentially runs in debug mode
+    run_all(False, True, True)

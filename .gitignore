@@ -1,6 +1,12 @@
 # private
 .credentials
 
+# intermediate files
+data/
+
+# generated public files
+app/public/assets
+
 # misc processing files
 pipeline/asteroids/*.csv
 pipeline/asteroids/*.dat

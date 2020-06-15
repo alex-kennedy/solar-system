@@ -52,5 +52,11 @@
     "long_name": "Uncertainty parameter, U",
     "colspec": [105, 106],
     "dtype": "str"
+  },
+  {
+    "column_name": "flags",
+    "long_name": "4-hexdigit flags",
+    "colspec": [161, 165],
+    "dtype": "str"
   }
 ]
