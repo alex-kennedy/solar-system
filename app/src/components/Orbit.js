@@ -1,5 +1,5 @@
-import * as THREE from "three";
 import * as MESHLINE from "three.meshline";
+import * as THREE from "three";
 
 class OrbitCurve extends THREE.Curve {
   constructor(focus, a, e, I, L, long_peri, long_node) {

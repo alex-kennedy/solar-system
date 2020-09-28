@@ -32,7 +32,7 @@ const solveKeplerEquation = (meanAnomaly, e, tol) => {
 
 const calculateEllipticPosition = (a, e, eccentricAnomaly) => {
   const r = a * (1 - e * Math.cos(eccentricAnomaly));
-  const atanArg = Math.sqrt((2 + e) / (1 - e)) * Math.tan(eccentricAnomaly / 2);
+  const atanArg = Math.sqrt((1 + e) / (1 - e)) * Math.tan(eccentricAnomaly / 2);
   const theta = 2 * Math.atan(atanArg);
   const x = r * Math.cos(theta);
   const y = r * Math.sin(theta);

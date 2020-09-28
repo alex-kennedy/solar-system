@@ -1,17 +1,17 @@
-import React, { Component } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import decompress from "brotli/decompress";
-import Stats from "three/examples/jsm/libs/stats.module";
-import calculateAsteroidPosition from "./Asteroids";
-
-import { Planet } from "./Orbit.js";
 import * as starShaders from "../assets/shaders/stars";
 
-import starTexture from "./../assets/stars/star.svg";
-import planetElements from "./../assets/planets/planetary_elements.json";
-import planetColours from "./../assets/planets/colours.json";
+import React, { Component } from "react";
+
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { Planet } from "./Orbit.js";
+import Stats from "three/examples/jsm/libs/stats.module";
 import asteroidStyles from './../assets/asteroids/styles.json';
+import calculateAsteroidPosition from "./Asteroids";
+import decompress from "brotli/decompress";
+import planetColours from "./../assets/planets/colours.json";
+import planetElements from "./../assets/planets/planetary_elements.json";
+import starTexture from "./../assets/stars/star.svg";
 
 const fetchBrotliAsJSON = async (path) => {
   const response = await fetch(path);
@@ -37,14 +37,12 @@ class Scene extends Component {
 
     window.addEventListener("resize", this.updateDimensions);
 
+    this.loadBrightStars();
     this.addControls();
     this.addStats();
-    this.loadBrightStars();
     this.addPlanets();
     this.addSun();
     this.loadAsteroids();
-
-    // this.addCelestialSphereWireframe();
   }
 
   createScene() {
@@ -77,6 +75,7 @@ class Scene extends Component {
     controls.dampingFactor = 0.15;
     controls.rotateSpeed = 0.5;
     controls.maxDistance = 100;
+    controls.enablePan = false;
     this.controls = controls;
   }
 
@@ -200,7 +199,10 @@ class Scene extends Component {
   }
 
   renderAsteroids(allAsteroids) {
+    const asteroidPoints = {};
+    
     for (const [type, asteroids] of Object.entries(allAsteroids)) {
+      // Gets asteroid locations
       let locations = new Float32Array(3 * asteroids.length);
       for (const [i, data] of asteroids.entries()) {
         let [x, y, z] = calculateAsteroidPosition(data);
@@ -222,8 +224,11 @@ class Scene extends Component {
         opacity: asteroidStyles.opacity[type],
       });
       let points = new THREE.Points(geometry, material);
+      
+      asteroidPoints[type] = points;
       this.scene.add(points);
     }
+    this.asteroidPoints = asteroidPoints;
   }
 
   updateDimensions() {

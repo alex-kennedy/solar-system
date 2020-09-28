@@ -13,6 +13,8 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
+import physics
+
 URL = 'http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT.gz'
 FOLDER = 'data/asteroids/'
 SCHEMA_PATH = 'pipeline/asteroids/schema.json'
@@ -305,16 +307,13 @@ def get_web_payload(df):
 
     """
     # Columns to send to the browser
-    columns_to_include = [
-        'm0', 'epoch_timestamp', 'mean_daily_motion', 'e', 'arg_perihelion',
-        'long_asc_node', 'i', 'a'
-    ]
+    columns_to_include = ['arg_perihelion', 'long_asc_node', 'i']
 
     # Processing steps to take (name, filter function, keep/remove)
     steps = (
         ('too_uncertain', lambda d:
          (d['u_number'].values >= 6) | (d['u_number'].values == -1), False),
-        ('distant', lambda d: d['orbit_type'].values == 10, True),
+        ('distant', lambda d: d['orbit_type'].values == 10, False),
         ('neo', lambda d: d['neo'].values == 1, True),
         ('hungaria', lambda d: d['orbit_type'].values == 6, True),
         ('trojan', lambda d: d['orbit_type'].values == 8, True),
@@ -345,9 +344,9 @@ def get_web_payload(df):
             if c == 'epoch_timestamp':
                 df[c] = df[c].astype(int)
             elif c in linear_variables:
-                df[c] = df[c].apply(lambda x: float(f'{x:.4e}'))
+                df[c] = df[c].apply(lambda x: float(f'{x:.3e}'))
             else:
-                df[c] = df[c].apply(lambda x: float(f'{x:.9e}'))
+                df[c] = df[c].apply(lambda x: float(f'{x:.6e}'))
         payload[k] = df.values.tolist()
     return payload
 
@@ -397,4 +396,4 @@ def run_all(download=True, write_csv=False, write_uncompressed_json=False):
 
 if __name__ == '__main__':
     # Essentially runs in debug mode
-    run_all(False, True, True)
+    run_all(True, True, True)

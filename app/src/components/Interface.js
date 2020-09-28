@@ -1,12 +1,12 @@
-import React from "react";
-import Button from "@material-ui/core/Button";
+import { AppBar, Grid, Slide, Switch, Typography } from "@material-ui/core";
 import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import { Grid, AppBar, Typography, Switch, Slide } from "@material-ui/core";
+
+import Button from "@material-ui/core/Button";
 import Paper from "@material-ui/core/Paper";
 import Toolbar from "@material-ui/core/Toolbar";
-// import MenuIcon from '@material-ui/icons/Menu'
-
 import svgLogo from "./../images/logo.svg";
+
+// import MenuIcon from '@material-ui/icons/Menu'
 
 const theme = createMuiTheme({
   palette: {
@@ -14,20 +14,20 @@ const theme = createMuiTheme({
       light: "#8bf5ff",
       main: "#4fc2f7",
       dark: "#0092c4",
-      contrastText: "#000"
+      contrastText: "#000",
     },
     secondary: {
       light: "#ffc4ff",
       main: "#ce93d8",
       dark: "#9c64a6",
-      contrastText: "#000"
-    }
-  }
+      contrastText: "#000",
+    },
+  },
 });
 
 class Settings extends React.Component {
   state = {
-    checked: false
+    checked: false,
   };
 
   handleChange = () => {
