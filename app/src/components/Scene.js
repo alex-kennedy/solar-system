@@ -1,15 +1,24 @@
+import * as THREE from "three";
+import * as starShaders from "../assets/shaders/stars";
+
 import React, { Component } from "react";
-import * as THREE from "three-full";
-import { OrbitControls } from "three-full";
-import * as Stats from "stats-js";
-import * as $ from "jquery";
-import * as csv from "parse-csv";
 
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Planet } from "./Orbit.js";
+import Stats from "three/examples/jsm/libs/stats.module";
+import asteroidStyles from './../assets/asteroids/styles.json';
+import calculateAsteroidPosition from "./Asteroids";
+import decompress from "brotli/decompress";
+import planetColours from "./../assets/planets/colours.json";
+import planetElements from "./../assets/planets/planetary_elements.json";
+import starTexture from "./../assets/stars/star.svg";
 
-import stars_file from "./../assets/stars/bright_stars.csv";
-import stars_texture from "./../assets/stars/star.svg";
-import planets from "./../assets/planets/planetary_elements.json";
+const fetchBrotliAsJSON = async (path) => {
+  const response = await fetch(path);
+  const buffer = await response.arrayBuffer();
+  const decompressed = decompress(Buffer(buffer));
+  return JSON.parse(new TextDecoder("utf-8").decode(decompressed));
+};
 
 class Scene extends Component {
   constructor(props) {
@@ -20,20 +29,19 @@ class Scene extends Component {
     this.animate = this.animate.bind(this);
     this.updateDimensions = this.updateDimensions.bind(this);
     this.renderBrightStars = this.renderBrightStars.bind(this);
+    this.renderAsteroids = this.renderAsteroids.bind(this);
   }
 
   componentDidMount() {
     this.createScene();
 
+    window.addEventListener("resize", this.updateDimensions);
+
+    this.loadBrightStars();
     this.addControls();
     this.addStats();
-    this.loadBrightStars();
+    this.addPlanets();
     this.addSun();
-    this.addPlanets(planets);
-
-    // this.addCelestialSphereWireframe();
-
-    window.addEventListener("resize", this.updateDimensions);
   }
 
   createScene() {
@@ -64,128 +72,162 @@ class Scene extends Component {
     this.camera.position.set(0, 0, 20);
     controls.enableDamping = true;
     controls.dampingFactor = 0.15;
-    controls.rotateSpeed = 0.15;
+    controls.rotateSpeed = 0.5;
     controls.maxDistance = 100;
-
+    controls.enablePan = false;
     this.controls = controls;
   }
 
   addStats() {
-    var stats = new Stats();
+    const stats = new Stats();
     stats.setMode(0); // 0: fps, 1: ms, 2: mb, 3+: custom
     this.stats = stats;
-    this.mount.appendChild(this.renderer.domElement);
+    this.mount.appendChild(this.stats.domElement);
   }
 
   addCelestialSphereWireframe() {
-    var radius = 100;
-    var segments = 100;
-    var rings = 100;
+    const radius = 100;
+    const segments = 100;
+    const rings = 100;
 
-    var geometry = new THREE.SphereGeometry(radius, segments, rings);
-    var material = new THREE.MeshBasicMaterial({
+    const geometry = new THREE.SphereGeometry(radius, segments, rings);
+    const material = new THREE.MeshBasicMaterial({
       color: 0xaaaaaa,
-      wireframe: true
+      wireframe: true,
     });
     material.side = THREE.DoubleSide;
 
-    var sphere = new THREE.Mesh(geometry, material);
+    const sphere = new THREE.Mesh(geometry, material);
     this.scene.add(sphere);
   }
 
   loadBrightStars() {
-    $.get(stars_file, this.renderBrightStars);
+    fetchBrotliAsJSON(
+      process.env.PUBLIC_URL + "/assets/bright_stars.json.br"
+    ).then(this.renderBrightStars);
   }
 
-  renderBrightStars(data) {
-    var parser = new csv.Parser();
-    var bright_stars = parser.parse(data).data;
+  renderBrightStars(brightStars) {
+    const sizes = new Float32Array(brightStars.length);
+    const positions = new Float32Array(brightStars.length * 3);
+    const colors = new Float32Array(brightStars.length * 3);
 
-    // console.log(bright_stars)
+    const color = new THREE.Color(1, 1, 1);
 
-    //Remove the column headers
-    bright_stars = bright_stars.slice(1);
+    for (let i = 0; i < brightStars.length; i++) {
+      positions[i * 3] = brightStars[i][1]; // x
+      positions[i * 3 + 1] = brightStars[i][2]; // y
+      positions[i * 3 + 2] = brightStars[i][3]; // z
 
-    var sizes = new Float32Array(bright_stars.length);
-    var positions = new Float32Array(bright_stars.length * 3);
-    var colors = new Float32Array(bright_stars.length * 3);
-
-    var color = new THREE.Color(1, 1, 1);
-
-    for (var i = 0; i < bright_stars.length; i++) {
-      positions[i * 3] = Number(bright_stars[i][1]); // x
-      positions[i * 3 + 1] = Number(bright_stars[i][2]); // y
-      positions[i * 3 + 2] = Number(bright_stars[i][3]); // z
-
-      sizes[i] = Number(bright_stars[i][0]) / 2.25;
+      sizes[i] = brightStars[i][0] / 2; // manually scaled brightness
 
       color.toArray(colors, i * 3);
     }
 
-    var geometry = new THREE.BufferGeometry();
-    geometry.addAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.addAttribute("size", new THREE.BufferAttribute(sizes, 1));
-    geometry.addAttribute("color_shader", new THREE.BufferAttribute(colors, 3));
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute("color_shader", new THREE.BufferAttribute(colors, 3));
 
-    var texture = new THREE.TextureLoader().load(stars_texture);
+    const texture = new THREE.TextureLoader().load(starTexture);
 
-    var material = new THREE.ShaderMaterial({
+    const material = new THREE.ShaderMaterial({
       uniforms: {
         color: { value: new THREE.Color(0xffffff) },
-        texture: { value: texture }
+        texture: { value: texture },
       },
-      vertexShader: document.getElementById("vertexshader").textContent,
-      fragmentShader: document.getElementById("fragmentshader").textContent,
-      transparent: true
+      vertexShader: starShaders.vertexShader,
+      fragmentShader: starShaders.fragmentShader,
+      transparent: true,
     });
 
-    var stars = new THREE.Points(geometry, material);
+    const stars = new THREE.Points(geometry, material);
     this.scene.add(stars);
   }
 
   addSun() {
-    var geometry = new THREE.Geometry();
-
-    var vertex = new THREE.Vector3();
-    vertex.x = 0;
-    vertex.y = 0;
-    vertex.z = 0;
-
-    geometry.vertices.push(vertex);
-
-    var material = new THREE.PointsMaterial({ size: 1 });
-    material.color.setRGB(1, 0.25, 0);
-    var particles = new THREE.Points(geometry, material);
-
-    this.scene.add(particles);
+    const geometry = new THREE.SphereBufferGeometry(1, 16, 16);
+    const material = new THREE.MeshBasicMaterial({
+      color: new THREE.Color("#F9D670"),
+    });
+    const sphere = new THREE.Mesh(geometry, material);
+    this.scene.add(sphere);
+    this.sun = sphere;
   }
 
-  addPlanets(planets_file) {
-    var planets = [];
+  addPlanets() {
+    const planets = [];
 
-    for (var system_name in planets_file) {
-      if (planets_file.hasOwnProperty(system_name)) {
-        var planet = new Planet(system_name, planets_file[system_name]);
+    // Adds the orbits of the planets
+    for (let systemName in planetElements) {
+      if (planetElements.hasOwnProperty(systemName)) {
+        const planet = new Planet(
+          systemName,
+          planetElements[systemName],
+          planetColours[systemName]
+        );
         planet.initialiseOrbit();
         planets.push(planet);
       }
     }
 
-    var geometry = new THREE.Geometry();
+    // Adds the sphere/dot representing each planet
+    for (let i = 0; i < planets.length; i++) {
+      planets[i].showInScene(this.scene, this.camera);
 
-    for (var i = 0; i < planets.length; i++) {
-      geometry.vertices.push(planets[i].currentPosition);
-      planets[i].showInScene(this.scene, this.camera); //, colours[i]
+      let geometry = new THREE.SphereBufferGeometry(1, 16, 16);
+      let material = new THREE.MeshBasicMaterial({
+        color: planetColours[planets[i].name],
+      });
+
+      let sphere = new THREE.Mesh(geometry, material);
+      let pos = planets[i].currentPosition;
+      sphere.position.set(pos.x, pos.y, pos.z);
+      planets[i].mesh = sphere;
+
+      this.scene.add(sphere);
     }
 
-    var size = 1;
-    var material = new THREE.PointsMaterial({ size: size });
-    material.color.setRGB(1, 1, 1);
-    var particles = new THREE.Points(geometry, material);
-
     this.planets = planets;
+  }
 
-    this.scene.add(particles);
+  loadAsteroids() {
+    fetchBrotliAsJSON(
+      process.env.PUBLIC_URL + "/assets/asteroids.json.br"
+    ).then(this.renderAsteroids);
+  }
+
+  renderAsteroids(allAsteroids) {
+    const asteroidPoints = {};
+    
+    for (const [type, asteroids] of Object.entries(allAsteroids)) {
+      // Gets asteroid locations
+      let locations = new Float32Array(3 * asteroids.length);
+      for (const [i, data] of asteroids.entries()) {
+        let [x, y, z] = calculateAsteroidPosition(data);
+        locations[3 * i] = x;
+        locations[3 * i + 1] = y;
+        locations[3 * i + 2] = z;
+      }
+
+      let geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(locations, 3)
+      );
+
+      let material = new THREE.PointsMaterial({
+        color: new THREE.Color(asteroidStyles.colours[type]),
+        size: 0.05,
+        transparent: true,
+        opacity: asteroidStyles.opacity[type],
+      });
+      let points = new THREE.Points(geometry, material);
+      
+      asteroidPoints[type] = points;
+      this.scene.add(points);
+    }
+    this.asteroidPoints = asteroidPoints;
   }
 
   updateDimensions() {
@@ -215,20 +257,34 @@ class Scene extends Component {
   animate() {
     this.stats.begin();
 
+    // Scale planets, sun
+    const scaleFactor = 250;
+    const scaleVector = new THREE.Vector3();
+    for (let i = 0; i < this.planets.length; i++) {
+      let scale =
+        scaleVector
+          .subVectors(this.planets[i].mesh.position, this.camera.position)
+          .length() / scaleFactor;
+      this.planets[i].mesh.scale.set(scale, scale, scale);
+    }
+    let scale =
+      scaleVector.subVectors(this.sun.position, this.camera.position).length() /
+      scaleFactor;
+    this.sun.scale.set(scale, scale, scale);
+
     this.renderer.render(this.scene, this.camera);
     this.controls.update();
 
     this.stats.end();
 
-    // requestAnimationFrame(animate);
-    this.frameId = window.requestAnimationFrame(this.animate);
+    this.frameId = requestAnimationFrame(this.animate);
   }
 
   render() {
     return (
       <div
         style={{ width: "100%", height: "100%" }}
-        ref={mount => {
+        ref={(mount) => {
           this.mount = mount;
         }}
       />

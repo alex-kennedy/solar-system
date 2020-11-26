@@ -1,8 +1,8 @@
 import unittest
-from astro.asteroids.get_small_bodies import *
+from process import *
+
 
 class TestUnpackFunctions(unittest.TestCase):
-
     def test_packed_letter_to_number(self):
         self.assertEqual(packed_letter_to_number('1'), '01')
         self.assertEqual(packed_letter_to_number('9'), '09')
@@ -20,7 +20,6 @@ class TestUnpackFunctions(unittest.TestCase):
         self.assertRaises(ValueError, packed_letter_to_number, '"')
         self.assertRaises(TypeError, packed_letter_to_number, 'hh')
         self.assertRaises(TypeError, packed_letter_to_number, 'hello there!')
-
 
     def test_unpack_designation(self):
         # From MPC website
@@ -43,7 +42,10 @@ class TestUnpackFunctions(unittest.TestCase):
         self.assertEqual(unpack_designation('A0345'), '100345')
         self.assertEqual(unpack_designation('a0017'), '360017')
         self.assertEqual(unpack_designation('K3289'), '203289')
-
+        self.assertEqual(unpack_designation('~0000'), '620000')
+        self.assertEqual(unpack_designation('~000z'), '620061')
+        self.assertEqual(unpack_designation('~AZaz'), '3140113')
+        self.assertEqual(unpack_designation('~zzzz'), '15396335')
 
     def test_unpack_epoch(self):
         # From MPC website
@@ -59,7 +61,6 @@ class TestUnpackFunctions(unittest.TestCase):
         self.assertEqual(unpack_epoch('I976C'), '1897-06-12')
         self.assertEqual(unpack_epoch('K162T'), '2016-02-29')
 
-
     def test_unpack_uncertainty_parameter(self):
         self.assertEqual(unpack_uncertainty_parameter('1'), (1, ''))
         self.assertEqual(unpack_uncertainty_parameter('2'), (2, ''))
@@ -68,7 +69,6 @@ class TestUnpackFunctions(unittest.TestCase):
         self.assertEqual(unpack_uncertainty_parameter('E'), (-1, 'E'))
         self.assertEqual(unpack_uncertainty_parameter('D'), (-1, 'D'))
         self.assertEqual(unpack_uncertainty_parameter('F'), (-1, 'F'))
-
 
     def test_unpack_flags(self):
         self.assertEqual(unpack_flags('5801'), (1, 1, 1, 0, 1, 0))
