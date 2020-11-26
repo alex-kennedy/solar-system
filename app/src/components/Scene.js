@@ -42,7 +42,6 @@ class Scene extends Component {
     this.addStats();
     this.addPlanets();
     this.addSun();
-    this.loadAsteroids();
   }
 
   createScene() {
