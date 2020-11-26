@@ -3,7 +3,9 @@ import io
 import json
 import logging
 import os
+import shutil
 
+import brotli
 import numpy as np
 import pandas as pd
 import requests
@@ -176,5 +178,24 @@ def process_bright_stars():
     df[cols].to_json(file_name, orient='values', double_precision=2)
 
 
-if __name__ == '__main__':
+def compress():
+    with open(os.path.join(FOLDER, 'bright_stars.json')) as fp:
+        uncompressed = fp.read().encode('utf-8')
+    compressed = brotli.compress(uncompressed)
+    with open(os.path.join(FOLDER, 'bright_stars.json.br'), 'wb') as f:
+        f.write(compressed)
+
+
+def copy_to_public():
+    shutil.copyfile(os.path.join(FOLDER, 'bright_stars.json.br'),
+                    'app/public/assets/bright_stars.json.br')
+
+
+def run_all():
     process_bright_stars()
+    compress()
+    copy_to_public()
+
+
+if __name__ == '__main__':
+    run_all()
