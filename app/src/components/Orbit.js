@@ -141,8 +141,6 @@ class Planet extends OrbitingObject {
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
       sizeAttenuation: false,
       lineWidth: 5,
-      near: camera.near,
-      far: camera.far,
     });
 
     const mesh = new THREE.Mesh(line.geometry, material);

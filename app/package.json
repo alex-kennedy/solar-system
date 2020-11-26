@@ -4,21 +4,21 @@
   "private": true,
   "homepage": "https://alexk.nz/solar-system/",
   "devDependencies": {
-    "@svgr/webpack": "^5.4.0",
+    "@svgr/webpack": "^5.5.0",
     "gh-pages": "^2.2.0",
-    "react-scripts": "^3.4.1"
+    "react-scripts": "^3.4.4"
   },
   "dependencies": {
-    "@material-ui/core": "^1.5.1",
-    "@material-ui/icons": "^1.1.1",
+    "@material-ui/core": "^4.11.1",
+    "@material-ui/icons": "^4.9.1",
     "brotli": "^1.3.2",
     "eslint-plugin-flowtype": "^3.13.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
     "stats-js": "^1.0.1",
     "three": "^0.116.1",
-    "three.meshline": "^1.2.0",
-    "typescript": "^3.8.3"
+    "three.meshline": "^1.3.0",
+    "typescript": "^3.9.7"
   },
   "scripts": {
     "predeploy": "npm run build",
