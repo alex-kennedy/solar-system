@@ -6,7 +6,7 @@ import React, { Component } from "react";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Planet } from "./Orbit.js";
 import Stats from "three/examples/jsm/libs/stats.module";
-import asteroidStyles from './../assets/asteroids/styles.json';
+import asteroidStyles from "./../assets/asteroids/styles.json";
 import calculateAsteroidPosition from "./Asteroids";
 import decompress from "brotli/decompress";
 import planetColours from "./../assets/planets/colours.json";
@@ -24,6 +24,10 @@ class Scene extends Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      wasmModule: null,
+    };
+
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
     this.animate = this.animate.bind(this);
@@ -33,6 +37,12 @@ class Scene extends Component {
   }
 
   componentDidMount() {
+    import("../wasm").then((wasmModule) => {
+      this.setState({ wasmModule: wasmModule });
+      window.wasmModule = wasmModule;
+      this.loadAsteroids();
+    });
+
     this.createScene();
 
     window.addEventListener("resize", this.updateDimensions);
@@ -197,17 +207,36 @@ class Scene extends Component {
     ).then(this.renderAsteroids);
   }
 
-  renderAsteroids(allAsteroids) {
+  renderAsteroids(payload) {
     const asteroidPoints = {};
-    
+
+    console.log(payload);
+
+    const allAsteroids = payload.asteroids;
+    const epoch = payload.meta.epoch;
+    const t = Date.now() / 1000;
+
+    console.log(asteroidStyles);
+
+
     for (const [type, asteroids] of Object.entries(allAsteroids)) {
+      console.log(type);
       // Gets asteroid locations
       let locations = new Float32Array(3 * asteroids.length);
       for (const [i, data] of asteroids.entries()) {
-        let [x, y, z] = calculateAsteroidPosition(data);
-        locations[3 * i] = x;
-        locations[3 * i + 1] = y;
-        locations[3 * i + 2] = z;
+        const buf = this.state.wasmModule.get_asteroid_position(
+          t,
+          epoch,
+          data[0],
+          data[1],
+          data[2],
+          data[3],
+          data[4],
+          data[5]
+        );
+        locations[3 * i] = buf[0];
+        locations[3 * i + 1] = buf[1];
+        locations[3 * i + 2] = buf[2];
       }
 
       let geometry = new THREE.BufferGeometry();
@@ -223,7 +252,7 @@ class Scene extends Component {
         opacity: asteroidStyles.opacity[type],
       });
       let points = new THREE.Points(geometry, material);
-      
+
       asteroidPoints[type] = points;
       this.scene.add(points);
     }

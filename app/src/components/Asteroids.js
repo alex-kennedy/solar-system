@@ -1,8 +1,8 @@
 const calculateAsteroidPosition = (d) => {
-  const meanAnomaly = calculateMeanAnomaly(d[0], d[1], d[2])
+  const meanAnomaly = calculateMeanAnomaly(d[0], d[1], d[2]);
   const eccentricAnomaly = solveKeplerEquation(meanAnomaly, d[3], 1e-6);
   const [x, y] = calculateEllipticPosition(d[7], d[3], eccentricAnomaly);
-  const [xDash, yDash, zDash] = rotate3d(x, y, d[4], d[5], d[6])
+  const [xDash, yDash, zDash] = rotate3d(x, y, d[4], d[5], d[6]);
   return [xDash, yDash, zDash];
 };
 
@@ -58,6 +58,6 @@ const rotate3d = (x, y, argPeri, longAsc, inc) => {
   const yDash = q10 * x + q11 * y;
   const zDash = q20 * x + q21 * y;
   return [xDash, yDash, zDash];
-}
+};
 
 export default calculateAsteroidPosition;

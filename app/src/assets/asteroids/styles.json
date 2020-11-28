@@ -6,7 +6,7 @@
     "neo": "#d3fbe5",
     "hilda": "#ffc8b7",
     "distant": "#e25969",
-    "other": "#A8414B"
+    "belt": "#A8414B"
   },
   "opacity": {
     "trojan": 0.75,
@@ -15,6 +15,6 @@
     "neo": 0.35,
     "hilda": 0.75,
     "distant": 1,
-    "other": 0.5
+    "belt": 0.5
   }
 }
