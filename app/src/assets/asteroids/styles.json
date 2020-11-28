@@ -5,16 +5,14 @@
     "hungaria": "#bef1e8",
     "neo": "#d3fbe5",
     "hilda": "#ffc8b7",
-    "distant": "#e25969",
     "belt": "#A8414B"
   },
   "opacity": {
-    "trojan": 0.75,
+    "trojan": 1,
     "q_bound": 1,
     "hungaria": 1,
     "neo": 0.35,
-    "hilda": 0.75,
-    "distant": 1,
+    "hilda": 1,
     "belt": 0.5
   }
 }

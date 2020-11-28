@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import * as starShaders from "../assets/shaders/stars";
+import * as asteroidShaders from "../assets/shaders/asteroids";
 
-import React, { Component } from "react";
+import React, { Component, useCallback } from "react";
 
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Planet } from "./Orbit.js";
@@ -40,6 +41,7 @@ class Scene extends Component {
     import("../wasm").then((wasmModule) => {
       this.setState({ wasmModule: wasmModule });
       window.wasmModule = wasmModule;
+      wasmModule.debug_init();
       this.loadAsteroids();
     });
 
@@ -208,19 +210,14 @@ class Scene extends Component {
   }
 
   renderAsteroids(payload) {
+    console.time("renderAsteroids");
+
     const asteroidPoints = {};
-
-    console.log(payload);
-
     const allAsteroids = payload.asteroids;
     const epoch = payload.meta.epoch;
     const t = Date.now() / 1000;
 
-    console.log(asteroidStyles);
-
-
     for (const [type, asteroids] of Object.entries(allAsteroids)) {
-      console.log(type);
       // Gets asteroid locations
       let locations = new Float32Array(3 * asteroids.length);
       for (const [i, data] of asteroids.entries()) {
@@ -245,18 +242,32 @@ class Scene extends Component {
         new THREE.BufferAttribute(locations, 3)
       );
 
-      let material = new THREE.PointsMaterial({
-        color: new THREE.Color(asteroidStyles.colours[type]),
-        size: 0.05,
+      let numVertices = geometry.attributes.position.count;
+      var alphas = new Float32Array(numVertices);
+
+      for (var i = 0; i < numVertices; i++) {
+        alphas[i] = asteroidStyles.opacity[type];
+      }
+      geometry.setAttribute("alpha", new THREE.BufferAttribute(alphas, 1));
+
+      var shaderMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          color: { value: new THREE.Color(asteroidStyles.colours[type]) },
+        },
+        vertexShader: asteroidShaders.vertexShader,
+        fragmentShader: asteroidShaders.fragmentShader,
         transparent: true,
-        opacity: asteroidStyles.opacity[type],
+        depthTest: true,
       });
-      let points = new THREE.Points(geometry, material);
+
+      let points = new THREE.Points(geometry, shaderMaterial);
 
       asteroidPoints[type] = points;
       this.scene.add(points);
     }
     this.asteroidPoints = asteroidPoints;
+
+    console.timeEnd("renderAsteroids");
   }
 
   updateDimensions() {
