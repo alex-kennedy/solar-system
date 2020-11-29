@@ -5,6 +5,10 @@ body {
   overflow: hidden;
 }
 
+canvas:focus {
+  outline: none;
+}
+
 #container {
   width: 100%;
   height: 100%;

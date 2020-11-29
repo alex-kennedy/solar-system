@@ -1,15 +1,22 @@
-const calculateAsteroidPosition = (d) => {
-  const meanAnomaly = calculateMeanAnomaly(d[0], d[1], d[2])
-  const eccentricAnomaly = solveKeplerEquation(meanAnomaly, d[3], 1e-6);
-  const [x, y] = calculateEllipticPosition(d[7], d[3], eccentricAnomaly);
-  const [xDash, yDash, zDash] = rotate3d(x, y, d[4], d[5], d[6])
+const calculateAsteroidPosition = (t, epoch, orbit) => {
+  const e = orbit[0];
+  const a = orbit[1];
+  const i = orbit[2];
+  const long_asc = orbit[3];
+  const arg_peri = orbit[4];
+  let mean_anomaly = orbit[5];
+
+  mean_anomaly = mean_anomaly + calculateMeanMotion(a) * (t - epoch);
+  const eccentricAnomaly = solveKeplerEquation(mean_anomaly, e, 1e-6);
+  const [x, y] = calculateEllipticPosition(a, e, eccentricAnomaly);
+  const [xDash, yDash, zDash] = rotate3d(x, y, arg_peri, long_asc, i);
   return [xDash, yDash, zDash];
 };
 
-const calculateMeanAnomaly = (m0, t0, n) => {
-  let m = m0 + (n * (new Date().getTime() / 1000 - t0)) / 86400;
-  m %= 2 * Math.PI;
-  return m;
+const calculateMeanMotion = (a) => {
+  return Math.sqrt(
+    (6.6743015e-11 * 1.98847e30) / Math.pow(a * 1.495978707e11, 3)
+  );
 };
 
 const solveKeplerEquation = (meanAnomaly, e, tol) => {
@@ -58,6 +65,6 @@ const rotate3d = (x, y, argPeri, longAsc, inc) => {
   const yDash = q10 * x + q11 * y;
   const zDash = q20 * x + q21 * y;
   return [xDash, yDash, zDash];
-}
+};
 
 export default calculateAsteroidPosition;
