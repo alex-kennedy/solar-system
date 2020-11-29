@@ -1,6 +1,5 @@
 mod utils;
 
-use js_sys;
 use wasm_bindgen::prelude::*;
 
 /// Tolerance for solving Kepler's equation
@@ -15,8 +14,12 @@ const GRAVITATIONAL_CONSTANT: f32 = 6.6743015e-11;
 /// Astronomical unit in metres
 const ASTRONOMICAL_UNIT: f32 = 1.495978707e11;
 
-/// Calculates eccentric anomaly by solving Kepler's equation.
 #[wasm_bindgen]
+pub fn debug_init() {
+    utils::set_panic_hook();
+}
+
+/// Calculates eccentric anomaly by solving Kepler's equation.
 pub fn solve_keplers_equation(mean_anomaly: f32, eccentricity: f32) -> f32 {
     // Sensible initialisation of the eccentric anomaly
     let mut eccentric_anomaly: f32;
@@ -36,7 +39,7 @@ pub fn solve_keplers_equation(mean_anomaly: f32, eccentricity: f32) -> f32 {
     }
 
     if iteration_count >= 100 {
-        utils::log("bad kepler!")
+        utils::log("Solving Kepler's equation exceeded iteration limit")
     }
 
     eccentric_anomaly
@@ -76,42 +79,73 @@ fn calculate_mean_motion(a: f32) -> f32 {
     (GRAVITATIONAL_CONSTANT * MASS_SUN / ((a * ASTRONOMICAL_UNIT).powi(3))).sqrt()
 }
 
-/// Calculates position of an asteroid at a time t in heliocentric coordinates.
-///
-/// # Arguments
-///
-/// * `t` -- Time at which to calculate position (Unix seconds)
-/// * `epoch` -- Epoch time of the mean anomaly (Unix seconds)
-/// * `e` -- Orbital eccentricity
-/// * `a` -- Semi-major axis of the orbit (AU)
-/// * `i` -- Orbital inclinations (rad)
-/// * `long_asc` -- Longitude of the ascending node (rad)
-/// * `arg_peri` -- Argument of perihelion (rad)
-/// * `mean_anomaly` -- Mean anomaly at the epoch (rad)
-///
-/// # Returns
-///
-/// A length 3 js_sys::Float32Array containing the heliocentric cartesian
-/// coordinates x, y, z
-#[wasm_bindgen]
-pub fn get_asteroid_position(
-    t: f32,
-    epoch: f32,
+#[derive(Clone)]
+pub struct Asteroid {
     e: f32,
     a: f32,
     i: f32,
     long_asc: f32,
     arg_peri: f32,
     mean_anomaly: f32,
-) -> js_sys::Float32Array {
-    let mean_motion = calculate_mean_motion(a);
-    let mean_anomaly = mean_anomaly + mean_motion * (t - epoch);
-    let eccentric_anomaly = solve_keplers_equation(mean_anomaly, e);
-    let (x, y) = calculate_elliptic_position(a, e, eccentric_anomaly);
-    let (x, y, z) = rotate_3d(x, y, arg_peri, long_asc, i);
-    let result = js_sys::Float32Array::new_with_length(3);
-    result.set_index(0, x);
-    result.set_index(1, y);
-    result.set_index(2, z);
-    result
+}
+
+#[derive(Clone)]
+pub struct Vector3 {
+    x: f32,
+    y: f32,
+    z: f32,
+}
+
+#[wasm_bindgen]
+pub struct AsteroidSet {
+    epoch: f32,
+    asteroids: Vec<Asteroid>,
+    locations: Vec<Vector3>,
+}
+
+#[wasm_bindgen]
+impl AsteroidSet {
+    pub fn new(count: usize, epoch: f32) -> AsteroidSet {
+        let asteroid = Asteroid {
+            e: 0.0,
+            a: 0.0,
+            i: 0.0,
+            long_asc: 0.0,
+            arg_peri: 0.0,
+            mean_anomaly: 0.0,
+        };
+        let location = Vector3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let asteroids = vec![asteroid; count];
+        let locations = vec![location; count];
+        AsteroidSet {
+            epoch,
+            asteroids,
+            locations,
+        }
+    }
+
+    pub fn asteroids_ptr(&self) -> *const Asteroid {
+        self.asteroids.as_ptr()
+    }
+
+    pub fn locations_ptr(&self) -> *const Vector3 {
+        self.locations.as_ptr()
+    }
+
+    pub fn recompute_locations(&mut self, t: f32) {
+        for (idx, ast) in self.asteroids.iter().enumerate() {
+            let mean_motion = calculate_mean_motion(ast.a);
+            let mean_anomaly = ast.mean_anomaly + mean_motion * (t - self.epoch);
+            let eccentric_anomaly = solve_keplers_equation(mean_anomaly, ast.e);
+            let (x, y) = calculate_elliptic_position(ast.a, ast.e, eccentric_anomaly);
+            let (x, y, z) = rotate_3d(x, y, ast.arg_peri, ast.long_asc, ast.i);
+            self.locations[idx].x = x;
+            self.locations[idx].y = y;
+            self.locations[idx].z = z;
+        }
+    }
 }
