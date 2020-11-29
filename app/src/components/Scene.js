@@ -3,7 +3,6 @@ import * as starShaders from "../assets/shaders/stars";
 import * as asteroidShaders from "../assets/shaders/asteroids";
 
 import React, { Component } from "react";
-
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Planet } from "./Orbit.js";
 import Stats from "three/examples/jsm/libs/stats.module";
@@ -12,16 +11,14 @@ import planetColours from "./../assets/planets/colours.json";
 import planetElements from "./../assets/planets/planetary_elements.json";
 import starTexture from "./../assets/stars/star.svg";
 import { fetchBrotliAsJSON } from "./../utils";
-
 import AsteroidsWorker from "./../workers/asteroids.worker";
+import LoaderSnackbar from "./LoaderSnackbar";
 
 class Scene extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      wasmModule: null,
-    };
+    this.state = { loadingAsteroids: true };
 
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
@@ -47,7 +44,6 @@ class Scene extends Component {
     this.addSun();
 
     this.asteroidsWorker = new AsteroidsWorker();
-    console.log(this.asteroidsWorker);
     this.asteroidsWorker.onmessage = this.handleAsteroidWorkerMessage;
     this.asteroidsWorker.postMessage({ cmd: "init" });
 
@@ -202,7 +198,6 @@ class Scene extends Component {
   }
 
   handleAsteroidWorkerMessage(message) {
-    console.log(message);
     if (message.data.cmd === "initComplete") {
       this.renderAsteroids(message.data.locations);
     } else {
@@ -240,6 +235,8 @@ class Scene extends Component {
       this.scene.add(points);
       this.asteroidPoints[type] = points;
     }
+
+    this.setState({ loadingAsteroids: false });
   }
 
   updateAsteroids(locationsByType) {
@@ -249,11 +246,9 @@ class Scene extends Component {
         new THREE.BufferAttribute(locationsByType[type], 3)
       );
     }
-    console.timeEnd("update");
   }
 
   requestAsteroidUpdate(t) {
-    console.time("update");
     this.asteroidsWorker.postMessage({ cmd: "update", t: t });
   }
 
@@ -309,12 +304,15 @@ class Scene extends Component {
 
   render() {
     return (
-      <div
-        style={{ width: "100%", height: "100%" }}
-        ref={(mount) => {
-          this.mount = mount;
-        }}
-      />
+      <>
+        <div
+          style={{ width: "100%", height: "100%" }}
+          ref={(mount) => {
+            this.mount = mount;
+          }}
+        />
+        <LoaderSnackbar open={this.state.loadingAsteroids} />
+      </>
     );
   }
 }
