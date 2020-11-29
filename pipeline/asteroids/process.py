@@ -51,6 +51,7 @@ def get_web_payload(df, include_other=False):
         ('too_uncertain', lambda d:
          (d['u_number'].values >= 6) | (d['u_number'].values == -1), False),
         ('distant', lambda d: d['orbit_type'].values == 10, False),
+        ('unbounded', lambda d: d['e'].values > 1, False),
         ('neo', lambda d: d['neo'].values == 1, True),
         ('hungaria', lambda d: d['orbit_type'].values == 6, True),
         ('trojan', lambda d: d['orbit_type'].values == 8, True),
