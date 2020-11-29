@@ -88,7 +88,7 @@ class Scene extends Component {
     const stats = new Stats();
     stats.setMode(0); // 0: fps, 1: ms, 2: mb, 3+: custom
     this.stats = stats;
-    this.mount.appendChild(this.stats.domElement);
+    // this.mount.appendChild(this.stats.domElement); // lazily comment it out for prod
   }
 
   addCelestialSphereWireframe() {
