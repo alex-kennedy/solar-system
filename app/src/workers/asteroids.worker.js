@@ -11,15 +11,21 @@ self.onmessage = (message) => {
 };
 
 async function init() {
-  const wasmPromise = import("../components/AsteroidSet").then((wasmModule) => {
-    self.wasmModule = wasmModule;
-  });
-  const payloadPromise = fetchBrotliAsJSON(
-    process.env.PUBLIC_URL + "/assets/asteroids.json.br"
-  );
-  const results = await Promise.all([wasmPromise, payloadPromise]);
-  self.asteroidSets = createAsteroidSets(results[1]);
-  self.postMessage({ cmd: "initComplete", locations: getLocationBuffers() });
+  try {
+    const wasmPromise = import("../components/AsteroidSet").then(
+      (wasmModule) => {
+        self.wasmModule = wasmModule;
+      }
+    );
+    const payloadPromise = fetchBrotliAsJSON(
+      process.env.PUBLIC_URL + "/assets/asteroids.json.br"
+    );
+    const results = await Promise.all([wasmPromise, payloadPromise]);
+    self.asteroidSets = createAsteroidSets(results[1]);
+    self.postMessage({ cmd: "initComplete", locations: getLocationBuffers() });
+  } catch {
+    self.postMessage({ cmd: "error" });
+  }
 }
 
 function recomputeLocations(t) {

@@ -13,18 +13,21 @@ import starTexture from "./../assets/stars/star.svg";
 import { fetchBrotliAsJSON } from "./../utils";
 import AsteroidsWorker from "./../workers/asteroids.worker";
 import LoaderSnackbar from "./LoaderSnackbar";
+import LoadErrorSnackbar from "./LoadErrorSnackbar";
 
 class Scene extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { loadingAsteroids: true };
+    this.state = { loadingAsteroids: true, loadingAsteroidsError: false };
 
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
     this.animate = this.animate.bind(this);
     this.updateDimensions = this.updateDimensions.bind(this);
     this.renderBrightStars = this.renderBrightStars.bind(this);
+    this.handleAsteroidLoadFailure = this.handleAsteroidLoadFailure.bind(this);
+    this.handleAsteroidErrorClose = this.handleAsteroidErrorClose.bind(this);
     this.renderAsteroids = this.renderAsteroids.bind(this);
     this.updateAsteroids = this.updateAsteroids.bind(this);
     this.handleAsteroidWorkerMessage = this.handleAsteroidWorkerMessage.bind(
@@ -198,11 +201,24 @@ class Scene extends Component {
   }
 
   handleAsteroidWorkerMessage(message) {
-    if (message.data.cmd === "initComplete") {
+    if (message.data.cmd === "error") {
+      this.handleAsteroidLoadFailure();
+    } else if (message.data.cmd === "initComplete") {
       this.renderAsteroids(message.data.locations);
     } else {
       this.updateAsteroids(message.data.locations);
     }
+  }
+
+  handleAsteroidLoadFailure() {
+    this.setState({ loadingAsteroids: false, loadingAsteroidsError: true });
+  }
+
+  handleAsteroidErrorClose(event, reason) {
+    if (reason === "clickaway") {
+      return;
+    }
+    this.setState({ loadingAsteroidsError: false });
   }
 
   renderAsteroids(locationsByType) {
@@ -312,6 +328,10 @@ class Scene extends Component {
           }}
         />
         <LoaderSnackbar open={this.state.loadingAsteroids} />
+        <LoadErrorSnackbar
+          open={this.state.loadingAsteroidsError}
+          handleClose={this.handleAsteroidErrorClose}
+        />
       </>
     );
   }
