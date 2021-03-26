@@ -8,14 +8,12 @@ self.onmessage = (message) => {
   } else {
     recomputeLocations(message.data.t);
   }
-}; 
+};
 
 async function init() {
-  const wasmPromise = import("./../components/AsteroidSet").then(
-    (wasmModule) => {
-      self.wasmModule = wasmModule;
-    }
-  );
+  const wasmPromise = import("../components/AsteroidSet").then((wasmModule) => {
+    self.wasmModule = wasmModule;
+  });
   const payloadPromise = fetchBrotliAsJSON(
     process.env.PUBLIC_URL + "/assets/asteroids.json.br"
   );
@@ -45,7 +43,7 @@ function createAsteroidSets(payload) {
 function getLocationBuffers() {
   const locations = {};
   for (const [type, asteroids] of Object.entries(self.asteroidSets)) {
-    locations[type] = asteroids.locationsBuffer();
+    locations[type] = asteroids.locationsBuffer().slice(0);
   }
   return locations;
 }
