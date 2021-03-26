@@ -4,11 +4,11 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/solar-system/0c45ba350a919bbfb67c.module.wasm"
   },
   {
-    "revision": "89b154c647ae227474fe1d188a3270bd",
+    "revision": "698ddaef85776c7a86b454eb13db8bbc",
     "url": "/solar-system/index.html"
   },
   {
-    "revision": "1b9af2584fb6358b8b59",
+    "revision": "bbc86e4639c9b151b8a7",
     "url": "/solar-system/static/css/main.b4c135e1.chunk.css"
   },
   {
@@ -24,16 +24,16 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/solar-system/static/js/2.9133dd82.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "b20c2c54b1c3734635b7f896bec4851f",
-    "url": "/solar-system/static/js/asteroids.worker.31be8726.worker.js"
+    "revision": "cb96e59f2dd9d632d5172daaefec9f2a",
+    "url": "/solar-system/static/js/asteroids.worker.4237ce45.worker.js"
   },
   {
     "revision": "c47fb89f944fc413937f1d857df6495a",
-    "url": "/solar-system/static/js/asteroids.worker.31be8726.worker.js.LICENSE.txt"
+    "url": "/solar-system/static/js/asteroids.worker.4237ce45.worker.js.LICENSE.txt"
   },
   {
-    "revision": "1b9af2584fb6358b8b59",
-    "url": "/solar-system/static/js/main.d74ccf59.chunk.js"
+    "revision": "bbc86e4639c9b151b8a7",
+    "url": "/solar-system/static/js/main.0a5fc71e.chunk.js"
   },
   {
     "revision": "9da12386ee5a878ceb24",
