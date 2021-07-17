@@ -3,6 +3,7 @@
 
 # intermediate files
 data/
+temp/
 
 # generated public files
 app/public/assets
