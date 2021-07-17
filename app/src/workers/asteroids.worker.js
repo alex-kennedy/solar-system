@@ -1,6 +1,6 @@
 import { fetchBrotliAsJSON } from "../utils";
 
-/* eslint-enable no-restricted-globals */
+/* eslint-disable no-restricted-globals */
 
 const ASTEROIDS_PAYLOAD = process.env.PUBLIC_URL + "/assets/asteroids.json.br";
 
