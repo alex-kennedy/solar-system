@@ -1,8 +1,5 @@
+brotli
+pandas
+numpy
 requests
-datetime
 tqdm
-google-cloud-datastore
-google-cloud-storage
-google-cloud-bigquery
-slackclient
-flask
