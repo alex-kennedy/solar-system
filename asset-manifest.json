@@ -1,29 +1,29 @@
 {
   "files": {
     "main.css": "/solar-system/static/css/main.b4c135e1.chunk.css",
-    "main.js": "/solar-system/static/js/main.c4ee91e3.chunk.js",
-    "main.js.map": "/solar-system/static/js/main.c4ee91e3.chunk.js.map",
+    "main.js": "/solar-system/static/js/main.c2abf656.chunk.js",
+    "main.js.map": "/solar-system/static/js/main.c2abf656.chunk.js.map",
     "runtime-main.js": "/solar-system/static/js/runtime-main.fe1130a2.js",
     "runtime-main.js.map": "/solar-system/static/js/runtime-main.fe1130a2.js.map",
     "static/js/2.93907344.chunk.js": "/solar-system/static/js/2.93907344.chunk.js",
     "static/js/2.93907344.chunk.js.map": "/solar-system/static/js/2.93907344.chunk.js.map",
-    "0c45ba350a919bbfb67c.module.wasm": "/solar-system/0c45ba350a919bbfb67c.module.wasm",
+    "b5d9102c12237749632b.module.wasm": "/solar-system/b5d9102c12237749632b.module.wasm",
     "index.html": "/solar-system/index.html",
-    "precache-manifest.99bde9160f2c3a8516da7b1b9b08a747.js": "/solar-system/precache-manifest.99bde9160f2c3a8516da7b1b9b08a747.js",
+    "precache-manifest.1d2339757f1c4294426c23393e964ef7.js": "/solar-system/precache-manifest.1d2339757f1c4294426c23393e964ef7.js",
     "service-worker.js": "/solar-system/service-worker.js",
     "static/css/main.b4c135e1.chunk.css.map": "/solar-system/static/css/main.b4c135e1.chunk.css.map",
-    "static/js/1.57d35084.chunk.worker.js": "/solar-system/static/js/1.57d35084.chunk.worker.js",
-    "static/js/1.57d35084.chunk.worker.js.map": "/solar-system/static/js/1.57d35084.chunk.worker.js.map",
+    "static/js/1.e2f7bfc7.chunk.worker.js": "/solar-system/static/js/1.e2f7bfc7.chunk.worker.js",
+    "static/js/1.e2f7bfc7.chunk.worker.js.map": "/solar-system/static/js/1.e2f7bfc7.chunk.worker.js.map",
     "static/js/2.93907344.chunk.js.LICENSE.txt": "/solar-system/static/js/2.93907344.chunk.js.LICENSE.txt",
-    "static/js/asteroids.worker.dc8eb625.worker.js": "/solar-system/static/js/asteroids.worker.dc8eb625.worker.js",
-    "static/js/asteroids.worker.dc8eb625.worker.js.LICENSE.txt": "/solar-system/static/js/asteroids.worker.dc8eb625.worker.js.LICENSE.txt",
-    "static/js/asteroids.worker.dc8eb625.worker.js.map": "/solar-system/static/js/asteroids.worker.dc8eb625.worker.js.map",
+    "static/js/asteroids.worker.b082a23d.worker.js": "/solar-system/static/js/asteroids.worker.b082a23d.worker.js",
+    "static/js/asteroids.worker.b082a23d.worker.js.LICENSE.txt": "/solar-system/static/js/asteroids.worker.b082a23d.worker.js.LICENSE.txt",
+    "static/js/asteroids.worker.b082a23d.worker.js.map": "/solar-system/static/js/asteroids.worker.b082a23d.worker.js.map",
     "static/media/star.svg": "/solar-system/static/media/star.85baf2a7.svg"
   },
   "entrypoints": [
     "static/js/runtime-main.fe1130a2.js",
     "static/js/2.93907344.chunk.js",
     "static/css/main.b4c135e1.chunk.css",
-    "static/js/main.c4ee91e3.chunk.js"
+    "static/js/main.c2abf656.chunk.js"
   ]
 }
