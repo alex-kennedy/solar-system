@@ -4,20 +4,22 @@ import * as wasm from "../wasm/index";
 wasm.debug_init();
 
 class AsteroidSet {
-  constructor(internal) {
+  internal: wasm.AsteroidSet;
+  locationsComputed: boolean = false;
+
+  constructor(internal: wasm.AsteroidSet) {
     this.internal = internal;
-    this.locationsComputed = false;
   }
 
-  static withCapacity(capacity) {
+  static withCapacity(capacity: number) {
     return new AsteroidSet(wasm.AsteroidSet.with_capacity(capacity));
   }
 
-  setEpoch(epoch) {
+  setEpoch(epoch: number) {
     this.internal.set_epoch(epoch);
   }
 
-  recomputeLocations(t) {
+  recomputeLocations(t: number) {
     this.internal.recompute_locations(t);
     this.locationsComputed = true;
   }
