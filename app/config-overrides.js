@@ -17,7 +17,6 @@ module.exports = function override(config, env) {
   config.plugins = (config.plugins || []).concat([
     new WasmPackPlugin({
       crateDirectory: path.resolve(__dirname, "../rust"),
-      extraArgs: "--no-typescript",
       outDir: path.resolve(__dirname, "./src/wasm"),
     }),
   ]);
