@@ -6,7 +6,7 @@ const ASTEROIDS_PAYLOAD = process.env.PUBLIC_URL + "/assets/asteroids.json.br";
 
 self.onmessage = (message) => {
   if (message.data.cmd === "init") {
-    init();
+    init().catch((err) => postError(err));
   } else {
     recomputeLocations(message.data.t);
   }
