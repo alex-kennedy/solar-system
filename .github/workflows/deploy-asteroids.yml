@@ -22,4 +22,4 @@ jobs:
       - name: deploy
         run: |
           cd /solar-system
-          python pipeline/asteroids/process.py --universe=prod
+          python3 pipeline/asteroids/process.py --universe=prod
