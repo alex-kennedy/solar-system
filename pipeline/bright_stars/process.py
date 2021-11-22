@@ -1,3 +1,9 @@
+"""Downloads and generates spec for bright (or visible by eye) stars.
+
+Bright stars change on astronomical time scales, so this can be build with the
+site deployment. Update them if something goes supernova :)
+"""
+
 import gzip
 import io
 import json
@@ -15,12 +21,17 @@ logger = logging.getLogger(__name__)
 
 FOLDER = 'data/bright_stars/'
 SCHEMA_PATH = 'pipeline/bright_stars/schema.json'
-CATALOG_DOWNLOAD_LOCATION = 'http://tdc-www.harvard.edu/catalogs/bsc5.dat.gz'
+CATALOG_URL = 'http://tdc-www.harvard.edu/catalogs/bsc5.dat.gz'
+
+
+def make_folders():
+    """Sets up necessary directories."""
+    os.makedirs(FOLDER, exist_ok=True)
 
 
 def download_catalog():
     """Downloads and unzips the bright star catalog (fixed-width text file).
-    
+
     The file is static, hence the simple check if it exists before downloading.
     """
     file_name = os.path.join(FOLDER, 'catalog.txt')
@@ -28,7 +39,7 @@ def download_catalog():
         logger.info('Bright stars catalog exists, skipping download')
         return
 
-    r = requests.get(CATALOG_DOWNLOAD_LOCATION)
+    r = requests.get(CATALOG_URL)
     r.raise_for_status()
 
     zipped_io = io.BytesIO()
@@ -77,7 +88,7 @@ def get_ra(rah, ram, ras):
         rah (float): Hours right ascension.
         ram (float): Minutes right ascension.
         ras (float): Seconds right ascension.
-    
+
     Returns:
         float: right ascension in radians
     """
@@ -129,7 +140,7 @@ def get_intensity(vmag, ndigits=2):
     This value is later used to determine the size of the star rendered on the
     celestial sphere. All sizes normalised to within 0 and 10.
 
-    Args: 
+    Args:
         vmag (pandas.Series): visual magnitude of the stars
 
     Returns:
@@ -144,9 +155,9 @@ def get_intensity(vmag, ndigits=2):
 
 def get_stars_df():
     """Produce an enriched dataframe of the Bright Stars Catalogue.
-    
+
     Parses the Bright Star Catalogue to a Pandas data frame from a schema.
-    Script should be run from the repository root directory. 
+    Script should be run from the repository root directory.
 
     Returns:
         panda.DataFrame: enriched dataframe from the catalogue
@@ -192,6 +203,7 @@ def copy_to_public():
 
 
 def run_all():
+    make_folders()
     process_bright_stars()
     compress()
     copy_to_public()
