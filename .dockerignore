@@ -1,0 +1,8 @@
+**/node_modules/
+app/build/
+app/temp/
+data/
+public/assets/
+rust/pkg/
+rust/target/
+.git
