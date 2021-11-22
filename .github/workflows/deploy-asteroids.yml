@@ -1,0 +1,22 @@
+on:
+  schedule:
+    - cron: 12 4 * * * # Every day at 4:12 AM (random)
+
+jobs:
+  deploy_asteroids:
+    name: Deploy Asteroids Payload
+    runs-on: ubuntu-latest
+    container:
+    image: "alexkennedy/solar-system:latest"
+    credentials:
+      username: ${{ secrets.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
+    steps:
+      - name: embed-gcloud-credentials
+        run: |
+          echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} > /google_application_credentials.json
+          export GOOGLE_APPLICATION_CREDENTIALS="/google_application_credentials.json"
+      - name: deploy
+        run: |
+          cd solar-system
+          python pipeline/asteroids/process.py --universe=prod
