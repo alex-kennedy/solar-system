@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: embed-gcloud-credentials
         run: |
-          echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} > /google_application_credentials.json
+          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}' > /google_application_credentials.json
           export GOOGLE_APPLICATION_CREDENTIALS="/google_application_credentials.json"
       - name: deploy
         run: |
