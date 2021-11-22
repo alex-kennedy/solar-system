@@ -37,7 +37,7 @@ def download_latest(chunk_size=1024):
 
     logger.info(f"Downloading {zip_path} ...")
     with open(zip_path, 'wb') as dat:
-        with tqdm(total=content_length, unit_scale=True) as bar:
+        with tqdm(total=content_length, unit_scale=True, unit='B') as bar:
             for chunk in response.iter_content(chunk_size=chunk_size):
                 dat.write(chunk)
                 bar.update(chunk_size)
@@ -50,18 +50,18 @@ def download_latest(chunk_size=1024):
 
 
 def get_schema():
-    """Get columns schema from file. 
+    """Get columns schema from file.
 
     The schema was drawn from the readme for the MPC orbital data:
         https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
 
     Args:
-        path (str): path to schema file
+        path (str): path to schema file.
 
     Returns:
-        list: dataframe column names
-        list: (int, int) half-open intervals corresponding to columns
-        list: datatypes of values
+        list: Dataframe column names.
+        list: (int, int) Half-open intervals corresponding to columns.
+        list: Datatypes of values.
     """
     with open(SCHEMA_PATH) as schema_file:
         schema = json.load(schema_file)
@@ -82,12 +82,12 @@ def packed_letter_to_number(letter):
 
     See:
         https://www.minorplanetcenter.net/iau/info/DesDoc.html
-    
+
     Args:
         letter (str): Single character to decode.
 
     Returns:
-        int: Corresponding number. 
+        int: Corresponding number.
     """
     try:
         int(letter)
@@ -107,7 +107,7 @@ def unpack_designation(packed):
 
     See:
         https://www.minorplanetcenter.net/iau/info/PackedDes.html
-    
+
     Args:
         packed (str): Packed designation.
 
@@ -155,7 +155,7 @@ def unpack_designation(packed):
 
 def unpack_epoch(epoch_packed):
     """Unpack epoch to date based on MPC format.
-    
+
     See:
         https://www.minorplanetcenter.net/iau/info/PackedDates.html
 
@@ -227,7 +227,7 @@ def unpack_flags(flags_hex):
 
 def tt_epoch_to_unix_s(epoch):
     """Converts Terrestrial Time to Unix epoch seconds.
-    
+
     Args:
         epoch (str): Epoch ISO date (e.g. '2020-01-01').
 
@@ -254,6 +254,7 @@ def shift_mean_anomaly_epoch(df):
                 (new_epoch - df.epoch_timestamp)) % (2 * np.pi)
     df['epoch_timestamp'] = new_epoch
     return df
+
 
 def get_asteroids_df():
     """Gets a dataframe from raw MPCORB.dat file.
@@ -306,7 +307,7 @@ def get_asteroids_df():
     cols = ['m0', 'arg_perihelion', 'long_asc_node', 'i', 'mean_daily_motion']
     for c in cols:
         df[c] = np.deg2rad(df[c].values)
-    
+
     # Standardises the mean anomalies to the same epoch
     logger.info(f'7/{n_steps}:Standardising epochs...')
     df = shift_mean_anomaly_epoch(df)

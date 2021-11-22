@@ -41,7 +41,7 @@ def download_catalog():
 
 
 def get_schema(path):
-    """Get columns schema from file. 
+    """Get columns schema from file.
 
     The schema was drawn from the readme for the Bright Star Catalogue:
         http://tdc-www.harvard.edu/catalogs/bsc5.readme
@@ -71,12 +71,12 @@ def get_schema(path):
 def get_ra(rah, ram, ras):
     """Determine right ascension.
 
-    All parameters should be equinox J2000, epoch 2000.0. 
+    All parameters should be equinox J2000, epoch 2000.0.
 
     Args:
-        rah (float): hours right ascension
-        ram (float): minutes right ascension
-        ras (float): seconds right ascension
+        rah (float): Hours right ascension.
+        ram (float): Minutes right ascension.
+        ras (float): Seconds right ascension.
     
     Returns:
         float: right ascension in radians
@@ -87,14 +87,14 @@ def get_ra(rah, ram, ras):
 
 def get_declination(ded, dem, des):
     """Determine declination angle.
-    
+
     All parameters should be equinox J2000, epoch 2000.0.
 
     Args:
-        ded (float): degrees declination 
-        dem (float): minutes declination
-        des (float): seconds declination
-    
+        ded (float): Degrees declination.
+        dem (float): Minutes declination.
+        des (float): Seconds declination.
+
     Returns:
         float: declination in radians
     """
@@ -112,7 +112,7 @@ def get_cartesian(ra, dec, r=100):
         dec (float): declination in radians
         r (float): radius of the celestial sphere (arbitrary units)
 
-    Returns: 
+    Returns:
         int: x coordinate
         int: y coordinate
         int: z coordinate
@@ -124,10 +124,10 @@ def get_cartesian(ra, dec, r=100):
 
 
 def get_intensity(vmag, ndigits=2):
-    """Determine a measure of intensity from the visual magnitude. 
+    """Determine a measure of intensity from the visual magnitude.
 
     This value is later used to determine the size of the star rendered on the
-    celestial sphere. All sizes normalised to within 0 and 10. 
+    celestial sphere. All sizes normalised to within 0 and 10.
 
     Args: 
         vmag (pandas.Series): visual magnitude of the stars
