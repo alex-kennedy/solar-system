@@ -10,10 +10,10 @@ jobs:
     name: Deploy Asteroids Payload
     runs-on: ubuntu-latest
     container:
-    image: "alexkennedy/solar-system:latest"
-    credentials:
-      username: ${{ secrets.DOCKERHUB_USERNAME }}
-      password: ${{ secrets.DOCKERHUB_TOKEN }}
+      image: "alexkennedy/solar-system:latest"
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
       - name: embed-gcloud-credentials
         run: |
