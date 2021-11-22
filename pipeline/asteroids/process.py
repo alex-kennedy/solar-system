@@ -176,7 +176,7 @@ def main(_):
     """Runs the preparation steps for asteroid data."""
     logging.basicConfig(level=logging.INFO)
     make_folders()
-    run_pipeline(download=False,
+    run_pipeline(download=True,
                  write_csv=False,
                  write_uncompressed_json=False)
     if FLAGS.universe in {'prod', 'test'}:
