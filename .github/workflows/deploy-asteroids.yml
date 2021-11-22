@@ -3,6 +3,7 @@ name: deploy-asteroids
 on:
   schedule:
     - cron: 12 4 * * * # Every day at 4:12 AM (random)
+  workflow_dispatch:
 
 jobs:
   deploy_asteroids:
