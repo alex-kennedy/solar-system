@@ -15,11 +15,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
-      - name: embed-gcloud-credentials
+      - name: Process and Deploy to GCS
         run: |
           echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}' > /google_application_credentials.json
           export GOOGLE_APPLICATION_CREDENTIALS="/google_application_credentials.json"
-      - name: deploy
-        run: |
           cd /solar-system
           python3 pipeline/asteroids/process.py --universe=prod
