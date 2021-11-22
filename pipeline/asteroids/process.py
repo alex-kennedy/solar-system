@@ -23,6 +23,7 @@ flags.DEFINE_string('bucket', 'storage.solar-system.alexkennedy.dev',
 
 GCS_ASTEROIDS_PATH_PROD = "asteroids.json.br"
 GCS_ASTEROIDS_PATH_TEST = "asteroids-test.json.br"
+ASSETS_FOLDER = 'app/public/assets/'
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 def make_folders():
     """Creates necessary folders."""
     os.makedirs(FLAGS.folder, exist_ok=True)
+    os.makedirs(ASSETS_FOLDER, exist_ok=True)
 
 
 def get_web_payload(df, include_other=False):

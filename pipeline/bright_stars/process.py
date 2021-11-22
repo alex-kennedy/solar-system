@@ -27,6 +27,7 @@ CATALOG_URL = 'http://tdc-www.harvard.edu/catalogs/bsc5.dat.gz'
 def make_folders():
     """Sets up necessary directories."""
     os.makedirs(FOLDER, exist_ok=True)
+    os.makedirs('app/public/assets/', exist_ok=True)
 
 
 def download_catalog():
