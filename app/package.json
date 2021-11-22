@@ -15,6 +15,10 @@
     "@material-ui/core": "^4.11.1",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.56",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.3.3",
+    "@types/react": "^17.0.14",
+    "@types/react-dom": "^17.0.9",
     "brotli": "^1.3.2",
     "eslint-plugin-flowtype": "^3.13.0",
     "react": "^16.14.0",
@@ -22,7 +26,7 @@
     "stats-js": "^1.0.1",
     "three": "^0.116.1",
     "three.meshline": "^1.3.0",
-    "typescript": "^3.9.7"
+    "typescript": "^3.9.10"
   },
   "scripts": {
     "predeploy": "react-app-rewired build",

@@ -1,17 +1,11 @@
 import datetime
-import gzip
 import json
 import logging
 import os
 import shutil
-import time
 from datetime import datetime, timezone
 
 import brotli
-import numpy as np
-import pandas as pd
-import requests
-from tqdm import tqdm
 
 import mpcorb
 
@@ -21,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_web_payload(df, include_other=False):
-    """Converts a dataframe to unserialised web payload. 
+    """Converts a dataframe to unserialised web payload.
 
     Note, the `steps` are used to partition the dataframe into categories
     relevant to the front end. This is simply used to keep the size down while
@@ -29,7 +23,7 @@ def get_web_payload(df, include_other=False):
     correspond to front-end changes.
 
     Args:
-        df (pandas.DataFrame): Dataframe of minor planets. 
+        df (pandas.DataFrame): Dataframe of minor planets.
 
     Returns:
         dict: Front-end payload ready to be serialised.
@@ -124,7 +118,7 @@ def run_all(download=True, write_csv=False, write_uncompressed_json=False):
     """Run all the download, processing, and compression steps.
 
     Args:
-        download (bool): Whether to download the MPCORB.dat, or to expect it 
+        download (bool): Whether to download the MPCORB.dat, or to expect it
             to be there (for debugging).
         write_csv (bool): Whether to write the full dataframe as a CSV (for
             debugging).
@@ -143,4 +137,4 @@ def run_all(download=True, write_csv=False, write_uncompressed_json=False):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    run_all(False, True, True)
+    run_all(download=True, write_csv=False, write_uncompressed_json=False)
