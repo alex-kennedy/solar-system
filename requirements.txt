@@ -1,5 +1,7 @@
+absl-py
 brotli
-pandas
+google-cloud-storage
 numpy
+pandas
 requests
 tqdm

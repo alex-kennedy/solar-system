@@ -6,12 +6,30 @@ import shutil
 from datetime import datetime, timezone
 
 import brotli
+from absl import app, flags
+from google.cloud import storage
 
 import mpcorb
 
-FOLDER = 'data/asteroids/'
+FLAGS = flags.FLAGS
+flags.DEFINE_enum(
+    'universe', 'debug', ['debug', 'test', 'prod'],
+    'One of {debug,test,prod}. Dev deploys to a dev file in GCS, while prod '
+    'updates the live version. Debug writes nothing to GCS.')
+flags.DEFINE_string('folder', 'data/asteroids/',
+                    'Folder to save intermediate files to.')
+flags.DEFINE_string('bucket', 'storage.solar-system.alexkennedy.dev',
+                    'GCS bucket to save files to.')
+
+GCS_ASTEROIDS_PATH_PROD = "asteroids.json.br"
+GCS_ASTEROIDS_PATH_TEST = "asteroids-test.json.br"
 
 logger = logging.getLogger(__name__)
+
+
+def make_folders():
+    """Creates necessary folders."""
+    os.makedirs(FLAGS.folder, exist_ok=True)
 
 
 def get_web_payload(df, include_other=False):
@@ -101,20 +119,39 @@ def write_web_payload(payload, write_uncompressed=False):
     logger.info('Getting and compressing JSON payload...')
     uncompressed = json.dumps(payload).encode('utf-8')
     if write_uncompressed:
-        with open(os.path.join(FOLDER, 'asteroids.json'), 'wb') as f:
+        with open(os.path.join(FLAGS.folder, 'asteroids.json'), 'wb') as f:
             f.write(uncompressed)
 
     compressed = brotli.compress(uncompressed)
-    with open(os.path.join(FOLDER, 'asteroids.json.br'), 'wb') as f:
+    with open(os.path.join(FLAGS.folder, 'asteroids.json.br'), 'wb') as f:
         f.write(compressed)
 
 
 def copy_to_public():
-    shutil.copyfile(os.path.join(FOLDER, 'asteroids.json.br'),
+    """Copies compressed file to public directory for deployment."""
+    shutil.copyfile(os.path.join(FLAGS.folder, 'asteroids.json.br'),
                     'app/public/assets/asteroids.json.br')
 
 
-def run_all(download=True, write_csv=False, write_uncompressed_json=False):
+def copy_to_gcs():
+    """Copies compressed asteroids file to Google Cloud Storage for serving."""
+    client = storage.Client()
+    bucket = client.bucket(FLAGS.bucket)
+    universe = FLAGS.universe
+    if universe not in {'test', 'prod'}:
+        logger.warning(
+            'Universe should but test or prod, but was: %s. No GCS blob written.'
+            % universe)
+        return
+    blob_name = (GCS_ASTEROIDS_PATH_PROD
+                 if universe == 'prod' else GCS_ASTEROIDS_PATH_TEST)
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(os.path.join(FLAGS.folder, 'asteroids.json.br'))
+
+
+def run_pipeline(download=True,
+                 write_csv=False,
+                 write_uncompressed_json=False):
     """Run all the download, processing, and compression steps.
 
     Args:
@@ -129,12 +166,22 @@ def run_all(download=True, write_csv=False, write_uncompressed_json=False):
         mpcorb.download_latest()
     df = mpcorb.get_asteroids_df()
     if write_csv is True:
-        df.to_csv(os.path.join(FOLDER, 'asteroids.csv'))
+        df.to_csv(os.path.join(FLAGS.folder, 'asteroids.csv'))
     payload = get_web_payload(df)
     write_web_payload(payload, write_uncompressed_json)
     copy_to_public()
 
 
-if __name__ == '__main__':
+def main(_):
+    """Runs the preparation steps for asteroid data."""
     logging.basicConfig(level=logging.INFO)
-    run_all(download=True, write_csv=False, write_uncompressed_json=False)
+    make_folders()
+    run_pipeline(download=False,
+                 write_csv=False,
+                 write_uncompressed_json=False)
+    if FLAGS.universe in {'prod', 'test'}:
+        copy_to_gcs()
+
+
+if __name__ == '__main__':
+    app.run(main)
