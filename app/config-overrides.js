@@ -10,6 +10,8 @@ module.exports = function override(config, env) {
         // Make file-loader ignore WASM files
         oneOf.exclude.push(/\.wasm$/);
         oneOf.exclude.push(/\.worker\.js$/);
+        oneOf.exclude.push(/\.vert$/);
+        oneOf.exclude.push(/\.frag$/);
       }
     });
   });
@@ -25,6 +27,15 @@ module.exports = function override(config, env) {
     test: /\.worker\.js$/,
     use: [{ loader: "worker-loader" }, { loader: "babel-loader" }],
   });
+
+  config.module.rules.push({
+    test: /\.vert$|\.frag$/,
+    loader: 'raw-loader',
+    options: {
+      esModule: false,
+    },
+  })
+
   config.output.globalObject = "this";
   return config;
 };
