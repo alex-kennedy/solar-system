@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import * as asteroidShaders from "../assets/shaders/asteroids";
 
 import React, { Component } from "react";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -14,6 +13,8 @@ import AsteroidsWorker from "./../workers/asteroids.worker";
 import LoaderSnackbar from "./LoaderSnackbar";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
 
+import asteroidFragmentShader from "../shaders/asteroids/asteroids.frag";
+import asteroidVertexShader from "../shaders/asteroids/asteroids.vert";
 import starFragmentShader from "../shaders/stars/stars.frag";
 import starVertexShader from "../shaders/stars/stars.vert";
 
@@ -243,8 +244,8 @@ class Scene extends Component {
         uniforms: {
           color: { value: new THREE.Color(asteroidStyles.colours[type]) },
         },
-        vertexShader: asteroidShaders.vertexShader,
-        fragmentShader: asteroidShaders.fragmentShader,
+        vertexShader: asteroidVertexShader,
+        fragmentShader: asteroidFragmentShader,
         transparent: true,
         depthTest: true,
       });
