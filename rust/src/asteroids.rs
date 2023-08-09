@@ -95,7 +95,7 @@ impl AsteroidTrig {
     let q11 =
       self.cos_long_asc * self.cos_inc * self.cos_arg_peri - self.sin_long_asc * self.sin_arg_peri;
     let q20 = self.sin_inc * self.sin_arg_peri;
-    let q21 = self.sin_inc * self.cos_long_asc;
+    let q21 = self.sin_inc * self.cos_arg_peri;
 
     let x_dash = q00 * x + q01 * y;
     let y_dash = q10 * x + q11 * y;
