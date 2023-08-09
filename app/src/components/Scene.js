@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import * as starShaders from "../assets/shaders/stars";
 import * as asteroidShaders from "../assets/shaders/asteroids";
 
 import React, { Component } from "react";
@@ -14,6 +13,9 @@ import { fetchBrotliAsJSON } from "./../utils";
 import AsteroidsWorker from "./../workers/asteroids.worker";
 import LoaderSnackbar from "./LoaderSnackbar";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
+
+import starFragmentShader from "../shaders/stars/stars.frag";
+import starVertexShader from "../shaders/stars/stars.vert";
 
 class Scene extends Component {
   constructor(props) {
@@ -145,8 +147,8 @@ class Scene extends Component {
         color: { value: new THREE.Color(0xffffff) },
         texture: { value: texture },
       },
-      vertexShader: starShaders.vertexShader,
-      fragmentShader: starShaders.fragmentShader,
+      vertexShader: starVertexShader,
+      fragmentShader: starFragmentShader,
       transparent: true,
     });
 
