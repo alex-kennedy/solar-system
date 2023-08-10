@@ -1,4 +1,4 @@
-import { fetchBrotliAsJSON } from "../utils";
+import { fetchBrotliAsJSON } from "../lib/brotli";
 
 /* eslint-disable no-restricted-globals */
 
