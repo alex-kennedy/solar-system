@@ -7,8 +7,6 @@ const ASTEROIDS_PAYLOAD = process.env.PUBLIC_URL + "/assets/asteroids.json.br";
 self.onmessage = (message) => {
   if (message.data.cmd === "init") {
     init().catch((err) => postError(err));
-  } else {
-    recomputeLocations(message.data.t);
   }
 };
 
@@ -48,13 +46,6 @@ function initAsteroidSets(payload) {
   return asteroidSets;
 }
 
-function recomputeLocations(t) {
-  for (const type of Object.keys(self.asteroidSets)) {
-    self.asteroidSets[type].recomputeLocations(t);
-  }
-  postUpdateComplete();
-}
-
 function getLocations() {
   const locations = {};
   for (const [type, asteroids] of Object.entries(self.asteroidSets)) {
@@ -70,10 +61,6 @@ function postError(err) {
 
 function postInitComplete() {
   self.postMessage({ cmd: "initComplete", locations: getLocations() });
-}
-
-function postUpdateComplete() {
-  self.postMessage({ cmd: "updateComplete", locations: getLocations() });
 }
 
 /* eslint-enable no-restricted-globals */

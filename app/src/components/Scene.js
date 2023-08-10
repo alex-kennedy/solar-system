@@ -32,10 +32,8 @@ class Scene extends Component {
     this.handleAsteroidLoadFailure = this.handleAsteroidLoadFailure.bind(this);
     this.handleAsteroidErrorClose = this.handleAsteroidErrorClose.bind(this);
     this.renderAsteroids = this.renderAsteroids.bind(this);
-    this.updateAsteroids = this.updateAsteroids.bind(this);
-    this.handleAsteroidWorkerMessage = this.handleAsteroidWorkerMessage.bind(
-      this
-    );
+    this.handleAsteroidWorkerMessage =
+      this.handleAsteroidWorkerMessage.bind(this);
   }
 
   componentDidMount() {
@@ -208,8 +206,6 @@ class Scene extends Component {
       this.handleAsteroidLoadFailure();
     } else if (message.data.cmd === "initComplete") {
       this.renderAsteroids(message.data.locations);
-    } else {
-      this.updateAsteroids(message.data.locations);
     }
   }
 
@@ -256,15 +252,6 @@ class Scene extends Component {
     }
 
     this.setState({ loadingAsteroids: false });
-  }
-
-  updateAsteroids(locationsByType) {
-    for (let type of Object.keys(locationsByType)) {
-      this.asteroidPoints[type].geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(locationsByType[type], 3)
-      );
-    }
   }
 
   requestAsteroidUpdate(t) {
