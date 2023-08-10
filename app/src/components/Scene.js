@@ -8,7 +8,7 @@ import asteroidStyles from "./../assets/asteroids/styles.json";
 import planetColours from "./../assets/planets/colours.json";
 import planetElements from "./../assets/planets/planetary_elements.json";
 import starTexture from "./../assets/stars/star.svg";
-import { fetchBrotliAsJSON } from "./../utils";
+import { fetchBrotliAsJSON } from "./../lib/brotli";
 import AsteroidsWorker from "./../workers/asteroids.worker";
 import LoaderSnackbar from "./LoaderSnackbar";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
