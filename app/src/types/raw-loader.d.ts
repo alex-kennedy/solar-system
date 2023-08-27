@@ -1,9 +1,9 @@
 declare module "*.frag" {
   const contents: string;
-  export = contents;
+  export default contents;
 }
 
 declare module "*.vert" {
   const contents: string;
-  export = contents;
+  export default contents;
 }

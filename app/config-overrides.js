@@ -30,10 +30,7 @@ module.exports = function override(config, env) {
 
   config.module.rules.push({
     test: /\.vert$|\.frag$/,
-    loader: 'raw-loader',
-    options: {
-      esModule: false,
-    },
+    type: 'asset/source',
   })
 
   config.output.globalObject = "this";

@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 import React, { Component } from "react";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { Planet } from "./Orbit.js";
+import { Planet } from "./Orbit";
 import Stats from "three/examples/jsm/libs/stats.module";
 import asteroidStyles from "./../assets/asteroids/styles.json";
 import planetColours from "./../assets/planets/colours.json";
@@ -12,15 +12,17 @@ import { fetchBrotliAsJSON } from "./../lib/brotli";
 import AsteroidsWorker from "./../workers/asteroids.worker";
 import LoaderSnackbar from "./LoaderSnackbar";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
+import { AsteroidPoints } from "../lib/asteroid_points";
 
-import asteroidFragmentShader from "../shaders/asteroids/asteroids.frag";
-import asteroidVertexShader from "../shaders/asteroids/asteroids.vert";
 import starFragmentShader from "../shaders/stars/stars.frag";
 import starVertexShader from "../shaders/stars/stars.vert";
 
 class Scene extends Component {
   constructor(props) {
     super(props);
+
+    this.shaderMaterial = null;
+    this.asteroidPoints = {};
 
     this.state = { loadingAsteroids: true, loadingAsteroidsError: false };
 
@@ -32,10 +34,8 @@ class Scene extends Component {
     this.handleAsteroidLoadFailure = this.handleAsteroidLoadFailure.bind(this);
     this.handleAsteroidErrorClose = this.handleAsteroidErrorClose.bind(this);
     this.renderAsteroids = this.renderAsteroids.bind(this);
-    this.updateAsteroids = this.updateAsteroids.bind(this);
-    this.handleAsteroidWorkerMessage = this.handleAsteroidWorkerMessage.bind(
-      this
-    );
+    this.handleAsteroidWorkerMessage =
+      this.handleAsteroidWorkerMessage.bind(this);
   }
 
   componentDidMount() {
@@ -94,7 +94,7 @@ class Scene extends Component {
     const stats = new Stats();
     stats.setMode(0); // 0: fps, 1: ms, 2: mb, 3+: custom
     this.stats = stats;
-    // this.mount.appendChild(this.stats.domElement); // lazily comment it out for prod
+    this.mount.appendChild(this.stats.domElement); // lazily comment it out for prod
   }
 
   addCelestialSphereWireframe() {
@@ -146,7 +146,7 @@ class Scene extends Component {
     const material = new THREE.ShaderMaterial({
       uniforms: {
         color: { value: new THREE.Color(0xffffff) },
-        texture: { value: texture },
+        starTexture: { value: texture },
       },
       vertexShader: starVertexShader,
       fragmentShader: starFragmentShader,
@@ -158,7 +158,7 @@ class Scene extends Component {
   }
 
   addSun() {
-    const geometry = new THREE.SphereBufferGeometry(1, 16, 16);
+    const geometry = new THREE.SphereGeometry(1, 16, 16);
     const material = new THREE.MeshBasicMaterial({
       color: new THREE.Color("#F9D670"),
     });
@@ -187,7 +187,7 @@ class Scene extends Component {
     for (let i = 0; i < planets.length; i++) {
       planets[i].showInScene(this.scene, this.camera);
 
-      let geometry = new THREE.SphereBufferGeometry(1, 16, 16);
+      let geometry = new THREE.SphereGeometry(1, 16, 16);
       let material = new THREE.MeshBasicMaterial({
         color: planetColours[planets[i].name],
       });
@@ -207,9 +207,7 @@ class Scene extends Component {
     if (message.data.cmd === "error") {
       this.handleAsteroidLoadFailure();
     } else if (message.data.cmd === "initComplete") {
-      this.renderAsteroids(message.data.locations);
-    } else {
-      this.updateAsteroids(message.data.locations);
+      this.renderAsteroids(message.data.points);
     }
   }
 
@@ -224,46 +222,26 @@ class Scene extends Component {
     this.setState({ loadingAsteroidsError: false });
   }
 
-  renderAsteroids(locationsByType) {
-    this.asteroidPoints = {};
-    for (let [type, locations] of Object.entries(locationsByType)) {
-      let geometry = new THREE.BufferGeometry();
-      geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(locations, 3)
-      );
-      const numVertices = geometry.attributes.position.count;
-      const opacityForAsteroidType = asteroidStyles.opacity[type];
-      var alphas = new Float32Array(numVertices);
-      for (var i = 0; i < numVertices; i++) {
-        alphas[i] = opacityForAsteroidType;
-      }
-      geometry.setAttribute("alpha", new THREE.BufferAttribute(alphas, 1));
-
-      const shaderMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-          color: { value: new THREE.Color(asteroidStyles.colours[type]) },
-        },
-        vertexShader: asteroidVertexShader,
-        fragmentShader: asteroidFragmentShader,
-        transparent: true,
-        depthTest: true,
+  renderAsteroids(pointsByType) {
+    for (let [type, a] of Object.entries(pointsByType)) {
+      const points = new AsteroidPoints(a.asteroids, a.epoch, {
+        alpha: asteroidStyles.opacity[type],
+        color: new THREE.Color(asteroidStyles.colours[type]),
+        pointSize: 2.0,
       });
-
-      const points = new THREE.Points(geometry, shaderMaterial);
       this.scene.add(points);
       this.asteroidPoints[type] = points;
     }
 
+    // Use the current time for asteroid positions.
+    this.setAsteroidTime(Date.now() / 1000);
+
     this.setState({ loadingAsteroids: false });
   }
 
-  updateAsteroids(locationsByType) {
-    for (let type of Object.keys(locationsByType)) {
-      this.asteroidPoints[type].geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(locationsByType[type], 3)
-      );
+  setAsteroidTime(time) {
+    for (let points of Object.values(this.asteroidPoints)) {
+      points.setTime(time);
     }
   }
 
