@@ -146,7 +146,7 @@ class Scene extends Component {
     const material = new THREE.ShaderMaterial({
       uniforms: {
         color: { value: new THREE.Color(0xffffff) },
-        texture: { value: texture },
+        starTexture: { value: texture },
       },
       vertexShader: starVertexShader,
       fragmentShader: starFragmentShader,
@@ -158,7 +158,7 @@ class Scene extends Component {
   }
 
   addSun() {
-    const geometry = new THREE.SphereBufferGeometry(1, 16, 16);
+    const geometry = new THREE.SphereGeometry(1, 16, 16);
     const material = new THREE.MeshBasicMaterial({
       color: new THREE.Color("#F9D670"),
     });
@@ -187,7 +187,7 @@ class Scene extends Component {
     for (let i = 0; i < planets.length; i++) {
       planets[i].showInScene(this.scene, this.camera);
 
-      let geometry = new THREE.SphereBufferGeometry(1, 16, 16);
+      let geometry = new THREE.SphereGeometry(1, 16, 16);
       let material = new THREE.MeshBasicMaterial({
         color: planetColours[planets[i].name],
       });
@@ -229,7 +229,6 @@ class Scene extends Component {
         color: new THREE.Color(asteroidStyles.colours[type]),
         pointSize: 2.0,
       });
-      console.log(points);
       this.scene.add(points);
       this.asteroidPoints[type] = points;
     }

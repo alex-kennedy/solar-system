@@ -1,4 +1,5 @@
 import decompress from "brotli/decompress";
+import { Buffer } from "buffer";
 
 export async function fetchBrotliAsJSON(path: string): Promise<Object> {
   const response = await fetch(path);

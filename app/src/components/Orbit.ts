@@ -1,5 +1,5 @@
-import * as MESHLINE from "three.meshline";
 import * as THREE from "three";
+import { MeshLineGeometry, MeshLineMaterial, raycast } from "meshline";
 
 interface OrbitalElements {
   a: number; // semi-major axis
@@ -155,24 +155,21 @@ class Planet {
   }
 
   showInScene(scene: THREE.Scene, camera: THREE.Camera) {
-    const points = this.curve!.getPoints(100);
+    const points = this.curve!.getPoints(200);
 
-    let geometry = new THREE.BufferGeometry().setFromPoints(points);
-    // geometry = geometry.getAttribute("position").array; // Needed due to strange error...
+    const geometry = new MeshLineGeometry()
+    geometry.setPoints(points);
 
-    const line = new MESHLINE.MeshLine();
-    line.setGeometry(geometry);
-
-    const material = new MESHLINE.MeshLineMaterial({
-      useMap: false,
+    const material = new MeshLineMaterial({
       color: this.color,
       opacity: 1,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-      sizeAttenuation: false,
-      lineWidth: 5,
+      sizeAttenuation: 0,
+      lineWidth: 10,
     });
 
-    const mesh = new THREE.Mesh(line.geometry, material);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.raycast = raycast;
     scene.add(mesh);
   }
 }
