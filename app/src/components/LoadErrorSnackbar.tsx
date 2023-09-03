@@ -1,6 +1,6 @@
 import React from "react";
-import Snackbar, { SnackbarProps } from "@material-ui/core/Snackbar";
-import MuiAlert from "@material-ui/lab/Alert";
+import { Snackbar, SnackbarProps } from "@mui/material";
+import { Alert } from '@mui/material';
 
 type LoadErrorSnackbarProps = {
   open: boolean;
@@ -16,9 +16,9 @@ export default class LoadErrorSnackbar extends React.Component<LoadErrorSnackbar
         anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         autoHideDuration={5000}
       >
-        <MuiAlert elevation={6} variant="filled" severity="error">
+        <Alert elevation={6} variant="filled" severity="error">
           Asteroids failed to load! Sorry :(
-        </MuiAlert>
+        </Alert>
       </Snackbar>
     );
   }

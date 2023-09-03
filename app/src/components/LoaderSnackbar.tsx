@@ -1,7 +1,7 @@
 import React from "react";
-import Snackbar from "@material-ui/core/Snackbar";
-import MuiAlert from "@material-ui/lab/Alert";
-import CircularProgress from "@material-ui/core/CircularProgress";
+import { Snackbar } from "@mui/material";
+import { Alert } from '@mui/material';
+import { CircularProgress } from "@mui/material";
 
 type LoaderSnackbarProps = {
   open: boolean;
@@ -15,14 +15,14 @@ export default class LoaderSnackbar extends React.Component<LoaderSnackbarProps>
           open={this.props.open}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         >
-          <MuiAlert
+          <Alert
             elevation={6}
             variant="filled"
             severity="info"
             icon={<CircularProgress color={"inherit"} size={20} />}
           >
             Loading Asteroids...
-          </MuiAlert>
+          </Alert>
         </Snackbar>
       </div>
     );
