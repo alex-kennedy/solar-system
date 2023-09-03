@@ -174,4 +174,4 @@ class Planet {
   }
 }
 
-export { Planet, OrbitCurve };
+export { Planet };

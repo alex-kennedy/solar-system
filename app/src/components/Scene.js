@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 import React, { Component } from "react";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { Planet } from "./Orbit";
+import { Planet } from "../lib/orbit";
 import Stats from "three/examples/jsm/libs/stats.module";
 import asteroidStyles from "./../assets/asteroids/styles.json";
 import planetColours from "./../assets/planets/colours.json";
