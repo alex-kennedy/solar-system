@@ -1,6 +1,9 @@
 import React from "react";
-import ReactDOM from "react-dom";
-import "./assets/css/index.css";
+import { createRoot } from "react-dom/client";
 import Index from "./pages/index";
 
-ReactDOM.render(<Index />, document.getElementById("wrapper"));
+import "./assets/css/index.css";
+
+const container = document.getElementById("wrapper")!;
+const root = createRoot(container);
+root.render(<Index />);
