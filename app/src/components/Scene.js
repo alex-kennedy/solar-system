@@ -3,19 +3,16 @@ import * as THREE from "three";
 import React, { Component } from "react";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Planet } from "../lib/orbit";
+import { BrightStars } from "../lib/bright_stars";
 import Stats from "three/examples/jsm/libs/stats.module";
 import asteroidStyles from "./../assets/asteroids/styles.json";
 import planetColours from "./../assets/planets/colours.json";
 import planetElements from "./../assets/planets/planetary_elements.json";
-import starTexture from "./../assets/stars/star.svg";
 import { fetchBrotliAsJSON } from "./../lib/brotli";
 import AsteroidsWorker from "./../workers/asteroids.worker";
 import LoaderSnackbar from "./LoaderSnackbar";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
 import { AsteroidPoints } from "../lib/asteroid_points";
-
-import starFragmentShader from "../shaders/stars/stars.frag";
-import starVertexShader from "../shaders/stars/stars.vert";
 
 class Scene extends Component {
   constructor(props) {
@@ -120,41 +117,7 @@ class Scene extends Component {
   }
 
   renderBrightStars(brightStars) {
-    const sizes = new Float32Array(brightStars.length);
-    const positions = new Float32Array(brightStars.length * 3);
-    const colors = new Float32Array(brightStars.length * 3);
-
-    const color = new THREE.Color(1, 1, 1);
-
-    for (let i = 0; i < brightStars.length; i++) {
-      positions[i * 3] = brightStars[i][1]; // x
-      positions[i * 3 + 1] = brightStars[i][2]; // y
-      positions[i * 3 + 2] = brightStars[i][3]; // z
-
-      sizes[i] = brightStars[i][0] / 2; // manually scaled brightness
-
-      color.toArray(colors, i * 3);
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-    geometry.setAttribute("color_shader", new THREE.BufferAttribute(colors, 3));
-
-    const texture = new THREE.TextureLoader().load(starTexture);
-
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        color: { value: new THREE.Color(0xffffff) },
-        starTexture: { value: texture },
-      },
-      vertexShader: starVertexShader,
-      fragmentShader: starFragmentShader,
-      transparent: true,
-    });
-
-    const stars = new THREE.Points(geometry, material);
-    this.scene.add(stars);
+    this.scene.add(new BrightStars(brightStars));
   }
 
   addSun() {
