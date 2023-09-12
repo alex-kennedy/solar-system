@@ -3,4 +3,5 @@ go 1.21.0
 use (
 	.
 	./pipeline/bright_stars
+	./proto/go/github.com/alex-kennedy/solar-system/solarsystempb
 )

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "github.com/alex-kennedy/solar-system/solarsystempb";
+
+message BrightStars { 
+  // Set of bright stars from the Yale Bright Star catalog.
+  repeated BrightStar bright_stars = 1; 
+}
+
+message BrightStar {
+  // Right ascension in radians.
+  float right_ascension = 1;
+
+  // Declination in radians.
+  float declination = 2;
+
+  // Stellar intensity normalised between 0 and 1.
+  float intensity = 3;
+}
