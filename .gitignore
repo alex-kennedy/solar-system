@@ -6,7 +6,7 @@ data/
 temp/
 
 # generated public files
-app/public/assets
+public/assets
 
 # misc processing files
 pipeline/asteroids/*.csv
@@ -15,13 +15,13 @@ pipeline/bright_stars/full.csv
 *archive/
 
 # dependencies
-app/node_modules
+node_modules
 
 # testing
 app/coverage
 
 # production
-app/build
+build
 
 # misc
 .DS_Store
