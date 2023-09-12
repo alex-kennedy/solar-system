@@ -73,12 +73,12 @@ type BrightStar struct {
 
 // Declination of the star in radians.
 func (s *BrightStar) Declination() float64 {
-	return (s.ded + (1.0/60)*s.dem + (1.0/3600)*s.des) * 2 * math.Pi / 360
+	return (s.ded + (1.0/60)*s.dem + (1.0/3600)*s.des) * 2 * math.Pi / 360.0
 }
 
 // RightAscension of the star in radians.
 func (s *BrightStar) RightAscension() float64 {
-	return ((1.0/24)*s.rah + (1./1440)*s.ram + (1.0/86400)*s.ras) * 2 * math.Pi
+	return ((1.0/24)*s.rah + (1.0/1440)*s.ram + (1.0/86400)*s.ras) * 2.0 * math.Pi
 }
 
 // Intensity is the visual intensity of the star relative to the dimmest star in
@@ -120,8 +120,8 @@ var (
 	rangeRAh  = charRange{low: 75, high: 77}
 	rangeRAm  = charRange{low: 77, high: 79}
 	rangeRAs  = charRange{low: 79, high: 83}
-	rangeDEd  = charRange{low: 86, high: 88}
-	rangeDEm  = charRange{low: 88, high: 90}
-	rangeDEs  = charRange{low: 90, high: 96}
+	rangeDEd  = charRange{low: 83, high: 86}
+	rangeDEm  = charRange{low: 86, high: 88}
+	rangeDEs  = charRange{low: 88, high: 90}
 	rangeVMag = charRange{low: 102, high: 107}
 )

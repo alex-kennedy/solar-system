@@ -3,12 +3,13 @@ import * as THREE from "three";
 import React, { Component } from "react";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Planet } from "../lib/orbit";
-import { BrightStars } from "../lib/bright_stars";
+import { BrightStarsPoints } from "../lib/bright_stars";
 import Stats from "three/examples/jsm/libs/stats.module";
 import asteroidStyles from "./../assets/asteroids/styles.json";
 import planetColours from "./../assets/planets/colours.json";
 import planetElements from "./../assets/planets/planetary_elements.json";
-import { fetchBrotliAsJSON } from "./../lib/brotli";
+import { fetchBrotliAsArray } from "./../lib/brotli";
+import { BrightStars } from "../lib/proto/bright_stars";
 import AsteroidsWorker from "./../workers/asteroids.worker";
 import LoaderSnackbar from "./LoaderSnackbar";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
@@ -111,13 +112,14 @@ class Scene extends Component {
   }
 
   loadBrightStars() {
-    fetchBrotliAsJSON(
-      process.env.PUBLIC_URL + "/assets/bright_stars.json.br"
+    fetchBrotliAsArray(
+      process.env.PUBLIC_URL + "/assets/bright_stars.pb.br"
     ).then(this.renderBrightStars);
   }
 
-  renderBrightStars(brightStars) {
-    this.scene.add(new BrightStars(brightStars));
+  renderBrightStars(brightStarsEncoded) {
+    const brightStars = BrightStars.decode(brightStarsEncoded)
+    this.scene.add(new BrightStarsPoints(brightStars));
   }
 
   addSun() {

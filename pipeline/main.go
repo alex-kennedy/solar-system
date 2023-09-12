@@ -5,11 +5,12 @@ import (
 	"os"
 
 	"github.com/google/brotli/go/cbrotli"
+	"google.golang.org/protobuf/proto"
 
 	brightstars "github.com/alex-kennedy/solar-system/pipeline/bright_stars"
 )
 
-func WriteCompressed(path, data string) error {
+func WriteCompressed(path string, data []byte) error {
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -19,7 +20,7 @@ func WriteCompressed(path, data string) error {
 	w := cbrotli.NewWriter(f, cbrotli.WriterOptions{Quality: 11})
 	defer w.Close()
 
-	n, err := w.Write([]byte(data))
+	n, err := w.Write(data)
 	if err != nil {
 		return err
 	}
@@ -38,8 +39,13 @@ func main() {
 	}
 	log.Printf("loaded %d bright stars\n", len(brightStars.BrightStars))
 
+	brightStarsSerialized, err := proto.Marshal(brightStars)
+	if err != nil {
+		log.Fatalf("failed to marshal bright stars: %s", err)
+	}
+
 	log.Printf("writing compressed bright stars...")
-	if err := WriteCompressed("./data/bright_stars/bright_stars.pb.br", brightStars.String()); err != nil {
+	if err := WriteCompressed("./public/assets/bright_stars.pb.br", brightStarsSerialized); err != nil {
 		log.Fatalf("failed to write bright stars: %s\n", err)
 	}
 }

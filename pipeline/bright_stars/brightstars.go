@@ -48,11 +48,32 @@ func LoadBrightStars() (*solarsystempb.BrightStars, error) {
 		})
 	}
 
-	if len(stars.BrightStars) < 100 {
+	// The catalog is largely constant, so shouldn't drop drastically.
+	if len(stars.BrightStars) < 9000 {
 		return nil, fmt.Errorf("failed to extract enough stars from the bright stars catalog (%d)", len(stars.BrightStars))
 	}
 
+	normaliseIntensity(stars)
+
 	return stars, nil
+}
+
+// Normalises intensity of stars to be <= 1.
+func normaliseIntensity(stars *solarsystempb.BrightStars) {
+	scaleFactor := maxIntensity(stars.BrightStars)
+	for _, star := range stars.BrightStars {
+		star.Intensity = star.GetIntensity() / scaleFactor
+	}
+}
+
+func maxIntensity(stars []*solarsystempb.BrightStar) float32 {
+	x := float32(1.0)
+	for _, star := range stars {
+		if x < star.GetIntensity() {
+			x = star.GetIntensity()
+		}
+	}
+	return x
 }
 
 // loadCatalog loads the bright stars catalog locally as a string (~2 MiB).

@@ -19,8 +19,5 @@
     "noEmit": true,
     "jsx": "react"
   },
-  "include": [
-    "app/src",
-    "proto/ts",
-  ]
+  "include": ["app/src"]
 }

@@ -3,25 +3,33 @@ import * as THREE from "three";
 import starTexture from "./../assets/stars/star.svg";
 import starFragmentShader from "../shaders/stars/stars.frag";
 import starVertexShader from "../shaders/stars/stars.vert";
+import { BrightStars, BrightStar } from "./proto/bright_stars";
 
-class BrightStars extends THREE.Points {
-  /** 
-   * Points object for stars. Constructed from a list of stars where each star
-   * is a list of the intensity and cartesian coordinates [intensity, x, y, z].
-   */
-  constructor(stars: number[][]) {
-    const sizes = new Float32Array(stars.length);
-    const positions = new Float32Array(stars.length * 3);
-    const colors = new Float32Array(stars.length * 3);
+const RADIUS = 100;
+const INTENSITY_SCALE = 5.0;
+
+/**
+ * Points object for stars. Each star is represented as an image scaled to its
+ * intensity.
+ */
+export class BrightStarsPoints extends THREE.Points {
+  constructor(stars: BrightStars) {
+    console.log(stars);
+    const sizes = new Float32Array(stars.brightStars.length);
+    const positions = new Float32Array(stars.brightStars.length * 3);
+    const colors = new Float32Array(stars.brightStars.length * 3);
 
     const color = new THREE.Color(1, 1, 1); // White
 
-    for (let i = 0; i < stars.length; i++) {
-      positions[i * 3] = stars[i][1]; // x
-      positions[i * 3 + 1] = stars[i][2]; // y
-      positions[i * 3 + 2] = stars[i][3]; // z
+    for (let i = 0; i < stars.brightStars.length; i++) {
+      const star = stars.brightStars[i];
+      const position = getStarPosition(star);
 
-      sizes[i] = stars[i][0] / 2; // manually scaled intensity
+      positions[i * 3] = position.x;
+      positions[i * 3 + 1] = position.y;
+      positions[i * 3 + 2] = position.z; // z
+
+      sizes[i] = star.intensity * INTENSITY_SCALE;
 
       color.toArray(colors, i * 3);
     }
@@ -47,4 +55,11 @@ class BrightStars extends THREE.Points {
   }
 }
 
-export { BrightStars };
+/** Computes the 3D position of the star. */
+function getStarPosition(star: BrightStar): THREE.Vector3 {
+  return new THREE.Vector3(
+    RADIUS * Math.cos(star.declination) * Math.cos(star.rightAscension),
+    RADIUS * Math.cos(star.declination) * Math.sin(star.rightAscension),
+    RADIUS * Math.sin(star.declination)
+  );
+}
