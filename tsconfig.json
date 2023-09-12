@@ -20,6 +20,7 @@
     "jsx": "react"
   },
   "include": [
-    "app/src"
+    "app/src",
+    "proto/ts",
   ]
 }

@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	solarsystempb "github.com/alex-kennedy/solar-system/solarsystempb"
 )
 
 const (
@@ -19,7 +21,7 @@ const (
 
 // LoadBrightStars downloads, processes, and returns the bright stars of the
 // Yale Bright Stars Catalog.
-func LoadBrightStars() ([]*BrightStar, error) {
+func LoadBrightStars() (*solarsystempb.BrightStars, error) {
 	if err := downloadCatalog(false); err != nil {
 		return nil, err
 	}
@@ -29,7 +31,7 @@ func LoadBrightStars() ([]*BrightStar, error) {
 		return nil, err
 	}
 
-	var stars []*BrightStar
+	stars := &solarsystempb.BrightStars{}
 	for _, row := range strings.Split(catalog, "\n") {
 		if row == "" {
 			continue
@@ -39,11 +41,15 @@ func LoadBrightStars() ([]*BrightStar, error) {
 			// Some entries have some no positional information, ignore them.
 			continue
 		}
-		stars = append(stars, star)
+		stars.BrightStars = append(stars.BrightStars, &solarsystempb.BrightStar{
+			RightAscension: float32(star.RightAscension()),
+			Declination:    float32(star.Declination()),
+			Intensity:      float32(star.Intensity()),
+		})
 	}
 
-	if len(stars) < 100 {
-		return nil, fmt.Errorf("failed to extract enough stars from the bright stars catalog (%d)", len(stars))
+	if len(stars.BrightStars) < 100 {
+		return nil, fmt.Errorf("failed to extract enough stars from the bright stars catalog (%d)", len(stars.BrightStars))
 	}
 
 	return stars, nil
