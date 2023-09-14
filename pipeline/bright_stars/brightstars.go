@@ -6,9 +6,11 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	solarsystempb "github.com/alex-kennedy/solar-system/solarsystempb"
@@ -66,6 +68,7 @@ func normaliseIntensity(stars *solarsystempb.BrightStars) {
 	}
 }
 
+// maxIntensity computes the maximum intensity of all stars in the slice.
 func maxIntensity(stars []*solarsystempb.BrightStar) float32 {
 	x := float32(1.0)
 	for _, star := range stars {
@@ -96,6 +99,11 @@ func downloadCatalog(force bool) error {
 		return nil
 	}
 	log.Println("downloading bright stars catalog...")
+
+	if err := os.MkdirAll(filepath.Dir(downloadPath), fs.FileMode(os.O_RDWR)); err != nil {
+		log.Panicln("failed to create bright star temp folder")
+		return err
+	}
 
 	output, err := os.Create(downloadPath)
 	if err != nil {
