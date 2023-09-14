@@ -3,13 +3,11 @@ import * as THREE from "three";
 import React, { Component } from "react";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Planet } from "../lib/orbit";
-import { BrightStarsPoints } from "../lib/bright_stars";
+import { loadBrightStars } from "../lib/bright_stars";
 import Stats from "three/examples/jsm/libs/stats.module";
 import asteroidStyles from "./../assets/asteroids/styles.json";
 import planetColours from "./../assets/planets/colours.json";
 import planetElements from "./../assets/planets/planetary_elements.json";
-import { fetchBrotliAsArray } from "./../lib/brotli";
-import { BrightStars } from "../lib/proto/bright_stars";
 import AsteroidsWorker from "./../workers/asteroids.worker";
 import LoaderSnackbar from "./LoaderSnackbar";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
@@ -28,7 +26,7 @@ class Scene extends Component {
     this.stop = this.stop.bind(this);
     this.animate = this.animate.bind(this);
     this.updateDimensions = this.updateDimensions.bind(this);
-    this.renderBrightStars = this.renderBrightStars.bind(this);
+    // this.renderBrightStars = this.renderBrightStars.bind(this);
     this.handleAsteroidLoadFailure = this.handleAsteroidLoadFailure.bind(this);
     this.handleAsteroidErrorClose = this.handleAsteroidErrorClose.bind(this);
     this.renderAsteroids = this.renderAsteroids.bind(this);
@@ -41,7 +39,7 @@ class Scene extends Component {
 
     window.addEventListener("resize", this.updateDimensions);
 
-    this.loadBrightStars();
+    this.renderBrightStars();
     this.addControls();
     this.addStats();
     this.addPlanets();
@@ -111,15 +109,10 @@ class Scene extends Component {
     this.scene.add(sphere);
   }
 
-  loadBrightStars() {
-    fetchBrotliAsArray(
-      process.env.PUBLIC_URL + "/assets/bright_stars.pb.br"
-    ).then(this.renderBrightStars);
-  }
-
-  renderBrightStars(brightStarsEncoded) {
-    const brightStars = BrightStars.decode(brightStarsEncoded)
-    this.scene.add(new BrightStarsPoints(brightStars));
+  renderBrightStars() {
+    loadBrightStars()
+      .then((stars) => this.scene.add(stars))
+      .catch((err) => console.error("failed to load stars!", err));
   }
 
   addSun() {

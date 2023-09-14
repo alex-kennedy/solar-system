@@ -4,9 +4,18 @@ import starTexture from "./../assets/stars/star.svg";
 import starFragmentShader from "../shaders/stars/stars.frag";
 import starVertexShader from "../shaders/stars/stars.vert";
 import { BrightStars, BrightStar } from "./proto/bright_stars";
+import { fetchBrotliAsArray } from "./brotli";
 
 const RADIUS = 100;
 const INTENSITY_SCALE = 5.0;
+const PUBLIC_PATH = process.env.PUBLIC_URL + "/assets/bright_stars.pb.br";
+
+/** Construct bright stars from the default proto path. */
+export async function loadBrightStars(): Promise<BrightStarsPoints> {
+  const data = await fetchBrotliAsArray(PUBLIC_PATH);
+  const pb = BrightStars.decode(data);
+  return new BrightStarsPoints(pb);
+}
 
 /**
  * Points object for stars. Each star is represented as an image scaled to its
