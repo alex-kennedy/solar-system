@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option go_package = "github.com/alex-kennedy/solar-system/asteroidspb";
+
+message Asteroids {
+  uint32 time_created = 1; // Unix seconds.
+  uint32 epoch_time = 2;   // Unix seconds.
+  repeated AsteroidGroup asteroid_groups = 3;
+}
+
+message AsteroidGroup {
+  ObitType orbit_type = 1;
+
+  // Asteroids in the group.
+  repeated Asteroid asteroids = 2;
+}
+
+// Orbital elements for an asteroid.
+message Asteroid {
+  float eccentricity = 1;
+  float semi_major_axis = 2;
+  float inclination = 3;
+  float longitude_ascending_node = 4;
+  float argument_of_perihelion = 5;
+  float mean_anomaly = 6;
+}
+
+enum ObitType {
+  ORBIT_TYPE_UNKNOWN = 0;
+  ORBIT_TYPE_Q_BOUNDED = 1;
+  ORBIT_TYPE_HUNGARIA = 2;
+  ORBIT_TYPE_HILDA = 3;
+  ORBIT_TYPE_JUPITER_TROJAN = 4;
+  ORBIT_TYPE_NEO = 5;
+  ORBIT_TYPE_ASTEROID_BELT = 6;
+}

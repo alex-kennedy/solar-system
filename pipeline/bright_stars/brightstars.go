@@ -95,7 +95,7 @@ func downloadCatalog(force bool) error {
 	// Skip downloading if output already exists unless it should be
 	// force-downloaded.
 	if _, err := os.Open(downloadPath); err == nil && !force {
-		log.Printf("bright stars catalog already exists, skipping download")
+		log.Println("bright stars catalog already exists, skipping download")
 		return nil
 	}
 	log.Println("downloading bright stars catalog...")
