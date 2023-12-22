@@ -26,7 +26,7 @@ func GetAsteroidPayload() (*apb.Asteroids, error) {
 	stats := &Stats{}
 	epoch := getEpoch()
 	log.Printf("selected epoch: %s\n", epoch.Format("2006-01-02 15:04:05 MST"))
-	asteroids := make(map[apb.ObitType]*apb.AsteroidGroup)
+	asteroids := make(map[apb.OrbitType]*apb.AsteroidGroup)
 
 	r, err := NewAsteroidsReader()
 	if err != nil {
@@ -40,7 +40,7 @@ func GetAsteroidPayload() (*apb.Asteroids, error) {
 			return nil, err
 		}
 		stats.Processed += 1
-		if a.OrbitType() == apb.ObitType_ORBIT_TYPE_UNKNOWN {
+		if a.OrbitType() == apb.OrbitType_ORBIT_TYPE_UNKNOWN {
 			stats.UnknownOrbitType += 1
 			continue
 		}
@@ -234,30 +234,30 @@ func (a *Asteroid) InAsteroidBelt() bool {
 	return 2.06 <= perihelionDistance && perihelionDistance <= 3.28
 }
 
-func (a *Asteroid) OrbitType() apb.ObitType {
+func (a *Asteroid) OrbitType() apb.OrbitType {
 	if a.IsNEO() || a.IsPHA() {
-		return apb.ObitType_ORBIT_TYPE_NEO
+		return apb.OrbitType_ORBIT_TYPE_NEO
 	}
 	if a.IsUnbounded() {
-		return apb.ObitType_ORBIT_TYPE_UNKNOWN
+		return apb.OrbitType_ORBIT_TYPE_UNKNOWN
 	}
 	orbitTypeID := a.flags & flagOrbitType
 	if orbitTypeID == orbitTypeHungaria {
-		return apb.ObitType_ORBIT_TYPE_HUNGARIA
+		return apb.OrbitType_ORBIT_TYPE_HUNGARIA
 	}
 	if orbitTypeID == orbitTypeTrojan {
-		return apb.ObitType_ORBIT_TYPE_JUPITER_TROJAN
+		return apb.OrbitType_ORBIT_TYPE_JUPITER_TROJAN
 	}
 	if orbitTypeID == orbitTypeHilda {
-		return apb.ObitType_ORBIT_TYPE_HILDA
+		return apb.OrbitType_ORBIT_TYPE_HILDA
 	}
 	if orbitTypeID == orbitTypeQBounded {
-		return apb.ObitType_ORBIT_TYPE_Q_BOUNDED
+		return apb.OrbitType_ORBIT_TYPE_Q_BOUNDED
 	}
 	if a.InAsteroidBelt() {
-		return apb.ObitType_ORBIT_TYPE_ASTEROID_BELT
+		return apb.OrbitType_ORBIT_TYPE_ASTEROID_BELT
 	}
-	return apb.ObitType_ORBIT_TYPE_UNKNOWN
+	return apb.OrbitType_ORBIT_TYPE_UNKNOWN
 }
 
 func (a *Asteroid) Epoch() (time.Time, error) {

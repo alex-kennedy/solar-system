@@ -3,7 +3,7 @@ import * as _m0 from "protobufjs/minimal";
 
 export const protobufPackage = "";
 
-export enum ObitType {
+export enum OrbitType {
   ORBIT_TYPE_UNKNOWN = 0,
   ORBIT_TYPE_Q_BOUNDED = 1,
   ORBIT_TYPE_HUNGARIA = 2,
@@ -14,53 +14,53 @@ export enum ObitType {
   UNRECOGNIZED = -1,
 }
 
-export function obitTypeFromJSON(object: any): ObitType {
+export function orbitTypeFromJSON(object: any): OrbitType {
   switch (object) {
     case 0:
     case "ORBIT_TYPE_UNKNOWN":
-      return ObitType.ORBIT_TYPE_UNKNOWN;
+      return OrbitType.ORBIT_TYPE_UNKNOWN;
     case 1:
     case "ORBIT_TYPE_Q_BOUNDED":
-      return ObitType.ORBIT_TYPE_Q_BOUNDED;
+      return OrbitType.ORBIT_TYPE_Q_BOUNDED;
     case 2:
     case "ORBIT_TYPE_HUNGARIA":
-      return ObitType.ORBIT_TYPE_HUNGARIA;
+      return OrbitType.ORBIT_TYPE_HUNGARIA;
     case 3:
     case "ORBIT_TYPE_HILDA":
-      return ObitType.ORBIT_TYPE_HILDA;
+      return OrbitType.ORBIT_TYPE_HILDA;
     case 4:
     case "ORBIT_TYPE_JUPITER_TROJAN":
-      return ObitType.ORBIT_TYPE_JUPITER_TROJAN;
+      return OrbitType.ORBIT_TYPE_JUPITER_TROJAN;
     case 5:
     case "ORBIT_TYPE_NEO":
-      return ObitType.ORBIT_TYPE_NEO;
+      return OrbitType.ORBIT_TYPE_NEO;
     case 6:
     case "ORBIT_TYPE_ASTEROID_BELT":
-      return ObitType.ORBIT_TYPE_ASTEROID_BELT;
+      return OrbitType.ORBIT_TYPE_ASTEROID_BELT;
     case -1:
     case "UNRECOGNIZED":
     default:
-      return ObitType.UNRECOGNIZED;
+      return OrbitType.UNRECOGNIZED;
   }
 }
 
-export function obitTypeToJSON(object: ObitType): string {
+export function orbitTypeToJSON(object: OrbitType): string {
   switch (object) {
-    case ObitType.ORBIT_TYPE_UNKNOWN:
+    case OrbitType.ORBIT_TYPE_UNKNOWN:
       return "ORBIT_TYPE_UNKNOWN";
-    case ObitType.ORBIT_TYPE_Q_BOUNDED:
+    case OrbitType.ORBIT_TYPE_Q_BOUNDED:
       return "ORBIT_TYPE_Q_BOUNDED";
-    case ObitType.ORBIT_TYPE_HUNGARIA:
+    case OrbitType.ORBIT_TYPE_HUNGARIA:
       return "ORBIT_TYPE_HUNGARIA";
-    case ObitType.ORBIT_TYPE_HILDA:
+    case OrbitType.ORBIT_TYPE_HILDA:
       return "ORBIT_TYPE_HILDA";
-    case ObitType.ORBIT_TYPE_JUPITER_TROJAN:
+    case OrbitType.ORBIT_TYPE_JUPITER_TROJAN:
       return "ORBIT_TYPE_JUPITER_TROJAN";
-    case ObitType.ORBIT_TYPE_NEO:
+    case OrbitType.ORBIT_TYPE_NEO:
       return "ORBIT_TYPE_NEO";
-    case ObitType.ORBIT_TYPE_ASTEROID_BELT:
+    case OrbitType.ORBIT_TYPE_ASTEROID_BELT:
       return "ORBIT_TYPE_ASTEROID_BELT";
-    case ObitType.UNRECOGNIZED:
+    case OrbitType.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
   }
@@ -75,7 +75,7 @@ export interface Asteroids {
 }
 
 export interface AsteroidGroup {
-  orbitType: ObitType;
+  orbitType: OrbitType;
   /** Asteroids in the group. */
   asteroids: Asteroid[];
 }
@@ -228,7 +228,7 @@ export const AsteroidGroup = {
 
   fromJSON(object: any): AsteroidGroup {
     return {
-      orbitType: isSet(object.orbitType) ? obitTypeFromJSON(object.orbitType) : 0,
+      orbitType: isSet(object.orbitType) ? orbitTypeFromJSON(object.orbitType) : 0,
       asteroids: Array.isArray(object?.asteroids) ? object.asteroids.map((e: any) => Asteroid.fromJSON(e)) : [],
     };
   },
@@ -236,7 +236,7 @@ export const AsteroidGroup = {
   toJSON(message: AsteroidGroup): unknown {
     const obj: any = {};
     if (message.orbitType !== 0) {
-      obj.orbitType = obitTypeToJSON(message.orbitType);
+      obj.orbitType = orbitTypeToJSON(message.orbitType);
     }
     if (message.asteroids?.length) {
       obj.asteroids = message.asteroids.map((e) => Asteroid.toJSON(e));

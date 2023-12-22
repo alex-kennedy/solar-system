@@ -9,7 +9,7 @@ message Asteroids {
 }
 
 message AsteroidGroup {
-  ObitType orbit_type = 1;
+  OrbitType orbit_type = 1;
 
   // Asteroids in the group.
   repeated Asteroid asteroids = 2;
@@ -25,7 +25,7 @@ message Asteroid {
   float mean_anomaly = 6;
 }
 
-enum ObitType {
+enum OrbitType {
   ORBIT_TYPE_UNKNOWN = 0;
   ORBIT_TYPE_Q_BOUNDED = 1;
   ORBIT_TYPE_HUNGARIA = 2;
