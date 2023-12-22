@@ -9,7 +9,9 @@ ASTEROIDS_OUTPUT="/solar-system/build/asteroids.json.br"
   --asteroids_output="${ASTEROIDS_OUTPUT}"
 
 # Build the site
-cd /solar-system/ && npm run build
+cd /solar-system/ && \
+  source "$HOME/.cargo/env" && \
+  npm run build
 
 # Deploy to cloudflare pages
 cd /solar-system/ && npx wrangler pages deploy \
