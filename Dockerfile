@@ -1,19 +1,28 @@
-FROM golang:1.21-alpine
+# Build pipeline in go
+FROM golang:1.21-alpine AS pipeline
 
 RUN apk add --no-cache --update \
-  bash \
   brotli-dev \
   g++ \
-  gcc \
-  libressl-dev \
-  nodejs \
-  npm \
-  rustup \
-  && rustup-init -y
+  gcc
 
+COPY . /solar-system
+
+RUN go build -C /solar-system/pipeline -o /usr/local/bin/pipeline
+
+# Add web build dependencies
+FROM rust:alpine
+
+RUN apk add --no-cache --update \
+  libressl-dev \
+  g++ \
+  gcc \
+  nodejs \
+  npm
+
+COPY --from=pipeline /usr/local/bin/pipeline /usr/local/bin/pipeline
 COPY . /solar-system
 
 WORKDIR /solar-system
 
-RUN go build -C /solar-system/pipeline -o /usr/local/bin/pipeline . \
-  && npm install
+RUN npm install
