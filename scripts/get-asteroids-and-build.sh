@@ -1,7 +1,7 @@
 set -e
 
-BRIGHT_STARS_OUTPUT="/solar-system/build/assets/bright_stars.json.br"
-ASTEROIDS_OUTPUT="/solar-system/build/assets/asteroids.json.br"
+BRIGHT_STARS_OUTPUT="/solar-system/public/assets/bright_stars.pb.br"
+ASTEROIDS_OUTPUT="/solar-system/public/assets/asteroids.pb.br"
 
 # Run the asteroids pipeline
 /usr/local/bin/pipeline \
