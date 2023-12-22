@@ -10,10 +10,11 @@ import (
 	"strings"
 	"time"
 
-	apb "github.com/alex-kennedy/solar-system/asteroidspb"
 	"github.com/brandondube/tai"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
+
+	apb "github.com/alex-kennedy/solar-system/asteroidspb"
 )
 
 // Terrestrial time (TT) is approximately 32.184s ahead of International
@@ -291,10 +292,11 @@ type Stats struct {
 func (s *Stats) ToString() string {
 	p := message.NewPrinter(language.English)
 	var lines []string
-	lines = append(lines, p.Sprintf("processed %d asteroids (%d valid, %d invalid)", s.Processed, s.Valid, s.Processed-s.Valid))
+	lines = append(lines, p.Sprintf("processed %d asteroids (%d added, %d skipped)", s.Processed, s.Valid, s.Processed-s.Valid))
 	lines = append(lines, p.Sprintf("UnknownOrbitType: %d", s.UnknownOrbitType))
 	lines = append(lines, p.Sprintf("TooUncertain: %d", s.TooUncertain))
 	lines = append(lines, p.Sprintf("UnboundedOrbit: %d", s.UnboundedOrbit))
+	lines = append(lines, p.Sprintf("Error: %d", s.Error))
 	return strings.Join(lines, "\n")
 }
 
@@ -392,7 +394,7 @@ func trim(s string) string {
 func decodePackedDate(d string) (time.Time, error) {
 	d = strings.Trim(d, " \t")
 	if len(d) != 5 {
-		return time.Time{}, fmt.Errorf("want packed date string to be 5 characters, got '%s'", s)
+		return time.Time{}, fmt.Errorf("want packed date string to be 5 characters, got '%s'", d)
 	}
 	var parts []int
 	for _, c := range d {
