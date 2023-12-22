@@ -8,6 +8,7 @@ RUN apk add --no-cache --update \
   libressl-dev \
   nodejs \
   npm \
+  rustup \
   && rustup-init -y
 
 COPY . /solar-system
