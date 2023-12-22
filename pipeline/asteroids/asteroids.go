@@ -406,7 +406,7 @@ func decodePackedDate(d string) (time.Time, error) {
 	}
 
 	s, ns := tai.Date((parts[0]*100)+(10*parts[1])+parts[2], parts[3], parts[4]).Unix()
-	return time.Unix(s, ns+ttToTaiNanoseconds), nil
+	return time.Unix(s, ns+ttToTaiNanoseconds).In(time.UTC), nil
 }
 
 // https://www.minorplanetcenter.net/iau/info/PackedDates.html
@@ -430,10 +430,10 @@ func decodePackedCharacter(c rune) (int, error) {
 	//           15           F             31           V
 	//           16           G
 	code := int(c)
-	if code >= 49 && code <= 57 {
+	if code >= 48 && code <= 57 {
 		return code - 48, nil
 	} else if code >= 65 && code <= 86 {
-		return code - 64, nil
+		return code - 55, nil
 	}
 	return 0, fmt.Errorf("unable to unpack character to minor planet center number: %c, want [1-9A-V]", c)
 }
