@@ -23,7 +23,6 @@ export async function loadBrightStars(): Promise<BrightStarsPoints> {
  */
 export class BrightStarsPoints extends THREE.Points {
   constructor(stars: BrightStars) {
-    console.log(stars);
     const sizes = new Float32Array(stars.brightStars.length);
     const positions = new Float32Array(stars.brightStars.length * 3);
     const colors = new Float32Array(stars.brightStars.length * 3);
