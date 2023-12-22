@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io"
 	"io/fs"
@@ -10,20 +11,24 @@ import (
 	"path/filepath"
 
 	"github.com/google/brotli/go/cbrotli"
+	"github.com/schollz/progressbar/v3"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/alex-kennedy/solar-system/pipeline/asteroids"
 	brightstars "github.com/alex-kennedy/solar-system/pipeline/bright_stars"
-	"github.com/schollz/progressbar/v3"
 )
 
-const (
-	BRIGHT_STARS_OUTPUT = "./public/assets/bright_stars.pb.br"
-	ASTEROIDS_OUTPUT    = "./public/assets/asteroids.pb.br"
+var (
+	brightStarsOutput = flag.String("bright_stars_output", "./public/assets/bright_stars.pb.br", "Output directory for bright stars.")
+	asteroidsOutput   = flag.String("asteroids_output", "./public/assets/asteroids.pb.br", "Output directory for asteroids.")
 )
 
-func CreateBrightStars() error {
+func CreateBrightStars(output string) error {
 	log.Println("starting bright stars pipeline...")
+	if err := os.MkdirAll(filepath.Dir(output), fs.FileMode(os.O_RDWR)); err != nil {
+		return fmt.Errorf("failed to make bright stars output dir: %s", err)
+	}
+
 	brightStars, err := brightstars.LoadBrightStars()
 	if err != nil {
 		return err
@@ -36,15 +41,19 @@ func CreateBrightStars() error {
 	}
 
 	log.Println("writing compressed bright stars...")
-	if err := WriteCompressed(BRIGHT_STARS_OUTPUT, brightStarsSerialized); err != nil {
+	if err := WriteCompressed(output, brightStarsSerialized); err != nil {
 		return fmt.Errorf("failed to write bright stars: %s", err)
 	}
 	log.Println("finished bright stars pipeline!")
 	return nil
 }
 
-func CreateAsteroids() error {
+func CreateAsteroids(output string) error {
 	log.Println("starting asteroids pipeline...")
+
+	if err := os.MkdirAll(filepath.Dir(output), fs.FileMode(os.O_RDWR)); err != nil {
+		return fmt.Errorf("failed to make asteroids output dir: %s", err)
+	}
 
 	asteroids, err := asteroids.GetAsteroidPayload()
 	if err != nil {
@@ -57,7 +66,7 @@ func CreateAsteroids() error {
 	}
 
 	log.Printf("writing compressed asteroids...")
-	if err := WriteCompressed(ASTEROIDS_OUTPUT, asteroidsSerialized); err != nil {
+	if err := WriteCompressed(output, asteroidsSerialized); err != nil {
 		return fmt.Errorf("failed to write asteroids: %s", err)
 	}
 	log.Println("finished asteroids pipeline!")
@@ -86,17 +95,15 @@ func WriteCompressed(path string, data []byte) error {
 }
 
 func main() {
+	flag.Parse()
+
 	log.Println("starting solar-system pipeline...")
 
-	if err := os.MkdirAll(filepath.Dir(BRIGHT_STARS_OUTPUT), fs.FileMode(os.O_RDWR)); err != nil {
-		log.Fatalf("failed to make assets dir: %s\n", err)
-	}
-
-	if err := CreateBrightStars(); err != nil {
+	if err := CreateBrightStars(*brightStarsOutput); err != nil {
 		log.Fatal(err)
 	}
 
-	if err := CreateAsteroids(); err != nil {
+	if err := CreateAsteroids(*asteroidsOutput); err != nil {
 		log.Fatal(err)
 	}
 
