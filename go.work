@@ -1,0 +1,9 @@
+go 1.21.0
+
+use (
+	.
+	./pipeline/asteroids
+	./pipeline/bright_stars
+	./proto/go/github.com/alex-kennedy/solar-system/asteroidspb
+	./proto/go/github.com/alex-kennedy/solar-system/solarsystempb
+)

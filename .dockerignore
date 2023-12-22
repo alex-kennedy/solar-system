@@ -1,6 +1,6 @@
-**/node_modules/
-app/build/
-app/temp/
+node_modules/
+build/
+temp/
 data/
 public/assets/
 rust/pkg/
