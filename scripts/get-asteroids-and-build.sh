@@ -1,3 +1,5 @@
+set -e
+
 BRIGHT_STARS_OUTPUT="/solar-system/build/bright_stars.json.br"
 ASTEROIDS_OUTPUT="/solar-system/build/asteroids.json.br"
 
@@ -7,9 +9,9 @@ ASTEROIDS_OUTPUT="/solar-system/build/asteroids.json.br"
   --asteroids_output="${ASTEROIDS_OUTPUT}"
 
 # Build the site
-npm run build
+cd /solar-system/ && npm run build
 
 # Deploy to cloudflare pages
-npx wrangler pages deploy \
+cd /solar-system/ && npx wrangler pages deploy \
   --project-name=alex-kennedy-solar-system \
   /solar-system/build
