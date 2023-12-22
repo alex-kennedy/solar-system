@@ -10,7 +10,7 @@ module.exports = {
         if (oneOf.loader && oneOf.loader.indexOf("file-loader") >= 0) {
           // Make file-loader ignore WASM files
           oneOf.exclude.push(/\.wasm$/);
-          oneOf.exclude.push(/\.worker\.js$/);
+          oneOf.exclude.push(/\.worker\.(js|ts)$/);
           oneOf.exclude.push(/\.vert$/);
           oneOf.exclude.push(/\.frag$/);
         }
@@ -30,11 +30,17 @@ module.exports = {
     });
 
     config.module.rules.push({
+      test: /\.worker\.ts$/,
+      use: [{ loader: "worker-loader" }, { loader: "ts-loader" }],
+    });
+
+    config.module.rules.push({
       test: /\.vert$|\.frag$/,
       type: "asset/source",
     });
 
     config.output.globalObject = "this";
+    config.output.filename = 'static/js/[name].bundle.js'
     return config;
   },
   paths: function(paths, env) {

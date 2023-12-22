@@ -5,20 +5,19 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Planet } from "../lib/orbit";
 import { loadBrightStars } from "../lib/bright_stars";
 import Stats from "three/examples/jsm/libs/stats.module";
-import asteroidStyles from "./../assets/asteroids/styles.json";
 import planetColours from "./../assets/planets/colours.json";
 import planetElements from "./../assets/planets/planetary_elements.json";
-import AsteroidsWorker from "./../workers/asteroids.worker";
+import AsteroidsWorker from "../workers/asteroids.worker";
 import LoaderSnackbar from "./LoaderSnackbar";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
-import { AsteroidPoints } from "../lib/asteroid_points";
+import { Asteroids } from "../lib/asteroids";
 
 class Scene extends Component {
   constructor(props) {
     super(props);
 
     this.shaderMaterial = null;
-    this.asteroidPoints = {};
+    this.asteroids = null;
 
     this.state = { loadingAsteroids: true, loadingAsteroidsError: false };
 
@@ -47,7 +46,7 @@ class Scene extends Component {
 
     this.asteroidsWorker = new AsteroidsWorker();
     this.asteroidsWorker.onmessage = this.handleAsteroidWorkerMessage;
-    this.asteroidsWorker.postMessage({ cmd: "init" });
+    this.asteroidsWorker.postMessage({cmd: 'init'});
 
     window.scene = this;
   }
@@ -165,7 +164,7 @@ class Scene extends Component {
     if (message.data.cmd === "error") {
       this.handleAsteroidLoadFailure();
     } else if (message.data.cmd === "initComplete") {
-      this.renderAsteroids(message.data.points);
+      this.renderAsteroids(message.data.asteroids);
     }
   }
 
@@ -180,27 +179,19 @@ class Scene extends Component {
     this.setState({ loadingAsteroidsError: false });
   }
 
-  renderAsteroids(pointsByType) {
-    for (let [type, a] of Object.entries(pointsByType)) {
-      const points = new AsteroidPoints(a.asteroids, a.epoch, {
-        alpha: asteroidStyles.opacity[type],
-        color: new THREE.Color(asteroidStyles.colours[type]),
-        pointSize: 2.0,
-      });
-      this.scene.add(points);
-      this.asteroidPoints[type] = points;
-    }
+  renderAsteroids(asteroidsProto) {
+    this.asteroids = Asteroids.fromAsteroidsProto(asteroidsProto)
+    this.asteroids.asteroidPoints.forEach((asteroidPoints) => {
+      this.scene.add(asteroidPoints);
+    })
 
     // Use the current time for asteroid positions.
     this.setAsteroidTime(Date.now() / 1000);
-
     this.setState({ loadingAsteroids: false });
   }
 
   setAsteroidTime(time) {
-    for (let points of Object.values(this.asteroidPoints)) {
-      points.setTime(time);
-    }
+    this.asteroids.setTime(time);
   }
 
   requestAsteroidUpdate(t) {
