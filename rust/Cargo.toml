@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Alex Kennedy <apkennedy@me.com>"]
 repository = "https://github.com/alex-kennedy/solar-system"
 description = "Rust packages for github.com/alex-kennedy/solar-system"
-license = "MIT"
+license = "../LICENSE"
 edition = "2018"
 
 [lib]
