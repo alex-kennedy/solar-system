@@ -7,4 +7,4 @@ COPY . /solar-system
 WORKDIR /solar-system
 
 RUN go build -C /solar-system/pipeline -o /usr/local/bin/pipeline . && \
-  npm install
+  npm install && npm run build
