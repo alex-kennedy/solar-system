@@ -1,6 +1,6 @@
 import React from "react";
 import "../assets/css/index.css";
-import Scene from "../components/Scene.js";
+import Scene from "../components/Scene";
 
 class Index extends React.Component {
   render() {

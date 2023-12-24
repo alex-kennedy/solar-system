@@ -17,12 +17,10 @@ async function init() {
 }
 
 function postError(err: Error) {
-  console.error(err);
+  console.log(err);
   self.postMessage({ cmd: "error" });
 }
 
 function postInitComplete() {
   self.postMessage({ cmd: "initComplete", asteroids });
 }
-
-export {};

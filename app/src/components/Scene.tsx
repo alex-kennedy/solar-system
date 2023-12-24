@@ -1,23 +1,39 @@
-import React, { Component } from "react";
+import React, { Component, SyntheticEvent } from "react";
 
 import { loadBrightStars } from "../lib/bright_stars";
+// @ts-expect-error Can't seem to make worker imports work
 import AsteroidsWorker from "../workers/asteroids.worker";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
 import { Asteroids } from "../lib/asteroids";
+import { Asteroids as AsteroidsProto } from "../lib/proto/asteroids";
 import { Scene } from "../lib/scene";
 
 import LoaderSnackbar from "./LoaderSnackbar";
+import { SnackbarCloseReason } from "@mui/material";
 
-class SceneComponent extends Component {
-  constructor(props) {
+interface SceneState {
+  loadingAsteroids: boolean;
+  loadingAsteroidsError: boolean;
+}
+
+interface AsteroidsMessage {
+  cmd: string;
+  asteroids: AsteroidsProto;
+}
+
+class SceneComponent extends Component<{}, SceneState> {
+  scene: Scene | null = null;
+
+  constructor(props: {}) {
     super(props);
     this.state = { loadingAsteroids: true, loadingAsteroidsError: false };
-    window.scene = this; // For debugging
+    (window as any).scene = this; // For debugging
   }
 
-  mountScene = (mount) => {
+  mountScene = (mount: HTMLDivElement) => {
     this.scene = new Scene(mount);
     this.scene.startAnimation();
+
     this.renderBrightStars();
 
     const worker = new AsteroidsWorker();
@@ -27,7 +43,7 @@ class SceneComponent extends Component {
     window.addEventListener("resize", this.scene.updateDimensions);
   };
 
-  handleAsteroidWorkerMessage = (message) => {
+  handleAsteroidWorkerMessage = (message: { data: AsteroidsMessage }) => {
     if (message.data.cmd === "error") {
       this.handleAsteroidLoadFailure();
     } else if (message.data.cmd === "initComplete") {
@@ -39,7 +55,10 @@ class SceneComponent extends Component {
     this.setState({ loadingAsteroids: false, loadingAsteroidsError: true });
   };
 
-  handleAsteroidErrorClose = (event, reason) => {
+  handleAsteroidErrorClose = (
+    event: Event | SyntheticEvent,
+    reason: SnackbarCloseReason
+  ) => {
     if (reason === "clickaway") {
       return;
     }
@@ -49,23 +68,30 @@ class SceneComponent extends Component {
   renderBrightStars = async () => {
     try {
       const brightStars = await loadBrightStars();
-      this.scene.showBrightStars(brightStars);
+      this.scene!.showBrightStars(brightStars);
     } catch (err) {
       console.error("Failed to load bright stars!", err);
     }
   };
 
-  renderAsteroids = (asteroidsProto) => {
+  renderAsteroids = (asteroidsProto: AsteroidsProto) => {
+    if (this.scene === null) {
+      console.error("Unexpected error for render asteroids! Scene was null!");
+      this.handleAsteroidLoadFailure();
+      return;
+    }
+
     const asteroids = Asteroids.fromAsteroidsProto(asteroidsProto);
     this.scene.showAsteroids(asteroids);
 
     // Use the current time for asteroid positions.
     this.scene.setTime(Date.now() / 1000);
+
     this.setState({ loadingAsteroids: false });
   };
 
   componentWillUnmount() {
-    this.scene.unmount();
+    this.scene!.unmount();
   }
 
   render() {

@@ -40,12 +40,12 @@ module.exports = {
     });
 
     config.output.globalObject = "this";
-    config.output.filename = 'static/js/[name].bundle.js'
+    config.output.filename = "static/js/[name].bundle.js";
     return config;
   },
-  paths: function(paths, env) {
-    paths.appIndexJs = path.resolve(__dirname, 'app/src/index.tsx');
-    paths.appSrc = path.resolve(__dirname, 'app');
+  paths: function (paths, env) {
+    paths.appIndexJs = path.resolve(__dirname, "app/src/index.tsx");
+    paths.appSrc = path.resolve(__dirname, "app");
     return paths;
   },
 };
