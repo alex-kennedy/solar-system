@@ -10,7 +10,7 @@ interface OrbitalElements {
   longNode: number; // longitude of the ascending node
 }
 
-interface OrbitalElementsDelta {
+export interface OrbitalElementsDelta {
   a: [number, number]; // semi-major axis
   e: [number, number]; // eccentricity
   i: [number, number]; // inclination
@@ -21,15 +21,13 @@ interface OrbitalElementsDelta {
 
 class OrbitCurve extends THREE.Curve<THREE.Vector3> {
   readonly type = "OrbitCurve";
-  focus: THREE.Vector3;
   orbitalElements: OrbitalElements;
   argPeri: number;
 
-  constructor(focus: THREE.Vector3, orbitalElements: OrbitalElements) {
+  constructor(orbitalElements: OrbitalElements) {
     super();
 
     this.type = "OrbitCurve";
-    this.focus = focus;
     this.orbitalElements = orbitalElements;
     this.argPeri = orbitalElements.longPeri - orbitalElements.longNode;
   }
@@ -66,44 +64,65 @@ class OrbitCurve extends THREE.Curve<THREE.Vector3> {
   }
 }
 
-class Planet {
+/**
+ * Represents a planet, where its orbit and position can be shown in a scene.
+ * Orbit focus is assumed to be 0,0,0 (heliocentric in this simulation).
+ */
+export class Planet {
+  /** Name of the planet. */
   name: string;
-  focus: THREE.Vector3;
 
-  orbitalElements: OrbitalElements;
-  argPeri: number;
-  meanAnomaly: number;
-  eccentricAnomaly: number = 0.0;
-  currentPosition: THREE.Vector3 | null = null;
-  curve: OrbitCurve | null = null;
+  /**
+   * Mesh object for the planet in its orbit. Only set if showInScene has been
+   * called.
+   */
+  sphere: THREE.Mesh | null = null;
 
-  color: THREE.Color;
-  timeCenturies: number;
+  /** Current position of the planet. */
+  currentPosition: THREE.Vector3 = new THREE.Vector3();
+
+  /** Orbital elements for the planet. */
+  private readonly orbitalElements: OrbitalElements;
+
+  /** Argument of perihelion, in degrees. */
+  private readonly argPeri: number;
+
+  /** Mean anomaly, in degrees. */
+  private meanAnomaly: number;
+
+  /** Eccentric anomaly, in degrees. */
+  private eccentricAnomaly: number = 0.0;
+
+  /** Orbit curve oject for the planets elliptical orbit. */
+  private readonly curve: OrbitCurve;
+
+  /** Color of the planet and orbit curves in the scene. */
+  private readonly color: THREE.Color;
 
   constructor(
     name: string,
     orbitalElements: OrbitalElementsDelta,
-    color: THREE.Color,
-    focus: THREE.Vector3 | undefined
+    color: THREE.Color
+    // focus?: THREE.Vector3 | undefined
   ) {
     this.name = name || "";
-    this.focus = focus || new THREE.Vector3(0, 0, 0);
-
     this.color = color;
-    this.timeCenturies = this.getCenturiesTT();
+    // this.focus = focus || new THREE.Vector3(0, 0, 0);
+
+    const timeCenturies = this.getCenturiesTT();
 
     // Part 1: compute planet's six elements
     this.orbitalElements = {
-      a: orbitalElements.a[0] + this.timeCenturies * orbitalElements.a[1],
-      e: orbitalElements.e[0] + this.timeCenturies * orbitalElements.e[1],
-      i: orbitalElements.i[0] + this.timeCenturies * orbitalElements.i[1],
-      l: orbitalElements.l[0] + this.timeCenturies * orbitalElements.l[1],
+      a: orbitalElements.a[0] + timeCenturies * orbitalElements.a[1],
+      e: orbitalElements.e[0] + timeCenturies * orbitalElements.e[1],
+      i: orbitalElements.i[0] + timeCenturies * orbitalElements.i[1],
+      l: orbitalElements.l[0] + timeCenturies * orbitalElements.l[1],
       longPeri:
         orbitalElements.longPeri[0] +
-        this.timeCenturies * orbitalElements.longPeri[1],
+        timeCenturies * orbitalElements.longPeri[1],
       longNode:
         orbitalElements.longNode[0] +
-        this.timeCenturies * orbitalElements.longNode[1],
+        timeCenturies * orbitalElements.longNode[1],
     };
 
     // Part 2: compute argument of perihelion
@@ -114,8 +133,11 @@ class Planet {
     this.meanAnomaly =
       ((this.orbitalElements.l - this.orbitalElements.longPeri + 180) % 360) -
       180;
+
+    this.curve = this.initialiseOrbit();
   }
 
+  /** Solves Kepler's equation with the given tolerance. */
   solveKepler(tol: number) {
     const e_star = (180 / Math.PI) * this.orbitalElements.e;
     let E_n =
@@ -134,30 +156,48 @@ class Planet {
     return E_n;
   }
 
+  /** Get the number of centuries that have elapsed since J2000.0, TT. */
   getCenturiesTT(): number {
-    // Get the number of centuries that have elapsed since J2000.0, TT
     const nowTT = this.getNowTT();
     return (nowTT / 86400.0 - 10957.5) / 36525;
   }
 
+  /** Gets the current terrestrial time in unix seconds. */
   getNowTT() {
-    // Get the current time as a unix seconds, but in Terrestrial Time
     return Date.now() / 1000 + 69.184;
   }
 
-  initialiseOrbit() {
-    this.curve = new OrbitCurve(this.focus, this.orbitalElements);
+  /** Initialises the planets orbit curve and current location. */
+  private initialiseOrbit(): OrbitCurve {
+    const curve = new OrbitCurve(this.orbitalElements);
     const eccentricAnomaly = this.solveKepler(1e-6);
-    this.currentPosition = this.curve.getPoint(
-      eccentricAnomaly / 360,
-      undefined
-    );
+    curve.getPoint(eccentricAnomaly / 360, this.currentPosition);
+    return curve;
   }
 
-  showInScene(scene: THREE.Scene, camera: THREE.Camera) {
-    const points = this.curve!.getPoints(200);
+  /** Shows the planet and orbit in the given scene. */
+  showInScene(scene: THREE.Scene) {
+    this.showPlanetInScene(scene);
+    this.showCurveInScene(scene);
+  }
 
-    const geometry = new MeshLineGeometry()
+  /** Shows the planet's sphere in the given scene. */
+  private showPlanetInScene(scene: THREE.Scene) {
+    let geometry = new THREE.SphereGeometry(1, 16, 16);
+    let material = new THREE.MeshBasicMaterial({
+      color: this.color,
+    });
+
+    this.sphere = new THREE.Mesh(geometry, material);
+    this.sphere.position.copy(this.currentPosition);
+    scene.add(this.sphere);
+  }
+
+  /** Shows the elliptical orbit curve in the given scene. */
+  private showCurveInScene(scene: THREE.Scene) {
+    const points = this.curve.getPoints(200);
+
+    const geometry = new MeshLineGeometry();
     geometry.setPoints(points);
 
     const material = new MeshLineMaterial({
@@ -173,5 +213,3 @@ class Planet {
     scene.add(mesh);
   }
 }
-
-export { Planet };

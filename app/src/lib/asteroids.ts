@@ -172,6 +172,12 @@ export class Asteroids {
     this.timeCreated = timeCreated;
   }
 
+  showInScene(scene: THREE.Scene) {
+    this.asteroidPoints.forEach((asteroidPoints) => {
+      scene.add(asteroidPoints);
+    });
+  }
+
   setTime(time: number) {
     this.asteroidPoints.forEach((asteroidPoints) => {
       asteroidPoints.setTime(time);
