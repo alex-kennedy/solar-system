@@ -12,6 +12,8 @@ import LoaderSnackbar from "./LoaderSnackbar";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
 import { Asteroids } from "../lib/asteroids";
 
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
 class Scene extends Component {
   constructor(props) {
     super(props);
@@ -25,7 +27,6 @@ class Scene extends Component {
     this.stop = this.stop.bind(this);
     this.animate = this.animate.bind(this);
     this.updateDimensions = this.updateDimensions.bind(this);
-    // this.renderBrightStars = this.renderBrightStars.bind(this);
     this.handleAsteroidLoadFailure = this.handleAsteroidLoadFailure.bind(this);
     this.handleAsteroidErrorClose = this.handleAsteroidErrorClose.bind(this);
     this.renderAsteroids = this.renderAsteroids.bind(this);
@@ -45,8 +46,8 @@ class Scene extends Component {
     this.addSun();
 
     this.asteroidsWorker = new AsteroidsWorker();
-    this.asteroidsWorker.onmessage = this.handleAsteroidWorkerMessage;
-    this.asteroidsWorker.postMessage({cmd: 'init'});
+    this.asteroidsWorker.onmessage = this.handleAsteroidWorkerMessage.bind(this);
+    this.asteroidsWorker.postMessage({ cmd: "init" });
 
     window.scene = this;
   }
@@ -89,7 +90,9 @@ class Scene extends Component {
     const stats = new Stats();
     stats.setMode(0); // 0: fps, 1: ms, 2: mb, 3+: custom
     this.stats = stats;
-    this.mount.appendChild(this.stats.domElement); // lazily comment it out for prod
+    if (!IS_PRODUCTION) {
+      this.mount.appendChild(this.stats.domElement);
+    }
   }
 
   addCelestialSphereWireframe() {
@@ -180,10 +183,10 @@ class Scene extends Component {
   }
 
   renderAsteroids(asteroidsProto) {
-    this.asteroids = Asteroids.fromAsteroidsProto(asteroidsProto)
+    this.asteroids = Asteroids.fromAsteroidsProto(asteroidsProto);
     this.asteroids.asteroidPoints.forEach((asteroidPoints) => {
       this.scene.add(asteroidPoints);
-    })
+    });
 
     // Use the current time for asteroid positions.
     this.setAsteroidTime(Date.now() / 1000);
