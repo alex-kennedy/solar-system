@@ -84,9 +84,6 @@ class SceneComponent extends Component<{}, SceneState> {
     const asteroids = Asteroids.fromAsteroidsProto(asteroidsProto);
     this.scene.showAsteroids(asteroids);
 
-    // Use the current time for asteroid positions.
-    this.scene.setTime(Date.now() / 1000);
-
     this.setState({ loadingAsteroids: false });
   };
 

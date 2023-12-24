@@ -63,6 +63,12 @@ class SolarSystem {
         .length() / SCALE_FACTOR;
     this.sun.scale.set(scale, scale, scale);
   }
+
+  setTime = (time: number) => {
+    this.planets.forEach((planet) => {
+      planet.setTime(time);
+    });
+  };
 }
 
 export { SolarSystem };

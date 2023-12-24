@@ -82,16 +82,10 @@ export class Planet {
   currentPosition: THREE.Vector3 = new THREE.Vector3();
 
   /** Orbital elements for the planet. */
-  private readonly orbitalElements: OrbitalElements;
+  private orbitalElements: OrbitalElements;
 
-  /** Argument of perihelion, in degrees. */
-  private readonly argPeri: number;
-
-  /** Mean anomaly, in degrees. */
-  private meanAnomaly: number;
-
-  /** Eccentric anomaly, in degrees. */
-  private eccentricAnomaly: number = 0.0;
+  /** Orbital elements with their per century rates of change. */
+  private readonly orbitalElementsDelta: OrbitalElementsDelta;
 
   /** Orbit curve oject for the planets elliptical orbit. */
   private readonly curve: OrbitCurve;
@@ -101,54 +95,30 @@ export class Planet {
 
   constructor(
     name: string,
-    orbitalElements: OrbitalElementsDelta,
+    orbitalElementsDelta: OrbitalElementsDelta,
     color: THREE.Color
-    // focus?: THREE.Vector3 | undefined
   ) {
     this.name = name || "";
     this.color = color;
-    // this.focus = focus || new THREE.Vector3(0, 0, 0);
+    this.orbitalElementsDelta = orbitalElementsDelta;
 
-    const timeCenturies = this.getCenturiesTT();
-
-    // Part 1: compute planet's six elements
-    this.orbitalElements = {
-      a: orbitalElements.a[0] + timeCenturies * orbitalElements.a[1],
-      e: orbitalElements.e[0] + timeCenturies * orbitalElements.e[1],
-      i: orbitalElements.i[0] + timeCenturies * orbitalElements.i[1],
-      l: orbitalElements.l[0] + timeCenturies * orbitalElements.l[1],
-      longPeri:
-        orbitalElements.longPeri[0] +
-        timeCenturies * orbitalElements.longPeri[1],
-      longNode:
-        orbitalElements.longNode[0] +
-        timeCenturies * orbitalElements.longNode[1],
-    };
-
-    // Part 2: compute argument of perihelion
-    this.argPeri =
-      this.orbitalElements.longPeri - this.orbitalElements.longNode;
-
-    // Part 3: modulus the mean anomaly so -180 <= M <= 180
-    this.meanAnomaly =
-      ((this.orbitalElements.l - this.orbitalElements.longPeri + 180) % 360) -
-      180;
-
-    this.curve = this.initialiseOrbit();
+    const time = Date.now() / 1000;
+    this.orbitalElements = this.getOrbitalElements(time);
+    this.curve = new OrbitCurve(this.orbitalElements);
+    this.setTime(time);
   }
 
   /** Solves Kepler's equation with the given tolerance. */
-  solveKepler(tol: number) {
-    const e_star = (180 / Math.PI) * this.orbitalElements.e;
-    let E_n =
-      this.meanAnomaly + e_star * Math.sin((Math.PI / 180) * this.meanAnomaly);
+  solveKepler(meanAnomaly: number, tol: number) {
+    const e_star = (180 / Math.PI) * this.orbitalElements!.e;
+    let E_n = meanAnomaly + e_star * Math.sin((Math.PI / 180) * meanAnomaly);
     let delta = 360;
     let count = 0;
 
     while (Math.abs(delta) > tol) {
       delta =
-        (this.meanAnomaly - (E_n - e_star * Math.sin((Math.PI / 180) * E_n))) /
-        (1 - this.orbitalElements.e * Math.cos((Math.PI / 180) * E_n));
+        (meanAnomaly - (E_n - e_star * Math.sin((Math.PI / 180) * E_n))) /
+        (1 - this.orbitalElements!.e * Math.cos((Math.PI / 180) * E_n));
       E_n = E_n + delta;
       count = count + 1;
     }
@@ -156,23 +126,43 @@ export class Planet {
     return E_n;
   }
 
-  /** Get the number of centuries that have elapsed since J2000.0, TT. */
-  getCenturiesTT(): number {
-    const nowTT = this.getNowTT();
-    return (nowTT / 86400.0 - 10957.5) / 36525;
+  /** Sets the orbit position based on the given time, in Unix seconds. */
+  setTime(time: number) {
+    // Part 1: compute planet's updated six orbital elements
+    this.orbitalElements = this.getOrbitalElements(time);
+
+    // Part 2: modulus the mean anomaly so -180 <= M <= 180
+    const meanAnomaly =
+      ((this.orbitalElements.l - this.orbitalElements.longPeri + 180) % 360) -
+      180;
+
+    // Part 3: solve Kepler's equation to get the eccentric anomaly
+    const eccentricAnomaly = this.solveKepler(meanAnomaly, 1e-6);
+    this.curve.orbitalElements = this.orbitalElements;
+    this.curve.getPoint(eccentricAnomaly / 360, this.currentPosition);
+    this.sphere?.position.copy(this.currentPosition);
   }
 
-  /** Gets the current terrestrial time in unix seconds. */
-  getNowTT() {
-    return Date.now() / 1000 + 69.184;
+  getOrbitalElements(time: number): OrbitalElements {
+    const centuriesTT = this.getCenturiesTT(time);
+    const ed = this.orbitalElementsDelta;
+    return {
+      a: ed.a[0] + centuriesTT * ed.a[1],
+      e: ed.e[0] + centuriesTT * ed.e[1],
+      i: ed.i[0] + centuriesTT * ed.i[1],
+      l: ed.l[0] + centuriesTT * ed.l[1],
+      longPeri: ed.longPeri[0] + centuriesTT * ed.longPeri[1],
+      longNode: ed.longNode[0] + centuriesTT * ed.longNode[1],
+    };
   }
 
-  /** Initialises the planets orbit curve and current location. */
-  private initialiseOrbit(): OrbitCurve {
-    const curve = new OrbitCurve(this.orbitalElements);
-    const eccentricAnomaly = this.solveKepler(1e-6);
-    curve.getPoint(eccentricAnomaly / 360, this.currentPosition);
-    return curve;
+  /**
+   * Get the number of centuries that have elapsed between J2000.0, TT and the
+   * given time.
+   */
+  getCenturiesTT(time: number): number {
+    const timeTT = time + 69.184; // Terrestrial time in unix seconds
+    return (timeTT / 86400.0 - 10957.5) / 36525;
   }
 
   /** Shows the planet and orbit in the given scene. */

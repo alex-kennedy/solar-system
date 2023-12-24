@@ -24,6 +24,12 @@ export class Scene {
   stats: Stats | null = null;
   frameId: number | null = null;
 
+  /** Current time for the animation, in Unix seconds. */
+  time = 0;
+
+  /** Number of seconds to advance the animation each render. */
+  tickRate = 0;
+
   constructor(mount: HTMLDivElement) {
     this.mount = mount;
 
@@ -48,6 +54,8 @@ export class Scene {
 
     this.solarSystem = new SolarSystem();
     this.solarSystem.showInScene(this.scene);
+
+    this.setTime(Date.now() / 1000.0);
   }
 
   startAnimation = () => {
@@ -80,6 +88,9 @@ export class Scene {
   };
 
   setTime = (time: number) => {
+    this.time = time;
+
+    this.solarSystem.setTime(time);
     if (this.asteroids !== null) {
       this.asteroids.setTime(time);
     }
@@ -108,12 +119,14 @@ export class Scene {
 
   showAsteroids = (asteroids: Asteroids) => {
     this.asteroids = asteroids;
+    asteroids.setTime(this.time);
     this.asteroids.showInScene(this.scene);
   };
 
   private animate = () => {
     this.beginStats();
 
+    this.setTime(this.time + this.tickRate);
     this.solarSystem.scale(this.camera);
     this.renderer.render(this.scene, this.camera);
     this.controls.update();
@@ -125,15 +138,11 @@ export class Scene {
   };
 
   private beginStats = () => {
-    if (this.stats !== null) {
-      this.stats.begin();
-    }
+    this.stats?.begin();
   };
 
   private endStats = () => {
-    if (this.stats !== null) {
-      this.stats.end();
-    }
+    this.stats?.end();
   };
 }
 
