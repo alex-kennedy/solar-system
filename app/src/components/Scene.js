@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 import React, { Component } from "react";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { Planet } from "../lib/orbit";
+import { Planet } from "../lib/planets";
 import { loadBrightStars } from "../lib/bright_stars";
 import Stats from "three/examples/jsm/libs/stats.module";
 import planetColours from "./../assets/planets/colours.json";
@@ -46,7 +46,8 @@ class Scene extends Component {
     this.addSun();
 
     this.asteroidsWorker = new AsteroidsWorker();
-    this.asteroidsWorker.onmessage = this.handleAsteroidWorkerMessage.bind(this);
+    this.asteroidsWorker.onmessage =
+      this.handleAsteroidWorkerMessage.bind(this);
     this.asteroidsWorker.postMessage({ cmd: "init" });
 
     window.scene = this;
