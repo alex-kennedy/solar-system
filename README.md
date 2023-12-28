@@ -1,30 +1,26 @@
-# The Solar System
+# Solar System
 
-This little hobby project is designed as a visualisation of some of the orbital 
-data we have about our solar system. Most interestingly, the eight planets (plus
-Pluto, if that's your thing), the five known Dwarf Planets and the
-700,000 plus (!) asteroids we know about. 
+## About This Project
 
-I made it because this knowledge is beautiful and extraordinary, isn't it? 
+An approximate visualisation of the bodies in our solar system. Asteroid
+positions are computed from Minor Planet Center orbit determination. No
+perturbations are applied to the orbits - calculations assume asteroids are in
+elliptical orbits around the sun - so they are inaccurate when simulating far in
+the future or past.
 
-I have made every effort to get the Physics right, however, I am but a Physicist
-in training. If you spot any errors, please make them known to me. I will thank
-you with a warm message <3. 
+Full code for this project is available on
+[GitHub](https://github.com/alex-kennedy/solar-system) and is freely licensed
+under the [MIT
+License](https://github.com/alex-kennedy/solar-system/blob/main/LICENSE).
 
+## References
 
-## Data Sources
+- Asteroid orbits are from the [International Astronomical Union Minor Planet Center](https://www.minorplanetcenter.net/data).
 
-This project makes heavy (and very grateful) use of some wonderful open data 
-sources:
+- Stellar positions are from the [Yale Bright Star Catalog](http://tdc-www.harvard.edu/catalogs/bsc5.html).
 
- - Asteroid data is drawn from the [International Astronomical Union Minor Planet Center](https://www.minorplanetcenter.net/data)
- - The star positions and brightnesses are from Version 5 of the [Yale Bright Star Catalog](http://tdc-www.harvard.edu/catalogs/bsc5.html)
- - Orbits of the planets (and Pluto) are from [JPL Solar System Dynamics](https://ssd.jpl.nasa.gov/?planet_phys_par)
+- Planetary (and Pluto) orbits are computed from [JPL Solar System Dynamics](https://ssd.jpl.nasa.gov/?planet_phys_par).
 
+- [Orbital Mechanics, Wikipedia](https://en.wikipedia.org/wiki/Orbital_mechanics)
 
-## License
-
-In so far as it is mine to give, you have permission to use any part of this 
-work for any reason. It is licensed under the MIT license. I would appreciate
-attribution where reasonable, but it is not a requirement. Look to the data 
-sources above for specific licenses pertaining to them.  
+- Curtis, Howard D. 2019. _Orbital Mechanics for Engineering Students: Revised Fourth Edition._ ISBN 978-0-08-102133-0.

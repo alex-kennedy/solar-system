@@ -15,6 +15,7 @@
     "gh-pages": "^2.2.0",
     "raw-loader": "^4.0.2",
     "react-app-rewired": "^2.2.1",
+    "react-router-dom": "^6.21.1",
     "react-scripts": "^5.0.1",
     "ts-loader": "^9.5.1",
     "ts-proto": "^1.157.0",
@@ -22,9 +23,10 @@
     "wrangler": "^3.22.1"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.1",
+    "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
-    "@mui/material": "^5.14.7",
+    "@mui/icons-material": "^5.15.1",
+    "@mui/material": "^5.15.1",
     "brotli": "^1.3.3",
     "buffer": "^6.0.3",
     "eslint-plugin-flowtype": "^3.13.0",
