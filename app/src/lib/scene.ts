@@ -7,28 +7,55 @@ import { SolarSystem } from "./solar_system";
 import { BrightStarsPoints } from "./bright_stars";
 import { Asteroids } from "./asteroids";
 
+/**
+ * True if this is a production build, false if this is a dev build (e.g.
+ * running locally.)
+ */
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 export class Scene {
-  mount: HTMLDivElement;
+  /** Mount element for the scene. */
+  private mount: HTMLDivElement;
 
-  renderer: THREE.WebGLRenderer;
-  camera: THREE.PerspectiveCamera;
-  scene: THREE.Scene;
-  controls: OrbitControls;
+  /** Renderer for the animation. */
+  private renderer: THREE.WebGLRenderer;
 
-  solarSystem: SolarSystem;
-  brightStars: BrightStarsPoints | null = null;
-  asteroids: Asteroids | null = null;
+  /** Camera for the animation. */
+  private camera: THREE.PerspectiveCamera;
 
-  stats: Stats | null = null;
-  frameId: number | null = null;
+  /** Three JS scene representing this scene. */
+  private scene: THREE.Scene;
+
+  /** Orbit controls for the scene. */
+  private controls: OrbitControls;
+
+  /** Solar system (planets, sun, and Pluto) to display in the scene. */
+  private solarSystem: SolarSystem;
+
+  /**
+   * Bright stars to display in the scene. Null if they have not yet been added.
+   */
+  private brightStars: BrightStarsPoints | null = null;
+
+  /**
+   * Asteroids to display in the scene. Null if they have not yet been added.
+   */
+  private asteroids: Asteroids | null = null;
+
+  /** Animation stats element or null if stats should not be collected. */
+  private stats: Stats | null = null;
+
+  /** Frame ID from the last call to requestAnimationFrame. */
+  private frameId: number | null = null;
 
   /** Current time for the animation, in Unix seconds. */
-  time = 0;
+  private timeMs: number = Date.now();
 
-  /** Number of seconds to advance the animation each render. */
-  tickRate = 0;
+  /** Animation timeline time for the last call to animate. */
+  private lastFrameTimeMs: DOMHighResTimeStamp = 0;
+
+  /** Rate of the animation. 1x is equivalent to real-time. */
+  private animationRate = 0;
 
   constructor(mount: HTMLDivElement) {
     this.mount = mount;
@@ -54,15 +81,13 @@ export class Scene {
 
     this.solarSystem = new SolarSystem();
     this.solarSystem.showInScene(this.scene);
-
-    this.setTime(Date.now() / 1000.0);
   }
 
   startAnimation = () => {
     if (this.frameId !== null) {
       return;
     }
-    this.frameId = requestAnimationFrame(this.animate);
+    this.frameId = requestAnimationFrame(this.firstAnimate);
   };
 
   stopAnimation = () => {
@@ -78,6 +103,7 @@ export class Scene {
     this.mount.removeChild(this.renderer.domElement);
   };
 
+  /** Callback to update animation dimensions when the window changes size. */
   updateDimensions = () => {
     const width = this.mount.clientWidth;
     const height = this.mount.clientHeight;
@@ -87,13 +113,19 @@ export class Scene {
     this.camera.updateProjectionMatrix();
   };
 
-  setTime = (time: number) => {
-    this.time = time;
+  /** Sets the current time for the animation in Unix milliseconds. */
+  setTime = (timeMs: number) => {
+    this.timeMs = timeMs;
 
-    this.solarSystem.setTime(time);
+    this.solarSystem.setTime(timeMs);
     if (this.asteroids !== null) {
-      this.asteroids.setTime(time);
+      this.asteroids.setTime(timeMs);
     }
+  };
+
+  /** Returns the current time of the animation in Unix milliseconds. */
+  getTime = (): number => {
+    return this.timeMs;
   };
 
   showCelestialSphereWireframe = () => {
@@ -119,14 +151,23 @@ export class Scene {
 
   showAsteroids = (asteroids: Asteroids) => {
     this.asteroids = asteroids;
-    asteroids.setTime(this.time);
+    asteroids.setTime(this.timeMs);
     this.asteroids.showInScene(this.scene);
   };
 
-  private animate = () => {
+  private firstAnimate = (timestamp: DOMHighResTimeStamp) => {
+    this.lastFrameTimeMs = timestamp;
+    this.frameId = requestAnimationFrame(this.animate);
+  };
+
+  private animate = (timestamp: DOMHighResTimeStamp) => {
     this.beginStats();
 
-    this.setTime(this.time + this.tickRate);
+    this.setTime(
+      this.timeMs + (timestamp - this.lastFrameTimeMs) * this.animationRate
+    );
+    this.lastFrameTimeMs = timestamp;
+
     this.solarSystem.scale(this.camera);
     this.renderer.render(this.scene, this.camera);
     this.controls.update();

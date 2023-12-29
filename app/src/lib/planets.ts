@@ -126,10 +126,10 @@ export class Planet {
     return E_n;
   }
 
-  /** Sets the orbit position based on the given time, in Unix seconds. */
-  setTime(time: number) {
+  /** Sets the orbit position based on the given time, in Unix milliseconds. */
+  setTime(timeMs: number) {
     // Part 1: compute planet's updated six orbital elements
-    this.orbitalElements = this.getOrbitalElements(time);
+    this.orbitalElements = this.getOrbitalElements(timeMs);
 
     // Part 2: modulus the mean anomaly so -180 <= M <= 180
     const meanAnomaly =
@@ -143,8 +143,8 @@ export class Planet {
     this.sphere?.position.copy(this.currentPosition);
   }
 
-  getOrbitalElements(time: number): OrbitalElements {
-    const centuriesTT = this.getCenturiesTT(time);
+  getOrbitalElements(timeMs: number): OrbitalElements {
+    const centuriesTT = this.getCenturiesTT(timeMs);
     const ed = this.orbitalElementsDelta;
     return {
       a: ed.a[0] + centuriesTT * ed.a[1],
@@ -160,8 +160,8 @@ export class Planet {
    * Get the number of centuries that have elapsed between J2000.0, TT and the
    * given time.
    */
-  getCenturiesTT(time: number): number {
-    const timeTT = time + 69.184; // Terrestrial time in unix seconds
+  getCenturiesTT(timeMs: number): number {
+    const timeTT = timeMs / 1000.0 + 69.184; // Terrestrial time in unix seconds
     return (timeTT / 86400.0 - 10957.5) / 36525;
   }
 

@@ -64,9 +64,10 @@ class SolarSystem {
     this.sun.scale.set(scale, scale, scale);
   }
 
-  setTime = (time: number) => {
+  /** Set position time for planets, in Unix milliseconds. */
+  setTime = (timeMs: number) => {
     this.planets.forEach((planet) => {
-      planet.setTime(time);
+      planet.setTime(timeMs);
     });
   };
 }

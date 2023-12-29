@@ -137,8 +137,8 @@ export class AsteroidPoints extends THREE.Points {
     this.epoch = epoch;
   }
 
-  setTime(time: number) {
-    this.shaderMaterial.uniforms.time.value = time - this.epoch;
+  setTime(timeMs: number) {
+    this.shaderMaterial.uniforms.time.value = timeMs / 1000.0 - this.epoch;
   }
 }
 
@@ -178,9 +178,9 @@ export class Asteroids {
     });
   }
 
-  setTime(time: number) {
+  setTime(timeMs: number) {
     this.asteroidPoints.forEach((asteroidPoints) => {
-      asteroidPoints.setTime(time);
+      asteroidPoints.setTime(timeMs);
     });
   }
 }
