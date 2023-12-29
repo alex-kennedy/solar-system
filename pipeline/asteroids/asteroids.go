@@ -44,7 +44,7 @@ func GetAsteroidPayload() (*apb.Asteroids, error) {
 			stats.UnknownOrbitType += 1
 			continue
 		}
-		if a.Uncertainty() < 0 || a.Uncertainty() >= 6 {
+		if a.Uncertainty() != 0 {
 			stats.TooUncertain += 1
 			continue
 		}
