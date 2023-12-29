@@ -14,6 +14,7 @@ import { SnackbarCloseReason } from "@mui/material";
 interface SceneState {
   loadingAsteroids: boolean;
   loadingAsteroidsError: boolean;
+  timeMs: number;
 }
 
 interface AsteroidsMessage {
@@ -26,12 +27,20 @@ class SceneComponent extends Component<{}, SceneState> {
 
   constructor(props: {}) {
     super(props);
-    this.state = { loadingAsteroids: true, loadingAsteroidsError: false };
+    this.state = {
+      loadingAsteroids: true,
+      loadingAsteroidsError: false,
+      timeMs: 0,
+    };
     (window as any).scene = this; // For debugging
   }
 
+  setTimeMs = (timeMs: number) => {
+    this.setState({ timeMs });
+  };
+
   mountScene = (mount: HTMLDivElement) => {
-    this.scene = new Scene(mount);
+    this.scene = new Scene(mount, this.setTimeMs);
     this.scene.startAnimation();
 
     this.renderBrightStars();

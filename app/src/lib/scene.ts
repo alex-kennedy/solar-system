@@ -17,6 +17,8 @@ export class Scene {
   /** Mount element for the scene. */
   private mount: HTMLDivElement;
 
+  private setTimeMsCallback: ((timeMs: number) => void) | null;
+
   /** Renderer for the animation. */
   private renderer: THREE.WebGLRenderer;
 
@@ -57,8 +59,12 @@ export class Scene {
   /** Rate of the animation. 1x is equivalent to real-time. */
   private animationRate = 0;
 
-  constructor(mount: HTMLDivElement) {
+  constructor(
+    mount: HTMLDivElement,
+    setTimeMsCallback: ((timeMs: number) => void) | null
+  ) {
     this.mount = mount;
+    this.setTimeMsCallback = setTimeMsCallback;
 
     const width = this.mount.clientWidth;
     const height = this.mount.clientHeight;
@@ -116,11 +122,11 @@ export class Scene {
   /** Sets the current time for the animation in Unix milliseconds. */
   setTime = (timeMs: number) => {
     this.timeMs = timeMs;
-
     this.solarSystem.setTime(timeMs);
     if (this.asteroids !== null) {
       this.asteroids.setTime(timeMs);
     }
+    this.setTimeMsCallback ? this.setTimeMsCallback(timeMs) : null;
   };
 
   /** Returns the current time of the animation in Unix milliseconds. */
