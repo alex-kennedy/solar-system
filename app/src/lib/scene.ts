@@ -15,7 +15,7 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 export class Scene {
   /** Mount element for the scene. */
-  private mount: HTMLDivElement;
+  private mount: HTMLDivElement | undefined;
 
   private setTimeMsCallback: ((timeMs: number) => void) | null;
 
@@ -106,13 +106,18 @@ export class Scene {
 
   unmount = () => {
     this.stopAnimation();
-    this.mount.removeChild(this.renderer.domElement);
+    this.mount?.removeChild(this.renderer.domElement);
   };
 
   /** Callback to update animation dimensions when the window changes size. */
   updateDimensions = () => {
-    const width = this.mount.clientWidth;
-    const height = this.mount.clientHeight;
+    const width = this.mount?.clientWidth;
+    const height = this.mount?.clientHeight;
+
+    // Mount might sneakily get destroyed in unmount.
+    if (width === undefined || height === undefined) {
+      return;
+    }
 
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
