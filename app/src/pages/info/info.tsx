@@ -2,6 +2,7 @@ import { Button, Container, IconButton, Link, Typography } from "@mui/material";
 import React from "react";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import CloseIcon from "@mui/icons-material/Close";
+import { Link as RouterLink } from "react-router-dom";
 
 import "./info.css";
 
@@ -17,9 +18,11 @@ class Info extends React.Component {
             top: 0,
           }}
         >
-          <IconButton aria-label="close">
-            <CloseIcon />
-          </IconButton>
+          <RouterLink to={"/"}>
+            <IconButton aria-label="close">
+              <CloseIcon />
+            </IconButton>
+          </RouterLink>
         </div>
         <Container maxWidth="md">
           <Typography variant="h1">Solar System</Typography>
