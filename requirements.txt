@@ -1,7 +1,0 @@
-absl-py
-brotli
-google-cloud-storage
-numpy
-pandas
-requests
-tqdm
