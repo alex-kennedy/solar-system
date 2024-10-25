@@ -25,4 +25,4 @@ COPY . /solar-system
 
 WORKDIR /solar-system
 
-RUN npm install
+RUN npm install && npm run build

@@ -20,7 +20,7 @@
     "ts-loader": "^9.5.1",
     "ts-proto": "^1.157.0",
     "worker-loader": "^3.0.8",
-    "wrangler": "^3.22.1"
+    "wrangler": "^3.83.0"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
