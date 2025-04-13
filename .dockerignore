@@ -3,6 +3,4 @@ build/
 temp/
 data/
 public/assets/
-rust/pkg/
-rust/target/
 .git

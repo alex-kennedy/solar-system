@@ -10,15 +10,7 @@ COPY . /solar-system
 
 RUN go build -C /solar-system/pipeline -o /usr/local/bin/pipeline
 
-# Add web build dependencies
-FROM rust:alpine
-
-RUN apk add --no-cache --update \
-  libressl-dev \
-  g++ \
-  gcc \
-  nodejs \
-  npm
+FROM node:23-slim
 
 COPY --from=pipeline /usr/local/bin/pipeline /usr/local/bin/pipeline
 COPY . /solar-system
