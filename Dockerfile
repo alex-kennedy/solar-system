@@ -1,5 +1,5 @@
 # Build pipeline in go
-FROM golang:1.21-alpine AS pipeline
+FROM golang:1.24-alpine AS pipeline
 
 RUN apk add --no-cache --update \
   brotli-dev \

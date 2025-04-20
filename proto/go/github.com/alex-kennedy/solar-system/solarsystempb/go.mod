@@ -1,5 +1,5 @@
 module github.com/alex-kennedy/solar-system/solarsystempb
 
-go 1.21.0
+go 1.24
 
-require google.golang.org/protobuf v1.31.0
+require google.golang.org/protobuf v1.36.6
