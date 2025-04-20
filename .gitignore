@@ -6,7 +6,7 @@ data/
 temp/
 
 # generated public files
-public/assets
+web/public/assets
 
 # misc processing files
 pipeline/asteroids/*.csv
