@@ -1,7 +1,7 @@
 import { fetchBrotliAsArray } from "../lib/brotli";
 import { Asteroids } from "../lib/proto/asteroids";
 
-const ASTEROIDS_PATH = process.env.PUBLIC_URL + "/assets/asteroids.pb.br";
+const ASTEROIDS_PATH = self.location.origin + "/assets/asteroids.pb.br";
 
 let asteroids: Asteroids | null = null;
 

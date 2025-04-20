@@ -1,8 +1,6 @@
 import React, { Component, SyntheticEvent } from "react";
 
 import { loadBrightStars } from "../lib/bright_stars";
-// @ts-expect-error Can't seem to make worker imports work
-import AsteroidsWorker from "../workers/asteroids.worker";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
 import { Asteroids } from "../lib/asteroids";
 import { Asteroids as AsteroidsProto } from "../lib/proto/asteroids";
@@ -39,13 +37,18 @@ class SceneComponent extends Component<{}, SceneState> {
     this.setState({ timeMs });
   };
 
-  mountScene = (mount: HTMLDivElement) => {
+  mountScene = (mount: HTMLDivElement | null) => {
+    if (mount === null) {
+      return;
+    }
     this.scene = new Scene(mount, this.setTimeMs);
     this.scene.startAnimation();
 
     this.renderBrightStars();
 
-    const worker = new AsteroidsWorker();
+    const worker = new Worker(
+      new URL("../workers/asteroids.worker.ts", import.meta.url)
+    );
     worker.onmessage = this.handleAsteroidWorkerMessage;
     worker.postMessage({ cmd: "init" });
 

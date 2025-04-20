@@ -8,7 +8,7 @@ import { fetchBrotliAsArray } from "./brotli";
 
 const RADIUS = 100;
 const INTENSITY_SCALE = 5.0;
-const PUBLIC_PATH = process.env.PUBLIC_URL + "/assets/bright_stars.pb.br";
+const PUBLIC_PATH = "/assets/bright_stars.pb.br";
 
 /** Construct bright stars from the default proto path. */
 export async function loadBrightStars(): Promise<BrightStarsPoints> {
@@ -47,8 +47,7 @@ export class BrightStarsPoints extends THREE.Points {
     geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
     geometry.setAttribute("color_shader", new THREE.BufferAttribute(colors, 3));
 
-    const texture = new THREE.TextureLoader().load(starTexture);
-
+    const texture = new THREE.TextureLoader().load(starTexture.src);
     const material = new THREE.ShaderMaterial({
       uniforms: {
         color: { value: new THREE.Color(0xffffff) },
