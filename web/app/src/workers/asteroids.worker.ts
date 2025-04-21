@@ -1,26 +1,15 @@
+// Simple web worker to offload loading and parsing the asteroids message.
+//
+// It should be sent a single message (of arbitrary content) and returns the
+// asteroid proto message.
+
 import { fetchBrotliAsArray } from "../lib/brotli";
 import { Asteroids } from "../lib/proto/asteroids";
 
 const ASTEROIDS_PATH = self.location.origin + "/assets/asteroids.pb.br";
 
-let asteroids: Asteroids | null = null;
-
-self.onmessage = (message: MessageEvent<{ cmd: string }>) => {
-  if (message.data.cmd === "init") {
-    init().then(postInitComplete).catch(postError);
-  }
-};
-
-async function init() {
+self.onmessage = async () => {
   const results = await fetchBrotliAsArray(ASTEROIDS_PATH);
-  asteroids = Asteroids.decode(results);
-}
-
-function postError(err: Error) {
-  console.log(err);
-  self.postMessage({ cmd: "error" });
-}
-
-function postInitComplete() {
-  self.postMessage({ cmd: "initComplete", asteroids });
-}
+  const asteroids = Asteroids.decode(results);
+  self.postMessage(asteroids);
+};

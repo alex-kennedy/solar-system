@@ -4,8 +4,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
 
 import { SolarSystem } from "./solar_system";
-import { BrightStarsPoints } from "./bright_stars";
-import { Asteroids } from "./asteroids";
+import { BrightStarsPoints, loadBrightStars } from "./bright_stars";
+import { Asteroids, LoadAsteroids } from "./asteroids";
 
 /**
  * True if this is a production build, false if this is a dev build (e.g.
@@ -15,7 +15,7 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 export class Scene {
   /** Mount element for the scene. */
-  private mount: HTMLDivElement | undefined;
+  private parent: HTMLDivElement | undefined;
 
   private setTimeMsCallback: ((timeMs: number) => void) | null;
 
@@ -44,6 +44,9 @@ export class Scene {
    */
   private asteroids: Asteroids | null = null;
 
+  /** Promise representing the loading of the asteroids. */
+  private asteroidsPromise: Promise<Asteroids>;
+
   /** Animation stats element or null if stats should not be collected. */
   private stats: Stats | null = null;
 
@@ -59,15 +62,13 @@ export class Scene {
   /** Rate of the animation. 1x is equivalent to real-time. */
   private animationRate = 0;
 
-  constructor(
-    mount: HTMLDivElement,
-    setTimeMsCallback: ((timeMs: number) => void) | null
-  ) {
-    this.mount = mount;
-    this.setTimeMsCallback = setTimeMsCallback;
+  constructor(setTimeMsCallback: ((timeMs: number) => void) | null) {
+    // this.setTimeMsCallback = setTimeMsCallback;
+    this.setTimeMsCallback = null;
 
-    const width = this.mount.clientWidth;
-    const height = this.mount.clientHeight;
+    // Choose an initial aspect ratio. This will be updated when first mounted.
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     const aspect = width / height;
 
     this.renderer = new THREE.WebGLRenderer();
@@ -79,16 +80,29 @@ export class Scene {
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
-    this.mount.appendChild(this.renderer.domElement);
+    // Start loading the asteroids.
+    this.asteroidsPromise = LoadAsteroids();
+    this.asteroidsPromise.then((asteroids: Asteroids) => {
+      this.showAsteroids(asteroids);
+    });
 
-    if (!IS_PRODUCTION) {
-      this.stats = addStats(mount);
-    }
+    // Load the bright stars and put them on the celestial sphere.
+    loadBrightStars()
+      .then((brightStars: BrightStarsPoints) => {
+        this.showBrightStars(brightStars);
+      })
+      .catch((error: any) => {
+        console.error(error);
+      });
 
+    // Place the planets and their orbits in the scene.
     this.solarSystem = new SolarSystem();
     this.solarSystem.showInScene(this.scene);
+
+    window.addEventListener("resize", this.updateDimensions);
   }
 
+  /** Starts the scene animation. Necessary to use the controls, etc. */
   startAnimation = () => {
     if (this.frameId !== null) {
       return;
@@ -96,6 +110,7 @@ export class Scene {
     this.frameId = requestAnimationFrame(this.firstAnimate);
   };
 
+  /** Stop and reset animation for the scene. */
   stopAnimation = () => {
     if (this.frameId === null) {
       return;
@@ -104,20 +119,46 @@ export class Scene {
     this.frameId = null;
   };
 
+  /** Mount the scene into a parent element. */
+  mount = (element: HTMLDivElement) => {
+    if (this.parent !== undefined) {
+      console.error("Attempted to mount already mounted scene.");
+      return;
+    }
+    this.startAnimation();
+    this.parent = element;
+    element.appendChild(this.renderer.domElement);
+    this.updateDimensions();
+
+    if (!IS_PRODUCTION) {
+      this.stats = addStats(this.parent);
+    }
+  };
+
+  /** Unmount the scene from the parent. */
   unmount = () => {
+    if (this.parent === undefined) {
+      console.error("Attempted to unmount an already unmounted scene.");
+      return;
+    }
     this.stopAnimation();
-    this.mount?.removeChild(this.renderer.domElement);
+    this.parent.removeChild(this.renderer.domElement);
+
+    if (!IS_PRODUCTION) {
+      this.parent.removeChild(this.stats.dom);
+    }
+
+    this.parent = undefined;
   };
 
   /** Callback to update animation dimensions when the window changes size. */
   updateDimensions = () => {
-    const width = this.mount?.clientWidth;
-    const height = this.mount?.clientHeight;
-
-    // Mount might sneakily get destroyed in unmount.
-    if (width === undefined || height === undefined) {
+    if (this.parent === undefined) {
       return;
     }
+
+    const width = this.parent.clientWidth;
+    const height = this.parent.clientHeight;
 
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
@@ -160,7 +201,11 @@ export class Scene {
     this.scene.add(brightStars);
   };
 
-  showAsteroids = (asteroids: Asteroids) => {
+  getAsteroids = (): Promise<Asteroids> => {
+    return this.asteroidsPromise;
+  };
+
+  private showAsteroids = (asteroids: Asteroids) => {
     this.asteroids = asteroids;
     asteroids.setTime(this.timeMs);
     this.asteroids.showInScene(this.scene);

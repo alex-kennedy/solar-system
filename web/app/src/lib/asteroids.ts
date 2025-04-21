@@ -57,6 +57,7 @@ function calculateMeanMotion(a: number): number {
   );
 }
 
+/** Orbital elements for an asteroid. */
 interface Asteroid {
   eccentricity: number;
   semiMajorAxis: number;
@@ -66,10 +67,30 @@ interface Asteroid {
   meanAnomaly: number;
 }
 
+/** Styles  for displaying asteroid points in the scene. */
 interface AsteroidStyle {
   pointSize?: number;
   alpha?: number;
   color?: THREE.Color;
+}
+
+/** Uses a web worker to load and deserialize the asteroids payload. */
+export function LoadAsteroids(): Promise<Asteroids> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL("../workers/asteroids.worker.ts", import.meta.url)
+    );
+    worker.onmessage = (message: { data: AsteroidsProto }) => {
+      const asteroids = Asteroids.fromAsteroidsProto(message.data);
+      resolve(asteroids);
+      worker.terminate();
+    };
+    worker.onerror = (event: ErrorEvent) => {
+      reject(event.error);
+      worker.terminate();
+    };
+    worker.postMessage({});
+  });
 }
 
 export class AsteroidPoints extends THREE.Points {

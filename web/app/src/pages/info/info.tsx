@@ -2,7 +2,7 @@ import { Button, Container, IconButton, Link, Typography } from "@mui/material";
 import React from "react";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import CloseIcon from "@mui/icons-material/Close";
-import { Link as RouterLink } from "react-router-dom";
+import RouterLink from "next/link";
 
 import "./info.css";
 
@@ -18,7 +18,7 @@ class Info extends React.Component {
             top: 0,
           }}
         >
-          <RouterLink to={"/"}>
+          <RouterLink href={"/"}>
             <IconButton aria-label="close">
               <CloseIcon />
             </IconButton>

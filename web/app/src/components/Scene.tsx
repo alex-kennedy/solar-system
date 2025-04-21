@@ -1,120 +1,53 @@
-import React, { Component, SyntheticEvent } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-import { loadBrightStars } from "../lib/bright_stars";
 import LoadErrorSnackbar from "./LoadErrorSnackbar";
-import { Asteroids } from "../lib/asteroids";
-import { Asteroids as AsteroidsProto } from "../lib/proto/asteroids";
 import { Scene } from "../lib/scene";
 
 import LoaderSnackbar from "./LoaderSnackbar";
-import { SnackbarCloseReason } from "@mui/material";
 
-interface SceneState {
-  loadingAsteroids: boolean;
-  loadingAsteroidsError: boolean;
-  timeMs: number;
-}
+// Singleton instance of a scene. It can be mounted and unmounted from the DOM,
+// but ensures all the heavy dependencies are only loaded once.
+const scene = new Scene(null);
 
-interface AsteroidsMessage {
-  cmd: string;
-  asteroids: AsteroidsProto;
-}
+function SceneFunction() {
+  (window as any).scene = this; // For debugging.
 
-class SceneComponent extends Component<{}, SceneState> {
-  scene: Scene | null = null;
+  const sceneDivRef = useRef<HTMLDivElement>(null);
+  const [loadingAsteroids, setLoadingAsteroids] = useState<boolean>(true);
+  const [loadingAsteroidsError, setLoadingAsteroidsError] =
+    useState<boolean>(false);
 
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      loadingAsteroids: true,
-      loadingAsteroidsError: false,
-      timeMs: 0,
+  useEffect(() => {
+    scene.mount(sceneDivRef.current);
+    scene
+      .getAsteroids()
+      .then(() => {
+        setLoadingAsteroids(false);
+        setLoadingAsteroidsError(false);
+      })
+      .catch(() => {
+        setLoadingAsteroids(false);
+        setLoadingAsteroidsError(true);
+      });
+    return () => {
+      scene.unmount();
     };
-    (window as any).scene = this; // For debugging
-  }
+  }, [sceneDivRef]);
 
-  setTimeMs = (timeMs: number) => {
-    this.setState({ timeMs });
+  const handleAsteroidErrorClose = () => {
+    setLoadingAsteroidsError(false);
   };
 
-  mountScene = (mount: HTMLDivElement | null) => {
-    if (mount === null) {
-      return;
-    }
-    this.scene = new Scene(mount, this.setTimeMs);
-    this.scene.startAnimation();
-
-    this.renderBrightStars();
-
-    const worker = new Worker(
-      new URL("../workers/asteroids.worker.ts", import.meta.url)
-    );
-    worker.onmessage = this.handleAsteroidWorkerMessage;
-    worker.postMessage({ cmd: "init" });
-
-    window.addEventListener("resize", this.scene.updateDimensions);
-  };
-
-  handleAsteroidWorkerMessage = (message: { data: AsteroidsMessage }) => {
-    if (message.data.cmd === "error") {
-      this.handleAsteroidLoadFailure();
-    } else if (message.data.cmd === "initComplete") {
-      this.renderAsteroids(message.data.asteroids);
-    }
-  };
-
-  handleAsteroidLoadFailure = () => {
-    this.setState({ loadingAsteroids: false, loadingAsteroidsError: true });
-  };
-
-  handleAsteroidErrorClose = (
-    event: Event | SyntheticEvent,
-    reason: SnackbarCloseReason
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    this.setState({ loadingAsteroidsError: false });
-  };
-
-  renderBrightStars = async () => {
-    try {
-      const brightStars = await loadBrightStars();
-      this.scene!.showBrightStars(brightStars);
-    } catch (err) {
-      console.error("Failed to load bright stars!", err);
-    }
-  };
-
-  renderAsteroids = (asteroidsProto: AsteroidsProto) => {
-    if (this.scene === null) {
-      console.error("Unexpected error for render asteroids! Scene was null!");
-      this.handleAsteroidLoadFailure();
-      return;
-    }
-
-    const asteroids = Asteroids.fromAsteroidsProto(asteroidsProto);
-    this.scene.showAsteroids(asteroids);
-
-    this.setState({ loadingAsteroids: false });
-  };
-
-  componentWillUnmount() {
-    this.scene!.unmount();
-  }
-
-  render() {
-    return (
-      <>
-        <div style={{ width: "100%", height: "100%" }} ref={this.mountScene} />
-        <LoaderSnackbar open={this.state.loadingAsteroids} />
-        <LoadErrorSnackbar
-          open={this.state.loadingAsteroidsError}
-          handleClose={this.handleAsteroidErrorClose}
-        />
-      </>
-    );
-  }
+  return (
+    <>
+      <div style={{ width: "100%", height: "100%" }} ref={sceneDivRef} />
+      <LoaderSnackbar open={loadingAsteroids} />
+      <LoadErrorSnackbar
+        open={loadingAsteroidsError}
+        handleClose={handleAsteroidErrorClose}
+      />
+    </>
+  );
 }
 
-export default SceneComponent;
+export default SceneFunction;

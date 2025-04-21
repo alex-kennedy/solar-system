@@ -1,10 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import "./src/assets/css/index.css";
 
 export const metadata: Metadata = {
   title: "Solar System",
   description: "An open source solar system asteroid visualisation.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
@@ -15,7 +19,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="theme-color" content="#000000" />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Roboto:300,400,500"
