@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 
-import LoadErrorSnackbar from "./LoadErrorSnackbar";
-import { Scene } from "../lib/scene";
-
-import LoaderSnackbar from "./LoaderSnackbar";
+import LoadErrorSnackbar from "@/components/LoadErrorSnackbar";
+import LoaderSnackbar from "@/components/LoaderSnackbar";
+import { Scene } from "@/lib/scene";
 
 // Singleton instance of a scene. It can be mounted and unmounted from the DOM,
 // but ensures all the heavy dependencies are only loaded once.

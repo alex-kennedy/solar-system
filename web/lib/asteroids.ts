@@ -1,9 +1,8 @@
 import * as THREE from "three";
 
-import { Asteroids as AsteroidsProto, OrbitType } from "./proto/asteroids";
-
-import orbitVertexShader from "../shaders/orbit/orbit.vert";
-import orbitFragmentShader from "../shaders/orbit/orbit.frag";
+import { Asteroids as AsteroidsProto, OrbitType } from "@/lib/proto/asteroids";
+import orbitVertexShader from "@/assets/shaders/orbit/orbit.vert";
+import orbitFragmentShader from "@/assets/shaders/orbit/orbit.frag";
 
 // Mass of the sun in kilograms
 const MASS_SUN = 1.98847e30;
@@ -78,7 +77,7 @@ interface AsteroidStyle {
 export function LoadAsteroids(): Promise<Asteroids> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(
-      new URL("../workers/asteroids.worker.ts", import.meta.url)
+      new URL("@/workers/asteroids.worker.ts", import.meta.url)
     );
     worker.onmessage = (message: { data: AsteroidsProto }) => {
       const asteroids = Asteroids.fromAsteroidsProto(message.data);

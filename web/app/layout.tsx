@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 
-import "./src/assets/css/index.css";
-
 export const metadata: Metadata = {
   title: "Solar System",
   description: "An open source solar system asteroid visualisation.",

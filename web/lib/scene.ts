@@ -3,9 +3,9 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
 
-import { SolarSystem } from "./solar_system";
-import { BrightStarsPoints, loadBrightStars } from "./bright_stars";
-import { Asteroids, LoadAsteroids } from "./asteroids";
+import { SolarSystem } from "@/lib/solar_system";
+import { BrightStarsPoints, loadBrightStars } from "@/lib/bright_stars";
+import { Asteroids, LoadAsteroids } from "@/lib/asteroids";
 
 /**
  * True if this is a production build, false if this is a dev build (e.g.

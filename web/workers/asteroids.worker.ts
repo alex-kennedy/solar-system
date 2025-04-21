@@ -3,8 +3,8 @@
 // It should be sent a single message (of arbitrary content) and returns the
 // asteroid proto message.
 
-import { fetchBrotliAsArray } from "../lib/brotli";
-import { Asteroids } from "../lib/proto/asteroids";
+import { fetchBrotliAsArray } from "@/lib/brotli";
+import { Asteroids } from "@/lib/proto/asteroids";
 
 const ASTEROIDS_PATH = self.location.origin + "/assets/asteroids.pb.br";
 

@@ -4,7 +4,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import CloseIcon from "@mui/icons-material/Close";
 import RouterLink from "next/link";
 
-import "./info.css";
+import "@/app/info.css";
 
 class Info extends React.Component {
   render() {

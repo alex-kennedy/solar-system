@@ -1,4 +1,6 @@
-import { ClientOnly } from "./client";
+import { ClientOnly } from "@/app/client";
+
+import "@/app/page.css";
 
 export function generateStaticParams() {
   return [{ slug: [""] }];

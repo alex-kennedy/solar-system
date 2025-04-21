@@ -4,7 +4,7 @@ import React from "react";
 import dynamic from "next/dynamic";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 
-const Scene = dynamic(() => import("./src/components/Scene"), { ssr: false });
+const Scene = dynamic(() => import("@/components/Scene"), { ssr: false });
 
 const theme = createTheme({
   palette: {

@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
-import { Planet, OrbitalElementsDelta } from "./planets";
+import { Planet, OrbitalElementsDelta } from "@/lib/planets";
 
-import data from "./../assets/planets/data.json";
+import data from "@/assets/planets/data.json";
 
 /** Scale factor for planet and sun points. */
 const SCALE_FACTOR = 250;

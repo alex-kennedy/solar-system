@@ -1,10 +1,10 @@
 import * as THREE from "three";
 
-import starTexture from "./../assets/stars/star.svg";
-import starFragmentShader from "../shaders/stars/stars.frag";
-import starVertexShader from "../shaders/stars/stars.vert";
-import { BrightStars, BrightStar } from "./proto/bright_stars";
-import { fetchBrotliAsArray } from "./brotli";
+import starTexture from "@/assets/stars/star.svg";
+import starFragmentShader from "@/assets/shaders/stars/stars.frag";
+import starVertexShader from "@/assets/shaders/stars/stars.vert";
+import { BrightStars, BrightStar } from "@/lib/proto/bright_stars";
+import { fetchBrotliAsArray } from "@/lib/brotli";
 
 const RADIUS = 100;
 const INTENSITY_SCALE = 5.0;
