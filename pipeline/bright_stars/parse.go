@@ -1,6 +1,6 @@
 // Schema information for the Yale Bright Star Catalog.
 // See http://tdc-www.harvard.edu/catalogs/bsc5.readme.
-package brightstars
+package main
 
 import (
 	"fmt"

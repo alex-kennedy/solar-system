@@ -8,7 +8,7 @@ import { fetchBrotliAsArray } from "@/lib/brotli";
 
 const RADIUS = 100;
 const INTENSITY_SCALE = 5.0;
-const PUBLIC_PATH = "/assets/bright_stars.pb.br";
+const PUBLIC_PATH = "/api/brightstars.pb.br";
 
 /** Construct bright stars from the default proto path. */
 export async function loadBrightStars(): Promise<BrightStarsPoints> {
