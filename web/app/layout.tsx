@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Theme } from "@/app/theme";
 
 export const metadata: Metadata = {
   title: "Solar System",
@@ -24,7 +25,9 @@ export default function RootLayout({
       </head>
       <body>
         <noscript> You need to enable JavaScript to run this app. </noscript>
-        <div id="root">{children}</div>
+        <div id="root">
+          <Theme>{children}</Theme>
+        </div>
       </body>
     </html>
   );
