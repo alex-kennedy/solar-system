@@ -23,7 +23,7 @@ import (
 )
 
 // Originally from http://tdc-www.harvard.edu/catalogs/bsc5.dat.gz.
-const catalogUrl = "http://static.alexkennedy.dev/brightstars/bsc5.dat.gz"
+const catalogUrl = "http://solarsystem-static.alexkennedy.dev/stars/bsc5.dat.gz"
 
 // ParseBrightStars processes and returns the bright stars of the Yale Bright
 // Stars Catalog.

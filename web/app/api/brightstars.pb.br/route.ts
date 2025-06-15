@@ -5,7 +5,8 @@
 
 export const dynamic = "force-static";
 
-const PATH = "https://static.alexkennedy.dev/brightstars/brightstars.pb.br";
+const PATH =
+  "https://solarsystem-static.alexkennedy.dev/stars/brightstars.pb.br";
 
 export async function GET() {
   const response = await fetch(PATH);
