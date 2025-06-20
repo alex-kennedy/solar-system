@@ -15,38 +15,11 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/alex-kennedy/solar-system/pipeline/asteroids"
-	brightstars "github.com/alex-kennedy/solar-system/pipeline/bright_stars"
 )
 
 var (
-	brightStarsOutput = flag.String("bright_stars_output", "./public/assets/bright_stars.pb.br", "Output directory for bright stars.")
-	asteroidsOutput   = flag.String("asteroids_output", "./public/assets/asteroids.pb.br", "Output directory for asteroids.")
+	asteroidsOutput = flag.String("asteroids_output", "./public/assets/asteroids.pb.br", "Output directory for asteroids.")
 )
-
-func CreateBrightStars(output string) error {
-	log.Println("starting bright stars pipeline...")
-	if err := os.MkdirAll(filepath.Dir(output), fs.FileMode(os.O_RDWR)); err != nil {
-		return fmt.Errorf("failed to make bright stars output dir: %s", err)
-	}
-
-	brightStars, err := brightstars.LoadBrightStars()
-	if err != nil {
-		return err
-	}
-	log.Printf("loaded %d bright stars\n", len(brightStars.BrightStars))
-
-	brightStarsSerialized, err := proto.Marshal(brightStars)
-	if err != nil {
-		return fmt.Errorf("failed to marshal bright stars: %s", err)
-	}
-
-	log.Println("writing compressed bright stars...")
-	if err := WriteCompressed(output, brightStarsSerialized); err != nil {
-		return fmt.Errorf("failed to write bright stars: %s", err)
-	}
-	log.Println("finished bright stars pipeline!")
-	return nil
-}
 
 func CreateAsteroids(output string) error {
 	log.Println("starting asteroids pipeline...")
@@ -98,10 +71,6 @@ func main() {
 	flag.Parse()
 
 	log.Println("starting solar-system pipeline...")
-
-	if err := CreateBrightStars(*brightStarsOutput); err != nil {
-		log.Fatal(err)
-	}
 
 	if err := CreateAsteroids(*asteroidsOutput); err != nil {
 		log.Fatal(err)

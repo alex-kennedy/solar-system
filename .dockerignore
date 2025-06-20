@@ -1,6 +1,7 @@
-node_modules/
-build/
 temp/
-data/
 public/assets/
 .git
+**/data/
+**/node_modules/
+**/build/
+**/.next/

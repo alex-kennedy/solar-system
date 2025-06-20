@@ -6,7 +6,7 @@ data/
 temp/
 
 # generated public files
-public/assets
+web/public/assets
 
 # misc processing files
 pipeline/asteroids/*.csv
@@ -36,3 +36,7 @@ __pycache__
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# next.js
+.next
+next-env.d.ts

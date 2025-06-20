@@ -1,0 +1,13 @@
+@import url("https://fonts.googleapis.com/css?family=Sarabun:400,800");
+
+html,
+body {
+  height: 100%;
+  margin: 0 auto;
+}
+
+h1 {
+  background-image: linear-gradient(45deg, white, #67d864);
+  background-clip: text;
+  color: transparent;
+}
