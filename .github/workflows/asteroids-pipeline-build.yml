@@ -48,5 +48,4 @@ jobs:
         with:
             package-name: ghcr.io/alex-kennedy/solar-system/asteroids-pipeline
             package-type: container
-            min-versions-to-keep: 1
-            token: ${{ secrets.GITHUB_TOKEN }}
+            delete-only-untagged-versions: true
