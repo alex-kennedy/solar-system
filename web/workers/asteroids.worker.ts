@@ -6,7 +6,7 @@
 import { fetchBrotliAsArray } from "@/lib/brotli";
 import { Asteroids } from "@/lib/proto/asteroids";
 
-const ASTEROIDS_PATH = self.location.origin + "/assets/asteroids.pb.br";
+const ASTEROIDS_PATH = self.location.origin + "/api/asteroids.pb.br";
 
 self.onmessage = async () => {
   const results = await fetchBrotliAsArray(ASTEROIDS_PATH);
