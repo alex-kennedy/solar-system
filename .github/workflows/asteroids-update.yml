@@ -1,0 +1,25 @@
+name: asteroids-update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 4 * * *"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/alex-kennedy/solar-system/asteroids-pipeline:main
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.github_token }}
+      env:
+        R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+        R2_ACCESS_KEY_SECRET: ${{ secrets.R2_ACCESS_KEY_SECRET }}
+        HEALTH_CHECK_ENDPOINT: ${{ secrets.HEALTH_CHECK_ENDPOINT }}
+        HEALTH_CHECK_ACCESS_KEY_ID: ${{ secrets.HEALTH_CHECK_ACCESS_KEY_ID }}
+        HEALTH_CHECK_ACCESS_KEY_SECRET: ${{ secrets.HEALTH_CHECK_ACCESS_KEY_SECRET }}
+    steps:
+      - name: Deploy asteroids
+        run: /bin/asteroids-deploy
