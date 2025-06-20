@@ -2,8 +2,6 @@ module github.com/alex-kennedy/solar-system/pipeline/bright_stars
 
 go 1.24
 
-replace github.com/alex-kennedy/solar-system/solarsystempb => ../../proto/go/github.com/alex-kennedy/solar-system/solarsystempb
-
 require (
 	github.com/alex-kennedy/solar-system/solarsystempb v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-sdk-go-v2/config v1.29.14
