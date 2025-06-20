@@ -34,7 +34,7 @@ jobs:
           context: .
           file: ./pipeline/asteroids/deploy/Dockerfile
           push: true
-          tags: main
+          tags: ghcr.io/alex-kennedy/solar-system/asteroids-pipeline:main
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
