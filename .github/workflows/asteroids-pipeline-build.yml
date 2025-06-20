@@ -42,10 +42,3 @@ jobs:
           subject-name: ghcr.io/alex-kennedy/solar-system/asteroids-pipeline
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
-      
-      - name: Clean-up old packages
-        uses: actions/delete-package-versions@v5
-        with:
-            package-name: ghcr.io/alex-kennedy/solar-system/asteroids-pipeline
-            package-type: container
-            delete-only-untagged-versions: true
