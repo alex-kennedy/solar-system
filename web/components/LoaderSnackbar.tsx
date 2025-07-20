@@ -1,6 +1,6 @@
 import React from "react";
 import { Snackbar } from "@mui/material";
-import { Alert } from '@mui/material';
+import { Alert } from "@mui/material";
 import { CircularProgress } from "@mui/material";
 
 type LoaderSnackbarProps = {

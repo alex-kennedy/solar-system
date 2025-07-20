@@ -180,6 +180,14 @@ export class Scene {
     return this.timeMs;
   };
 
+  /**
+   * Sets the animation rate for the simulation. Measured as a rate, e.g. 10
+   * means 10x faster than real-time.
+   */
+  setAnimationRate = (rate: number) => {
+    this.animationRate = rate;
+  };
+
   showCelestialSphereWireframe = () => {
     const radius = 100;
     const segments = 100;

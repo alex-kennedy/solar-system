@@ -1,6 +1,6 @@
 import React from "react";
 import { Snackbar, SnackbarProps } from "@mui/material";
-import { Alert } from '@mui/material';
+import { Alert } from "@mui/material";
 
 type LoadErrorSnackbarProps = {
   open: boolean;
